@@ -4,6 +4,7 @@ import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
+import { loginUser } from "@/services/authService";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
@@ -19,20 +20,10 @@ export default function SignInForm() {
     e.preventDefault();
 
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        router.push("/");
-      } else {
-        alert(data.error || "Login failed");
-      }
-    } catch (error) {
-      // alert("An error occurred");
+      await loginUser({ username, password });
+      router.push("/");
+    } catch (error: any) {
+      alert(error.message || "Login failed");
     }
   }
 
