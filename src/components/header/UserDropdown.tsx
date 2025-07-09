@@ -17,9 +17,15 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
 }
 
 const handleSignOut = async () => {
-  const success = await logoutUser();
-  if (success) {
-    router.push('/signin');
+  try {
+    const success = await logoutUser();
+    if (success) {
+      router.push('/signin');
+    
+      window.location.reload();
+    }
+  } catch (error) {
+    console.error('Logout error:', error);
   }
 };
 

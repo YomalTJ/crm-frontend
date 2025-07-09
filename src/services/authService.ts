@@ -29,6 +29,7 @@ export const logoutUser = async () => {
   try {
     const res = await fetch("/api/auth/logout", {
       method: "POST",
+      credentials: 'include',
     });
 
     if (!res.ok) {
