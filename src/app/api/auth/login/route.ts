@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axiosInstance from "@/lib/axios";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";

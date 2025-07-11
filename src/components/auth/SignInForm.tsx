@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import Checkbox from "@/components/form/input/Checkbox";
 import Input from "@/components/form/input/InputField";
@@ -17,15 +18,73 @@ export default function SignInForm() {
   const [isChecked, setIsChecked] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    try {
-      await loginUser({ username, password });
-      router.push("/");
-    } catch (error: any) {
-      alert(error.message || "Login failed");
+  try {
+    const result = await loginUser({ username, password });
+
+    if (result.type === "admin") {
+      console.log("✅ Admin login success");
+      router.push("/dashboard/admin");
+      return;
     }
+
+    if (result.type === "staff") {
+      console.log("✅ Staff login success, decoding staffAccessToken...");
+
+      // Get token from cookie
+      const res = await fetch("/api/auth/get-staff-token");
+      const { token } = await res.json();
+
+      if (!token) throw new Error("❌ Staff token not found");
+
+      const payloadBase64 = token.split(".")[1];
+      const decodedPayload = JSON.parse(
+        atob(payloadBase64)
+      );
+
+      console.log("🔍 Decoded staff token payload:", decodedPayload);
+
+      const roleName: string = decodedPayload?.role?.name;
+
+      if (!roleName) {
+        console.warn("⚠️ No role name in token, redirecting to /dashboard/staff");
+        router.push("/dashboard/staff");
+        return;
+      }
+
+      // Format role name (e.g., "HR Executive" → "hr-executive")
+      const formattedRole = roleName.toLowerCase().replace(/\s+/g, "-");
+
+      console.log(`➡️ Redirecting based on role: ${roleName} -> ${formattedRole}`);
+
+      switch (formattedRole) {
+        case "department-manager":
+          router.push("/dashboard/department-manager");
+          break;
+        case "hr-executive":
+          router.push("/dashboard/hr-executive");
+          break;
+        case "finance-officer":
+          router.push("/dashboard/finance-officer");
+          break;
+        case "it-support":
+          router.push("/dashboard/it-support");
+          break;
+        case "operations-supervisor":
+          router.push("/dashboard/operations-supervisor");
+          break;
+        default:
+          router.push("/dashboard/staff");
+      }
+    }
+  } catch (error: any) {
+    console.error("❌ Login error:", error.message);
+    alert(error.message || "Login failed");
   }
+};
+
+
 
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full">

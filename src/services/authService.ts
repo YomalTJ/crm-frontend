@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 interface LoginPayload {
   username: string;
   password: string;
@@ -5,21 +6,29 @@ interface LoginPayload {
 
 export const loginUser = async ({ username, password }: LoginPayload) => {
   try {
-    const res = await fetch("/api/auth/login", {
+    // First try admin login
+    let res = await fetch("/api/auth/login", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
     });
 
-    const data = await res.json();
+    let data = await res.json();
 
-    if (!res.ok) {
-      throw new Error(data.error || "Login failed");
-    }
+    if (res.ok) return { type: "admin", ...data };
 
-    return data;
+    // If admin login fails, try staff login
+    res = await fetch("/api/auth/staff-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
+
+    data = await res.json();
+
+    if (res.ok) return { type: "staff", ...data };
+
+    throw new Error(data.error || "Login failed");
   } catch (err: any) {
     throw new Error(err.message || "Something went wrong");
   }
