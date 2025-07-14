@@ -1,5 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+"use server"
+
 import axiosInstance from "@/lib/axios";
+import { cookies } from "next/headers";
 
 interface SamurdhiFamilyPayload {
   district: string;
@@ -34,7 +37,18 @@ interface SamurdhiFamilyPayload {
 
 export const createSamurdhiFamily = async (payload: SamurdhiFamilyPayload) => {
   try {
-    const response = await axiosInstance.post('/samurdhi-family', payload);
+    // Get the token from cookies
+    const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
+    
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await axiosInstance.post('/samurdhi-family', payload, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
     return response.data;
   } catch (error: any) {
     throw new Error(error.response?.data?.message || 'Failed to create Samurdhi family record');

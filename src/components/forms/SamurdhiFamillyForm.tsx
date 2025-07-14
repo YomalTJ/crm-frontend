@@ -239,18 +239,23 @@ const SamurdhiFamillyForm = () => {
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
+    e.preventDefault();
+    setIsSubmitting(true);
 
-        try {
-            await createSamurdhiFamily(formData);
-            alert('Samurdhi family record created successfully!');
-        } catch (error: any) {
+    try {
+        await createSamurdhiFamily(formData);
+        alert('Samurdhi family record created successfully!');
+    } catch (error: any) {
+        if (error.message.includes('authentication')) {
+            // Handle auth errors specifically
+            alert('Please login again');
+        } else {
             alert(error.message || 'Failed to submit form');
-        } finally {
-            setIsSubmitting(false);
         }
-    };
+    } finally {
+        setIsSubmitting(false);
+    }
+};
 
     return (
         <ComponentCard title="Family Development plan for Community Empowerment">

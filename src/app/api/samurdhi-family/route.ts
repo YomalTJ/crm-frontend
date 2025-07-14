@@ -5,9 +5,14 @@ import axiosInstance from '@/lib/axios';
 export async function POST(req: Request) {
     try {
         const body = await req.json();
+        const authHeader = req.headers.get('authorization');
         
-        // Forward the request to your backend API
-        const response = await axiosInstance.post('/samurdhi-family', body);
+        // Forward the request with the auth header
+        const response = await axiosInstance.post('/samurdhi-family', body, {
+            headers: {
+                Authorization: authHeader || ''
+            }
+        });
         
         return NextResponse.json(response.data);
     } catch (error: any) {
