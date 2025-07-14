@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState } from 'react'
@@ -9,6 +10,7 @@ import { BoxIcon, ChevronDownIcon } from '@/icons'
 import Radio from '../form/input/Radio';
 import Checkbox from '../form/input/Checkbox';
 import Button from '../ui/button/Button';
+import { createSamurdhiFamily } from '@/services/samurdhiService';
 
 const SamurdhiFamillyForm = () => {
     const divisionalSecretariatDivisions = [
@@ -35,6 +37,39 @@ const SamurdhiFamillyForm = () => {
     const [selectedValue, setSelectedValue] = useState<string>("Previous Samurdhi beneficiary /Low income earner");
     const [selectedProjectValue] = useState<string>("Previous Samurdhi beneficiary /Low income earner");
     const [isChecked, setIsChecked] = useState(false);
+
+    const [formData, setFormData] = useState({
+        district: '',
+        divisionalSecretariat: '',
+        samurdhiBank: '',
+        gramaNiladhariDivision: '',
+        beneficiaryType: 'Previous Samurdhi beneficiary /Low income earner',
+        aswasumaHouseholdNo: '',
+        nic: '',
+        beneficiaryName: '',
+        gender: 'Male',
+        address: '',
+        phone: '',
+        projectOwnerAge: 0,
+        male18To60: 0,
+        female18To60: 0,
+        currentEmployment: '',
+        otherOccupation: '',
+        samurdhiSubsidy: '',
+        aswasumaCategory: '',
+        empowermentDimension: '',
+        projectType: '',
+        otherProject: '',
+        resourcesNeeded: [] as string[],
+        monthlySaving: false,
+        savingAmount: 0,
+        healthInfo: [] as string[],
+        domesticDynamics: [] as string[],
+        communityParticipation: [] as string[],
+        housingServices: [] as string[],
+    });
+
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const samurdhiBanks = [
         { value: "ampara", label: "Ampara" },
@@ -165,290 +200,474 @@ const SamurdhiFamillyForm = () => {
         { value: "Other", label: "Other" },
     ]
 
-    const handleSelectChange = (value: string) => {
-        console.log("Selected value:", value);
-    };
-
-    const handleRadioChange = (value: string) => {
-        setSelectedValue(value);
-    };
-
     const handleProjectRadioChange = (value: string) => {
         setSelectedValue(value);
     };
 
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleSelectChange = (name: string, value: string) => {
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleRadioChange = (name: string, value: string) => {
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleCheckboxChange = (name: string, value: string, isChecked: boolean) => {
+        setFormData(prev => {
+            const currentArray = prev[name as keyof typeof formData] as string[];
+            return {
+                ...prev,
+                [name]: isChecked 
+                    ? [...currentArray, value]
+                    : currentArray.filter(item => item !== value)
+            };
+        });
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+
+        try {
+            await createSamurdhiFamily(formData);
+            alert('Samurdhi family record created successfully!');
+        } catch (error: any) {
+            alert(error.message || 'Failed to submit form');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     return (
         <ComponentCard title="Family Development plan for Community Empowerment">
-            <div className="space-y-6">
-                <div>
-                    <Label>District</Label>
-                    <Input type="text" />
-                </div>
-
-                <div>
-                    <Label>Divisional Secretariat Division</Label>
-                    <div className="relative">
-                        <Select
-                            options={divisionalSecretariatDivisions}
-                            placeholder="Select Option"
-                            onChange={handleSelectChange}
-                            className="dark:bg-dark-900"
+            <form onSubmit={handleSubmit}>
+                <div className="space-y-6">
+                    <div>
+                        <Label>District</Label>
+                        <Input 
+                            type="text" 
+                            name="district"
+                            value={formData.district}
+                            onChange={handleInputChange}
                         />
-                        <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
-                            <ChevronDownIcon/>
-                        </span>
                     </div>
-                </div>
 
-                <div>
-                    <Label>Samurdhi Bank</Label>
-                    <div className="relative">
-                        <Select
-                            options={samurdhiBanks}
-                            placeholder="Select Option"
-                            onChange={handleSelectChange}
-                            className="dark:bg-dark-900"
-                        />
-                        <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
-                            <ChevronDownIcon/>
-                        </span>
-                    </div>
-                </div>
-
-                <div>
-                    <Label>Grama Nildhari Division</Label>
-                    <div className="relative">
-                        <Select
-                            options={gramaNiladhariOptions}
-                            placeholder="Select Option"
-                            onChange={handleSelectChange}
-                            className="dark:bg-dark-900"
-                        />
-                        <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
-                            <ChevronDownIcon/>
-                        </span>
-                    </div>
-                </div>
-
-                <div className="flex flex-col gap-4">
-                    <Label>Are you a Samurdhi beneficiary?/ Aswasuma beneficiary?/low-income earner?</Label>
-                    <Radio
-                        id="radio1"
-                        name="group1"
-                        value="Previous Samurdhi beneficiary /Low income earner"
-                        checked={selectedValue === "Previous Samurdhi beneficiary /Low income earner"}
-                        onChange={handleRadioChange}
-                        label="Previous Samurdhi beneficiary /Low income earnerPrevious Samurdhi beneficiary /Low income earner"
-                    />
-                    <Radio
-                        id="radio2"
-                        name="group1"
-                        value="Aswasuma beneficiary"
-                        checked={selectedValue === "Aswasuma beneficiary"}
-                        onChange={handleRadioChange}
-                        label="Aswasuma beneficiary"
-                    />
-                </div>
-
-                <div>
-                    <Label>Aswasuma household number</Label>
-                    <Input type="text" />
-                </div>
-
-                <div>
-                    <Label>National Identity Card Number</Label>
-                    <Input type="text" />
-                </div>
-
-                <div>
-                    <Label>Name of the Beneficiary</Label>
-                    <Input type="text" />
-                </div>
-
-                <div className="flex flex-col gap-4">
-                    <Label>Gender</Label>
-                    <Radio
-                        id="radio1"
-                        name="group1"
-                        value="female"
-                        checked={selectedValue === "female"}
-                        onChange={handleRadioChange}
-                        label="Female"
-                    />
-                    <Radio
-                        id="radio2"
-                        name="group1"
-                        value="male"
-                        checked={selectedValue === "male"}
-                        onChange={handleRadioChange}
-                        label="Male"
-                    />
-                </div>
-
-                <div>
-                    <Label>Address</Label>
-                    <Input type="text" />
-                </div>
-
-                <div>
-                    <Label>Age of Project Owner</Label>
-                    <Input type="text" />
-                </div>
-
-                <div>
-                    <Label>No. of Household Members Aged 18–60</Label>
-                    <Label>Female</Label>
-                    <Input type="text" />
-                    <Label>Male</Label>
-                    <Input type="text" />
-                </div>
-
-                <div className="space-y-2">
-                    <Label>Current Employment</Label>
-                    <div className="grid grid-cols-3 gap-4">
-                        {employmentOptions.map((option, index) => (
-                            <Radio
-                                key={index}
-                                id={`employment-${index}`}
-                                name="employmentGroup"
-                                value={option}
-                                checked={selectedValue === option}
-                                onChange={handleRadioChange}
-                                label={option}
+                    <div>
+                        <Label>Divisional Secretariat Division</Label>
+                        <div className="relative">
+                            <Select
+                                options={divisionalSecretariatDivisions}
+                                placeholder="Select Option"
+                                onChange={(value) => handleSelectChange('divisionalSecretariat', value)}
+                                className="dark:bg-dark-900"
+                                value={formData.divisionalSecretariat}
                             />
-                        ))}
+                            <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                                <ChevronDownIcon/>
+                            </span>
+                        </div>
                     </div>
-                </div>
 
-                <div>
-                    <Label>Samurdhi subsidy received</Label>
-                    <div className="relative">
-                        <Select
-                            options={samurdhiSubsidy}
-                            placeholder="Select Option"
-                            onChange={handleSelectChange}
-                            className="dark:bg-dark-900"
-                        />
-                        <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
-                            <ChevronDownIcon/>
-                        </span>
-                    </div>
-                </div>
-
-                <div>
-                    <Label>Aswasuma category</Label>
-                    <div className="relative">
-                        <Select
-                            options={aswasumaCategory}
-                            placeholder="Select Option"
-                            onChange={handleSelectChange}
-                            className="dark:bg-dark-900"
-                        />
-                        <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
-                            <ChevronDownIcon/>
-                        </span>
-                    </div>
-                </div>
-
-                <div>
-                    <Label>What is Empowerment Dimension</Label>    
-                    <div className="flex gap-3 mt-3">
-                        <Checkbox checked={isChecked} onChange={setIsChecked} />
-                        <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">
-                            Business Opportunities/Self-Employment
-                        </span>
-                    </div>
-                    <div className="flex gap-3 mt-3">
-                        <Checkbox checked={isChecked} onChange={setIsChecked} />
-                        <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">
-                            Employment Facilitation
-                        </span>
-                    </div>
-                </div>
-
-                <div className="space-y-2">
-                    <Label>Types of Projects</Label>
-                    <div className="grid grid-cols-3 gap-4">
-                        {typesOfProjects.map((project, index) => (
-                            <Radio
-                                key={index}
-                                id={`project-${index}`}
-                                name="projectGroup"
-                                value={project.value}
-                                checked={selectedProjectValue === project.value}
-                                onChange={handleProjectRadioChange}
-                                label={project.label}
+                    <div>
+                        <Label>Samurdhi Bank</Label>
+                        <div className="relative">
+                            <Select
+                                options={samurdhiBanks}
+                                placeholder="Select Option"
+                                onChange={(value) => handleSelectChange('samurdhiBank', value)}
+                                className="dark:bg-dark-900"
+                                value={formData.samurdhiBank}
                             />
-                        ))}
+                            <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                                <ChevronDownIcon/>
+                            </span>
+                        </div>
                     </div>
-                </div>
 
-                <div>
-                    <Label>Specify other projects</Label>
-                    <Input type="text" />
-                </div>
+                    <div>
+                        <Label>Grama Nildhari Division</Label>
+                        <div className="relative">
+                            <Select
+                                options={gramaNiladhariOptions}
+                                placeholder="Select Option"
+                                onChange={(value) => handleSelectChange('gramaNiladhariDivision', value)}
+                                className="dark:bg-dark-900"
+                                value={formData.gramaNiladhariDivision}
+                            />
+                            <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                                <ChevronDownIcon/>
+                            </span>
+                        </div>
+                    </div>
 
-                <div>
-                    <Label>Name of the child to be trained/employed</Label>
-                    <Input type="text" />
-                </div>
-
-                <div>
-                    <Label>Age of the child to be trained/employed</Label>
-                    <Input type="text" />
-                </div>
-
-                <div className="flex flex-col gap-4">
-                    <Label>Gender of the child to be trained/employed</Label>
-                    <Radio
-                        id="radio1"
-                        name="group1"
-                        value="female"
-                        checked={selectedValue === "female"}
-                        onChange={handleRadioChange}
-                        label="Female"
-                    />
-                    <Radio
-                        id="radio2"
-                        name="group1"
-                        value="male"
-                        checked={selectedValue === "male"}
-                        onChange={handleRadioChange}
-                        label="Male"
-                    />
-                </div>
-
-                <div className="space-y-2">
-                    <Label>Job Field</Label>
-                    <div className="grid grid-cols-3 gap-4">
-                        {jobFields.map((jobs, index) => (
+                    <div className="flex flex-col gap-4">
+                        <Label>Are you a Samurdhi beneficiary?/ Aswasuma beneficiary?/low-income earner?</Label>
                         <Radio
-                            key={index}
-                            id={`job-${index}`}
-                            name="jobGroup"
-                            value={jobs.value}
-                            checked={selectedProjectValue === jobs.value}
-                            onChange={handleProjectRadioChange}
-                            label={jobs.label}
+                            id="radio1"
+                            name="beneficiaryType"
+                            value="Previous Samurdhi beneficiary /Low income earner"
+                            checked={formData.beneficiaryType === "Previous Samurdhi beneficiary /Low income earner"}
+                            onChange={() => handleRadioChange('beneficiaryType', "Previous Samurdhi beneficiary /Low income earner")}
+                            label="Previous Samurdhi beneficiary /Low income earner"
                         />
-                        ))}
+                        <Radio
+                            id="radio2"
+                            name="beneficiaryType"
+                            value="Aswasuma beneficiary"
+                            checked={formData.beneficiaryType === "Aswasuma beneficiary"}
+                            onChange={() => handleRadioChange('beneficiaryType', "Aswasuma beneficiary")}
+                            label="Aswasuma beneficiary"
+                        />
+                    </div>
+
+                    <div>
+                        <Label>Aswasuma household number</Label>
+                        <Input 
+                            type="text" 
+                            name="aswasumaHouseholdNo"
+                            value={formData.aswasumaHouseholdNo}
+                            onChange={handleInputChange}
+                        />
+                    </div>
+
+                    <div>
+                        <Label>National Identity Card Number</Label>
+                        <Input 
+                            type="text" 
+                            name="nic"
+                            value={formData.nic}
+                            onChange={handleInputChange}
+                        />
+                    </div>
+
+                    <div>
+                        <Label>Name of the Beneficiary</Label>
+                        <Input 
+                            type="text" 
+                            name="beneficiaryName"
+                            value={formData.beneficiaryName}
+                            onChange={handleInputChange}
+                        />
+                    </div>
+
+                    <div className="flex flex-col gap-4">
+                        <Label>Gender</Label>
+                        <Radio
+                            id="gender-female"
+                            name="gender"
+                            value="Female"
+                            checked={formData.gender === "Female"}
+                            onChange={() => handleRadioChange('gender', "Female")}
+                            label="Female"
+                        />
+                        <Radio
+                            id="gender-male"
+                            name="gender"
+                            value="Male"
+                            checked={formData.gender === "Male"}
+                            onChange={() => handleRadioChange('gender', "Male")}
+                            label="Male"
+                        />
+                    </div>
+
+                    <div>
+                        <Label>Address</Label>
+                        <Input 
+                            type="text" 
+                            name="address"
+                            value={formData.address}
+                            onChange={handleInputChange}
+                        />
+                    </div>
+
+                    <div>
+                        <Label>Phone Number</Label>
+                        <Input 
+                            type="text" 
+                            name="phone"
+                            value={formData.phone}
+                            onChange={handleInputChange}
+                        />
+                    </div>
+
+                    <div>
+                        <Label>Age of Project Owner</Label>
+                        <Input 
+                            type="number" 
+                            name="projectOwnerAge"
+                            value={formData.projectOwnerAge}
+                            onChange={handleInputChange}
+                        />
+                    </div>
+
+                    <div>
+                        <Label>No. of Household Members Aged 18–60</Label>
+                        <Label>Female</Label>
+                        <Input 
+                            type="number" 
+                            name="female18To60"
+                            value={formData.female18To60}
+                            onChange={handleInputChange}
+                        />
+                        <Label>Male</Label>
+                        <Input 
+                            type="number" 
+                            name="male18To60"
+                            value={formData.male18To60}
+                            onChange={handleInputChange}
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Current Employment</Label>
+                        <div className="grid grid-cols-3 gap-4">
+                            {employmentOptions.map((option, index) => (
+                                <Radio
+                                    key={index}
+                                    id={`employment-${index}`}
+                                    name="currentEmployment"
+                                    value={option}
+                                    checked={formData.currentEmployment === option}
+                                    onChange={() => handleRadioChange('currentEmployment', option)}
+                                    label={option}
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    <div>
+                        <Label>Other Occupation (if any)</Label>
+                        <Input 
+                            type="text" 
+                            name="otherOccupation"
+                            value={formData.otherOccupation}
+                            onChange={handleInputChange}
+                        />
+                    </div>
+
+                    <div>
+                        <Label>Samurdhi subsidy received</Label>
+                        <div className="relative">
+                            <Select
+                                options={samurdhiSubsidy}
+                                placeholder="Select Option"
+                                onChange={(value) => handleSelectChange('samurdhiSubsidy', value)}
+                                className="dark:bg-dark-900"
+                                value={formData.samurdhiSubsidy}
+                            />
+                            <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                                <ChevronDownIcon/>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <Label>Aswasuma category</Label>
+                        <div className="relative">
+                            <Select
+                                options={aswasumaCategory}
+                                placeholder="Select Option"
+                                onChange={(value) => handleSelectChange('aswasumaCategory', value)}
+                                className="dark:bg-dark-900"
+                                value={formData.aswasumaCategory}
+                            />
+                            <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                                <ChevronDownIcon/>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <Label>What is Empowerment Dimension</Label>    
+                        <div className="flex gap-3 mt-3">
+                            <Checkbox 
+                                checked={formData.empowermentDimension === "Business Opportunities/Self-Employment"}
+                                onChange={(checked) => handleRadioChange('empowermentDimension', "Business Opportunities/Self-Employment")}
+                            />
+                            <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                                Business Opportunities/Self-Employment
+                            </span>
+                        </div>
+                        <div className="flex gap-3 mt-3">
+                            <Checkbox 
+                                checked={formData.empowermentDimension === "Employment Facilitation"}
+                                onChange={(checked) => handleRadioChange('empowermentDimension', "Employment Facilitation")}
+                            />
+                            <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                                Employment Facilitation
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Types of Projects</Label>
+                        <div className="grid grid-cols-3 gap-4">
+                            {typesOfProjects.map((project, index) => (
+                                <Radio
+                                    key={index}
+                                    id={`project-${index}`}
+                                    name="projectType"
+                                    value={project.value}
+                                    checked={formData.projectType === project.value}
+                                    onChange={() => handleRadioChange('projectType', project.value)}
+                                    label={project.label}
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    <div>
+                        <Label>Specify other projects</Label>
+                        <Input 
+                            type="text" 
+                            name="otherProject"
+                            value={formData.otherProject}
+                            onChange={handleInputChange}
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Resources Needed</Label>
+                        <div className="flex flex-col gap-2">
+                            {['Loan', 'Raw materials', 'Training', 'Equipment', 'Marketing help', 'Other'].map((resource, index) => (
+                                <div key={index} className="flex gap-3">
+                                    <Checkbox
+                                        checked={formData.resourcesNeeded.includes(resource)}
+                                        onChange={(checked) => handleCheckboxChange('resourcesNeeded', resource, checked)}
+                                    />
+                                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                                        {resource}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <Checkbox 
+                            checked={formData.monthlySaving}
+                            onChange={(checked) => setFormData(prev => ({ ...prev, monthlySaving: checked }))}
+                        />
+                        <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                            Monthly Saving
+                        </span>
+                    </div>
+
+                    {formData.monthlySaving && (
+                        <div>
+                            <Label>Saving Amount</Label>
+                            <Input 
+                                type="number" 
+                                name="savingAmount"
+                                value={formData.savingAmount}
+                                onChange={handleInputChange}
+                            />
+                        </div>
+                    )}
+
+                    <div className="space-y-2">
+                        <Label>Health Information</Label>
+                        <div className="flex flex-col gap-2">
+                            {['Chronic illness', 'Disability', 'Elder care support', 'Child care support', 'Other'].map((item, index) => (
+                                <div key={index} className="flex gap-3">
+                                    <Checkbox
+                                        checked={formData.healthInfo.includes(item)}
+                                        onChange={(checked) => handleCheckboxChange('healthInfo', item, checked)}
+                                    />
+                                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                                        {item}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Domestic Dynamics</Label>
+                        <div className="flex flex-col gap-2">
+                            {['Debt', 'School dropout', 'Single parent', 'Elderly dependents', 'Other'].map((item, index) => (
+                                <div key={index} className="flex gap-3">
+                                    <Checkbox
+                                        checked={formData.domesticDynamics.includes(item)}
+                                        onChange={(checked) => handleCheckboxChange('domesticDynamics', item, checked)}
+                                    />
+                                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                                        {item}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Community Participation</Label>
+                        <div className="flex flex-col gap-2">
+                            {['Village Council', 'Social welfare committee', 'Religious organization', 'Sports club', 'Other'].map((item, index) => (
+                                <div key={index} className="flex gap-3">
+                                    <Checkbox
+                                        checked={formData.communityParticipation.includes(item)}
+                                        onChange={(checked) => handleCheckboxChange('communityParticipation', item, checked)}
+                                    />
+                                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                                        {item}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Housing Services</Label>
+                        <div className="flex flex-col gap-2">
+                            {['Inadequate water supply', 'Leaking roof', 'No sanitation', 'Unstable structure', 'Other'].map((item, index) => (
+                                <div key={index} className="flex gap-3">
+                                    <Checkbox
+                                        checked={formData.housingServices.includes(item)}
+                                        onChange={(checked) => handleCheckboxChange('housingServices', item, checked)}
+                                    />
+                                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                                        {item}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-5">
+                        <Button 
+                            size="sm" 
+                            variant="primary" 
+                            startIcon={<BoxIcon />}
+                            type="submit"
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? 'Submitting...' : 'Submit'}
+                        </Button>
+                        <Button 
+                            size="md" 
+                            variant="primary" 
+                            startIcon={<BoxIcon />}
+                            type="button"
+                        >
+                            Cancel
+                        </Button>
                     </div>
                 </div>
-
-                <div>
-                    <Label>Please specify Other employment fields</Label>
-                    <Input type="text" />
-                </div>
-
-                <div className="flex items-center gap-5">
-                    <Button size="sm" variant="primary" startIcon={<BoxIcon />}>
-                        Submit
-                    </Button>
-                    <Button size="md" variant="primary" startIcon={<BoxIcon />}>
-                        Cancel
-                    </Button>
-                </div>
-            </div>
+            </form>
         </ComponentCard>
     )
 }
