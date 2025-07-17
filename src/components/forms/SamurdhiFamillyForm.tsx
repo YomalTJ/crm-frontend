@@ -34,9 +34,9 @@ const SamurdhiFamillyForm = () => {
         { value: "ulamamdu", label: "Uhana" }
     ];
 
-    const [selectedValue, setSelectedValue] = useState<string>("Previous Samurdhi beneficiary /Low income earner");
-    const [selectedProjectValue] = useState<string>("Previous Samurdhi beneficiary /Low income earner");
-    const [isChecked, setIsChecked] = useState(false);
+    // const [selectedValue, setSelectedValue] = useState<string>("Previous Samurdhi beneficiary /Low income earner");
+    // const [selectedProjectValue] = useState<string>("Previous Samurdhi beneficiary /Low income earner");
+    // const [isChecked, setIsChecked] = useState(false);
 
     const [formData, setFormData] = useState({
         district: '',
@@ -159,50 +159,46 @@ const SamurdhiFamillyForm = () => {
         { value: "Other", label: "Other" },
     ]
 
-    const jobFields = [
-        { value: "Three-wheeler Repair", label: "Three-wheeler Repair" },
-        { value: "AC Technician", label: "AC Technician" },
-        { value: "Bakery Products", label: "Bakery Products" },
-        { value: "Batik", label: "Batik" },
-        { value: "Cosmetology", label: "Cosmetology" },
-        { value: "Welding", label: "Welding" },
-        { value: "Motor Mechanic", label: "Motor Mechanic" },
-        { value: "Bicycle Repair", label: "Bicycle Repair" },
-        { value: "Bites Production", label: "Bites Production" },
-        { value: "Caretaker", label: "Caretaker" },
-        { value: "Catering Service", label: "Catering Service" },
-        { value: "Chef", label: "Chef" },
-        { value: "Coconut Oil Production", label: "Coconut Oil Production" },
-        { value: "Waste Collection (Plastic and Polythene, Bottles, Scrap Iron, Coconut Shells, Paper etc.)", label: "Waste Collection (Plastic and Polythene, Bottles, Scrap Iron, Coconut Shells, Paper etc.)" },
-        { value: "Nursing Care", label: "Nursing Care" },
-        { value: "Plumber", label: "Plumber" },
-        { value: "Sales Assistant (e.g. Abans, Food City)", label: "Sales Assistant (e.g. Abans, Food City)" },
-        { value: "Dressmaking", label: "Dressmaking" },
-        { value: "Shoe Making", label: "Shoe Making" },
-        { value: "Computer, CCTV and Solar Panel Installation and Services", label: "Computer, CCTV and Solar Panel Installation and Services" },
-        { value: "Electrician", label: "Electrician" },
-        { value: "Electrical Wiring", label: "Electrical Wiring" },
-        { value: "Fishnet Weaving", label: "Fishnet Weaving" },
-        { value: "Graphic Designer", label: "Graphic Designer" },
-        { value: "Salons", label: "Salons" },
-        { value: "Handicrafts", label: "Handicrafts" },
-        { value: "Heavy Vehicle Driver", label: "Heavy Vehicle Driver" },
-        { value: "Heavy Vehicle Repair", label: "Heavy Vehicle Repair" },
-        { value: "Iron Work", label: "Iron Work" },
-        { value: "Juki Machine Repair", label: "Juki Machine Repair" },
-        { value: "Mobile Phone Repair", label: "Mobile Phone Repair" },
-        { value: "Mason", label: "Mason" },
-        { value: "Kithul related products (e.g. Kithul honey, and jaggery)", label: "Kithul related products (e.g. Kithul honey, and jaggery)" },
-        { value: "Painting", label: "Painting" },
-        { value: "Room attendant (hotel)", label: "Room attendant (hotel)" },
-        { value: "Vehicle maintenance (e.g. cushioning/painting/repair)", label: "Vehicle maintenance (e.g. cushioning/painting/repair)" },
-        { value: "Tour guides", label: "Tour guides" },
-        { value: "Other", label: "Other" },
-    ]
-
-    const handleProjectRadioChange = (value: string) => {
-        setSelectedValue(value);
-    };
+    // const jobFields = [
+    //     { value: "Three-wheeler Repair", label: "Three-wheeler Repair" },
+    //     { value: "AC Technician", label: "AC Technician" },
+    //     { value: "Bakery Products", label: "Bakery Products" },
+    //     { value: "Batik", label: "Batik" },
+    //     { value: "Cosmetology", label: "Cosmetology" },
+    //     { value: "Welding", label: "Welding" },
+    //     { value: "Motor Mechanic", label: "Motor Mechanic" },
+    //     { value: "Bicycle Repair", label: "Bicycle Repair" },
+    //     { value: "Bites Production", label: "Bites Production" },
+    //     { value: "Caretaker", label: "Caretaker" },
+    //     { value: "Catering Service", label: "Catering Service" },
+    //     { value: "Chef", label: "Chef" },
+    //     { value: "Coconut Oil Production", label: "Coconut Oil Production" },
+    //     { value: "Waste Collection (Plastic and Polythene, Bottles, Scrap Iron, Coconut Shells, Paper etc.)", label: "Waste Collection (Plastic and Polythene, Bottles, Scrap Iron, Coconut Shells, Paper etc.)" },
+    //     { value: "Nursing Care", label: "Nursing Care" },
+    //     { value: "Plumber", label: "Plumber" },
+    //     { value: "Sales Assistant (e.g. Abans, Food City)", label: "Sales Assistant (e.g. Abans, Food City)" },
+    //     { value: "Dressmaking", label: "Dressmaking" },
+    //     { value: "Shoe Making", label: "Shoe Making" },
+    //     { value: "Computer, CCTV and Solar Panel Installation and Services", label: "Computer, CCTV and Solar Panel Installation and Services" },
+    //     { value: "Electrician", label: "Electrician" },
+    //     { value: "Electrical Wiring", label: "Electrical Wiring" },
+    //     { value: "Fishnet Weaving", label: "Fishnet Weaving" },
+    //     { value: "Graphic Designer", label: "Graphic Designer" },
+    //     { value: "Salons", label: "Salons" },
+    //     { value: "Handicrafts", label: "Handicrafts" },
+    //     { value: "Heavy Vehicle Driver", label: "Heavy Vehicle Driver" },
+    //     { value: "Heavy Vehicle Repair", label: "Heavy Vehicle Repair" },
+    //     { value: "Iron Work", label: "Iron Work" },
+    //     { value: "Juki Machine Repair", label: "Juki Machine Repair" },
+    //     { value: "Mobile Phone Repair", label: "Mobile Phone Repair" },
+    //     { value: "Mason", label: "Mason" },
+    //     { value: "Kithul related products (e.g. Kithul honey, and jaggery)", label: "Kithul related products (e.g. Kithul honey, and jaggery)" },
+    //     { value: "Painting", label: "Painting" },
+    //     { value: "Room attendant (hotel)", label: "Room attendant (hotel)" },
+    //     { value: "Vehicle maintenance (e.g. cushioning/painting/repair)", label: "Vehicle maintenance (e.g. cushioning/painting/repair)" },
+    //     { value: "Tour guides", label: "Tour guides" },
+    //     { value: "Other", label: "Other" },
+    // ]
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -266,7 +262,7 @@ const SamurdhiFamillyForm = () => {
                         <Input 
                             type="text" 
                             name="district"
-                            value={formData.district}
+                            defaultValue={formData.district}
                             onChange={handleInputChange}
                         />
                     </div>
@@ -279,7 +275,7 @@ const SamurdhiFamillyForm = () => {
                                 placeholder="Select Option"
                                 onChange={(value) => handleSelectChange('divisionalSecretariat', value)}
                                 className="dark:bg-dark-900"
-                                value={formData.divisionalSecretariat}
+                                defaultValue={formData.divisionalSecretariat}
                             />
                             <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
                                 <ChevronDownIcon/>
@@ -295,7 +291,7 @@ const SamurdhiFamillyForm = () => {
                                 placeholder="Select Option"
                                 onChange={(value) => handleSelectChange('samurdhiBank', value)}
                                 className="dark:bg-dark-900"
-                                value={formData.samurdhiBank}
+                                defaultValue={formData.samurdhiBank}
                             />
                             <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
                                 <ChevronDownIcon/>
@@ -311,7 +307,7 @@ const SamurdhiFamillyForm = () => {
                                 placeholder="Select Option"
                                 onChange={(value) => handleSelectChange('gramaNiladhariDivision', value)}
                                 className="dark:bg-dark-900"
-                                value={formData.gramaNiladhariDivision}
+                                defaultValue={formData.gramaNiladhariDivision}
                             />
                             <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
                                 <ChevronDownIcon/>
@@ -344,7 +340,7 @@ const SamurdhiFamillyForm = () => {
                         <Input 
                             type="text" 
                             name="aswasumaHouseholdNo"
-                            value={formData.aswasumaHouseholdNo}
+                            defaultValue={formData.aswasumaHouseholdNo}
                             onChange={handleInputChange}
                         />
                     </div>
@@ -354,7 +350,7 @@ const SamurdhiFamillyForm = () => {
                         <Input 
                             type="text" 
                             name="nic"
-                            value={formData.nic}
+                            defaultValue={formData.nic}
                             onChange={handleInputChange}
                         />
                     </div>
@@ -364,7 +360,7 @@ const SamurdhiFamillyForm = () => {
                         <Input 
                             type="text" 
                             name="beneficiaryName"
-                            value={formData.beneficiaryName}
+                            defaultValue={formData.beneficiaryName}
                             onChange={handleInputChange}
                         />
                     </div>
@@ -394,7 +390,7 @@ const SamurdhiFamillyForm = () => {
                         <Input 
                             type="text" 
                             name="address"
-                            value={formData.address}
+                            defaultValue={formData.address}
                             onChange={handleInputChange}
                         />
                     </div>
@@ -404,7 +400,7 @@ const SamurdhiFamillyForm = () => {
                         <Input 
                             type="text" 
                             name="phone"
-                            value={formData.phone}
+                            defaultValue={formData.phone}
                             onChange={handleInputChange}
                         />
                     </div>
@@ -414,7 +410,7 @@ const SamurdhiFamillyForm = () => {
                         <Input 
                             type="number" 
                             name="projectOwnerAge"
-                            value={formData.projectOwnerAge}
+                            defaultValue={formData.projectOwnerAge}
                             onChange={handleInputChange}
                         />
                     </div>
@@ -425,14 +421,14 @@ const SamurdhiFamillyForm = () => {
                         <Input 
                             type="number" 
                             name="female18To60"
-                            value={formData.female18To60}
+                            defaultValue={formData.female18To60}
                             onChange={handleInputChange}
                         />
                         <Label>Male</Label>
                         <Input 
                             type="number" 
                             name="male18To60"
-                            value={formData.male18To60}
+                            defaultValue={formData.male18To60}
                             onChange={handleInputChange}
                         />
                     </div>
@@ -459,7 +455,7 @@ const SamurdhiFamillyForm = () => {
                         <Input 
                             type="text" 
                             name="otherOccupation"
-                            value={formData.otherOccupation}
+                            defaultValue={formData.otherOccupation}
                             onChange={handleInputChange}
                         />
                     </div>
@@ -472,7 +468,7 @@ const SamurdhiFamillyForm = () => {
                                 placeholder="Select Option"
                                 onChange={(value) => handleSelectChange('samurdhiSubsidy', value)}
                                 className="dark:bg-dark-900"
-                                value={formData.samurdhiSubsidy}
+                                defaultValue={formData.samurdhiSubsidy}
                             />
                             <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
                                 <ChevronDownIcon/>
@@ -488,7 +484,7 @@ const SamurdhiFamillyForm = () => {
                                 placeholder="Select Option"
                                 onChange={(value) => handleSelectChange('aswasumaCategory', value)}
                                 className="dark:bg-dark-900"
-                                value={formData.aswasumaCategory}
+                                defaultValue={formData.aswasumaCategory}
                             />
                             <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
                                 <ChevronDownIcon/>
@@ -501,7 +497,7 @@ const SamurdhiFamillyForm = () => {
                         <div className="flex gap-3 mt-3">
                             <Checkbox 
                                 checked={formData.empowermentDimension === "Business Opportunities/Self-Employment"}
-                                onChange={(checked) => handleRadioChange('empowermentDimension', "Business Opportunities/Self-Employment")}
+                                onChange={() => handleRadioChange('empowermentDimension', "Business Opportunities/Self-Employment")}
                             />
                             <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">
                                 Business Opportunities/Self-Employment
@@ -510,7 +506,7 @@ const SamurdhiFamillyForm = () => {
                         <div className="flex gap-3 mt-3">
                             <Checkbox 
                                 checked={formData.empowermentDimension === "Employment Facilitation"}
-                                onChange={(checked) => handleRadioChange('empowermentDimension', "Employment Facilitation")}
+                                onChange={() => handleRadioChange('empowermentDimension', "Employment Facilitation")}
                             />
                             <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">
                                 Employment Facilitation
@@ -540,7 +536,7 @@ const SamurdhiFamillyForm = () => {
                         <Input 
                             type="text" 
                             name="otherProject"
-                            value={formData.otherProject}
+                            defaultValue={formData.otherProject}
                             onChange={handleInputChange}
                         />
                     </div>
@@ -578,7 +574,7 @@ const SamurdhiFamillyForm = () => {
                             <Input 
                                 type="number" 
                                 name="savingAmount"
-                                value={formData.savingAmount}
+                                defaultValue={formData.savingAmount}
                                 onChange={handleInputChange}
                             />
                         </div>
@@ -657,7 +653,7 @@ const SamurdhiFamillyForm = () => {
                             size="sm" 
                             variant="primary" 
                             startIcon={<BoxIcon />}
-                            type="submit"
+                            // type="submit"
                             disabled={isSubmitting}
                         >
                             {isSubmitting ? 'Submitting...' : 'Submit'}
@@ -666,7 +662,7 @@ const SamurdhiFamillyForm = () => {
                             size="md" 
                             variant="primary" 
                             startIcon={<BoxIcon />}
-                            type="button"
+                            // type="button"
                         >
                             Cancel
                         </Button>
