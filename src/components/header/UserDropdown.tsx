@@ -2,7 +2,7 @@
 import Image from "next/image";
 import React, { useState } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
-import { DropdownItem } from "../ui/dropdown/DropdownItem";
+// import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { logoutUser } from "@/services/authService";
 import { useRouter } from "next/navigation";
 
@@ -20,8 +20,6 @@ const handleSignOut = async () => {
     const success = await logoutUser();
     if (success) {
       router.push('/signin');
-    
-      window.location.reload();
     }
   } catch (error) {
     console.error('Logout error:', error);
@@ -75,14 +73,14 @@ const handleSignOut = async () => {
       >
         <div>
           <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
-            Musharof Chowdhury
+            Yomal Thushara
           </span>
           <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
-            randomuser@pimjo.com
+            yomal@gmail.com
           </span>
         </div>
 
-        <ul className="flex flex-col gap-1 pt-4 pb-3 border-b border-gray-200 dark:border-gray-800">
+        {/* <ul className="flex flex-col gap-1 pt-4 pb-3 border-b border-gray-200 dark:border-gray-800">
           <li>
             <DropdownItem
               onItemClick={closeDropdown}
@@ -158,7 +156,7 @@ const handleSignOut = async () => {
               Support
             </DropdownItem>
           </li>
-        </ul>
+        </ul> */}
         <button
           onClick={handleSignOut}
           className="flex items-center gap-3 px-3 py-2 mt-3 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
