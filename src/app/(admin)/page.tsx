@@ -6,17 +6,17 @@ import MonthlySalesChart from "@/components/ecommerce/MonthlySalesChart";
 import StatisticsChart from "@/components/ecommerce/StatisticsChart";
 import RecentOrders from "@/components/ecommerce/RecentOrders";
 import DemographicCard from "@/components/ecommerce/DemographicCard";
-import { getCurrentUser } from "@/lib/auth";
-import { redirect } from "next/navigation";
+// import { getCurrentUser } from "@/lib/auth";
+// import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title:
-    "Next.js E-commerce Dashboard | TailAdmin - Next.js Dashboard Template",
-  description: "This is Next.js Home for TailAdmin Dashboard Template",
+    "Department of Samurdhi Development",
+  description: "This is Home for Department of Samurdhi Development",
 };
 
 export default async function Ecommerce() {
-  const user = await getCurrentUser();
+  // const user = await getCurrentUser();
 
   // if (!user || user.role !== 'user') {
   //   redirect('/signin')
