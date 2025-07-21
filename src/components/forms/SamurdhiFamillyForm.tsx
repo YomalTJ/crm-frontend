@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import ComponentCard from '../common/ComponentCard'
 import Label from '../form/Label'
 import Input from '../form/input/InputField'
@@ -11,6 +11,9 @@ import Radio from '../form/input/Radio';
 import Checkbox from '../form/input/Checkbox';
 import Button from '../ui/button/Button';
 import { createSamurdhiFamily } from '@/services/samurdhiService';
+import { getCurrentEmploymentOptions } from '@/services/employmentService';
+import { getCookie } from 'cookies-next';
+import { getSamurdhiSubsidyOptions } from '@/services/subsidyService';
 
 const SamurdhiFamillyForm = () => {
     const divisionalSecretariatDivisions = [
@@ -37,6 +40,65 @@ const SamurdhiFamillyForm = () => {
     // const [selectedValue, setSelectedValue] = useState<string>("Previous Samurdhi beneficiary /Low income earner");
     // const [selectedProjectValue] = useState<string>("Previous Samurdhi beneficiary /Low income earner");
     // const [isChecked, setIsChecked] = useState(false);
+
+    const [employmentOptions, setEmploymentOptions] = useState<Array<{
+        id: string;
+        nameEnglish: string;
+        nameSinhala: string;
+        nameTamil: string;
+    }>>([]);
+    const [language, setLanguage] = useState<'ENGLISH' | 'SINHALA' | 'TAMIL'>('ENGLISH');
+
+    const [subsidyOptions, setSubsidyOptions] = useState<Array<{
+        id: string;
+        amount: string;
+    }>>([]);
+
+    useEffect(() => {
+        const fetchEmploymentOptions = async () => {
+            try {
+                const data = await getCurrentEmploymentOptions();
+                setEmploymentOptions(data);
+            } catch (error) {
+                console.error('Error fetching employment options:', error);
+            }
+        };
+        
+        fetchEmploymentOptions();
+    }, []);
+
+    useEffect(() => {
+        const fetchSubsidyOptions = async () => {
+            try {
+                
+                const data = await getSamurdhiSubsidyOptions();
+                setSubsidyOptions(data);
+            } catch (error) {
+                console.error('Error fetching subsidy options:', error);
+            }
+        };
+        
+        fetchSubsidyOptions();
+    }, []);
+
+    const formatAmount = (amount: string) => {
+        return `Rs. ${parseFloat(amount).toFixed(2)}`;
+    };
+
+    const getEmploymentLabel = (option: {
+        nameEnglish: string;
+        nameSinhala: string;
+        nameTamil: string;
+    }) => {
+        switch (language) {
+            case 'SINHALA':
+                return option.nameSinhala;
+            case 'TAMIL':
+                return option.nameTamil;
+            default:
+                return option.nameEnglish;
+        }
+    };
 
     const [formData, setFormData] = useState({
         district: '',
@@ -99,17 +161,17 @@ const SamurdhiFamillyForm = () => {
         { value: "unapana", label: "Unapana" },
     ];
 
-    const employmentOptions = [
-        "Agricultural",
-        "Self-employment",
-        "Trade",
-        "Transportation",
-        "Industrial",
-        "Daily wage work",
-        "Service",
-        "Monthly Salary work",
-        "Other",
-    ];
+    // const employmentOptions = [
+    //     "Agricultural",
+    //     "Self-employment",
+    //     "Trade",
+    //     "Transportation",
+    //     "Industrial",
+    //     "Daily wage work",
+    //     "Service",
+    //     "Monthly Salary work",
+    //     "Other",
+    // ];
 
     const samurdhiSubsidy = [
         { value: "4500", label: "4500" },
@@ -436,20 +498,19 @@ const SamurdhiFamillyForm = () => {
                     <div className="space-y-2">
                         <Label>Current Employment</Label>
                         <div className="grid grid-cols-3 gap-4">
-                            {employmentOptions.map((option, index) => (
+                            {employmentOptions.map((option) => (
                                 <Radio
-                                    key={index}
-                                    id={`employment-${index}`}
+                                    key={option.id}
+                                    id={`employment-${option.id}`}
                                     name="currentEmployment"
-                                    value={option}
-                                    checked={formData.currentEmployment === option}
-                                    onChange={() => handleRadioChange('currentEmployment', option)}
-                                    label={option}
+                                    value={option.nameEnglish}
+                                    checked={formData.currentEmployment === option.nameEnglish}
+                                    onChange={() => handleRadioChange('currentEmployment', option.nameEnglish)}
+                                    label={`${option.nameSinhala} - ${option.nameTamil} - ${option.nameEnglish}`}
                                 />
                             ))}
                         </div>
                     </div>
-
                     <div>
                         <Label>Other Occupation (if any)</Label>
                         <Input 
@@ -460,21 +521,24 @@ const SamurdhiFamillyForm = () => {
                         />
                     </div>
 
-                    <div>
-                        <Label>Samurdhi subsidy received</Label>
-                        <div className="relative">
-                            <Select
-                                options={samurdhiSubsidy}
-                                placeholder="Select Option"
-                                onChange={(value) => handleSelectChange('samurdhiSubsidy', value)}
-                                className="dark:bg-dark-900"
-                                defaultValue={formData.samurdhiSubsidy}
-                            />
-                            <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
-                                <ChevronDownIcon/>
-                            </span>
-                        </div>
+                   <div>
+                    <Label>Samurdhi subsidy received</Label>
+                    <div className="relative">
+                        <Select
+                            options={subsidyOptions.map(option => ({
+                                value: option.amount,
+                                label: formatAmount(option.amount)
+                            }))}
+                            placeholder="Select Subsidy Amount"
+                            onChange={(value) => handleSelectChange('samurdhiSubsidy', value)}
+                            className="dark:bg-dark-900"
+                            defaultValue={formData.samurdhiSubsidy}
+                        />
+                        <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                            <ChevronDownIcon/>
+                        </span>
                     </div>
+                </div>
 
                     <div>
                         <Label>Aswasuma category</Label>
