@@ -12,7 +12,7 @@ export async function getCurrentUser(): Promise<{ sub: string; username: string;
             role: string;
         };
         return payload;
-    } catch (error) {
+    } catch {
         return null;
     }
 }

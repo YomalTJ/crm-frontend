@@ -46,11 +46,19 @@ export async function POST() {
         },
       }
     );
-  } catch (error: any) {
-    console.error('Logout error:', error); // Add logging
-    return NextResponse.json(
-      { message: error.message || 'Logout failed' },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+  console.error('Logout error:', error);
+
+  let message = 'Logout failed';
+
+  if (error instanceof Error) {
+    message = error.message;
   }
+
+  return NextResponse.json(
+    { message },
+    { status: 500 }
+  );
+}
+
 }
