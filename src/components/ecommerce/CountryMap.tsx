@@ -1,95 +1,54 @@
 import React from "react";
-// import { VectorMap } from "@react-jvectormap/core";
-import { worldMill } from "@react-jvectormap/world";
 import dynamic from "next/dynamic";
+import { worldMill } from "@react-jvectormap/world";
 
 const VectorMap = dynamic(
   () => import("@react-jvectormap/core").then((mod) => mod.VectorMap),
   { ssr: false }
 );
 
-// Define the component props
 interface CountryMapProps {
   mapColor?: string;
 }
-
-type MarkerStyle = {
-  initial: {
-    fill: string;
-    r: number; // Radius for markers
-  };
-};
-
-type Marker = {
-  latLng: [number, number];
-  name: string;
-  style?: {
-    fill: string;
-    borderWidth: number;
-    borderColor: string;
-    stroke?: string;
-    strokeOpacity?: number;
-  };
-};
 
 const CountryMap: React.FC<CountryMapProps> = ({ mapColor }) => {
   return (
     <VectorMap
       map={worldMill}
       backgroundColor="transparent"
-      markerStyle={
+      markerStyle={{
+        initial: {
+          fill: "#1E3A8A", // darker blue or government green can be used
+          r: 5,
+        },
+      }}
+      markers={[
         {
-          initial: {
-            fill: "#465FFF",
-            r: 4, // Custom radius for markers
-          }, // Type assertion to bypass strict CSS property checks
-        } as MarkerStyle
-      }
-      markersSelectable={true}
-      markers={
-        [
-          {
-            latLng: [37.2580397, -104.657039],
-            name: "United States",
-            style: {
-              fill: "#465FFF",
-              borderWidth: 1,
-              borderColor: "white",
-              stroke: "#383f47",
-            },
-          },
-          {
-            latLng: [20.7504374, 73.7276105],
-            name: "India",
-            style: { fill: "#465FFF", borderWidth: 1, borderColor: "white" },
-          },
-          {
-            latLng: [53.613, -11.6368],
-            name: "United Kingdom",
-            style: { fill: "#465FFF", borderWidth: 1, borderColor: "white" },
-          },
-          {
-            latLng: [-25.0304388, 115.2092761],
-            name: "Sweden",
-            style: {
-              fill: "#465FFF",
-              borderWidth: 1,
-              borderColor: "white",
-              strokeOpacity: 0,
-            },
-          },
-        ] as Marker[]
-      }
+          latLng: [6.9271, 79.8612], // Colombo
+          name: "Colombo District",
+          style: { fill: "#1E40AF", borderWidth: 2, borderColor: "white" },
+        },
+        {
+          latLng: [7.2906, 80.6337], // Kandy
+          name: "Kandy District",
+          style: { fill: "#2563EB", borderWidth: 2, borderColor: "white" },
+        },
+        {
+          latLng: [6.7054, 81.1120], // Galle
+          name: "Galle District",
+          style: { fill: "#3B82F6", borderWidth: 2, borderColor: "white" },
+        },
+        // Add more Sri Lankan districts as needed
+      ]}
       zoomOnScroll={false}
-      zoomMax={12}
-      zoomMin={1}
+      zoomMax={10}
+      zoomMin={4}
       zoomAnimate={true}
       zoomStep={1.5}
       regionStyle={{
         initial: {
-          fill: mapColor || "#D0D5DD",
+          fill: mapColor || "#CBD5E1",
           fillOpacity: 1,
-          fontFamily: "Outfit",
           stroke: "none",
           strokeWidth: 0,
           strokeOpacity: 0,
@@ -97,18 +56,18 @@ const CountryMap: React.FC<CountryMapProps> = ({ mapColor }) => {
         hover: {
           fillOpacity: 0.7,
           cursor: "pointer",
-          fill: "#465fff",
+          fill: "#2563EB",
           stroke: "none",
         },
         selected: {
-          fill: "#465FFF",
+          fill: "#2563EB",
         },
         selectedHover: {},
       }}
       regionLabelStyle={{
         initial: {
-          fill: "#35373e",
-          fontWeight: 500,
+          fill: "#334155",
+          fontWeight: 600,
           fontSize: "13px",
           stroke: "none",
         },
