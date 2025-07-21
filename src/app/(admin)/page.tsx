@@ -18,9 +18,9 @@ export const metadata: Metadata = {
 export default async function Ecommerce() {
   const user = await getCurrentUser();
 
-  if (!user || user.role !== 'user') {
-    redirect('/signin')
-  }
+  // if (!user || user.role !== 'user') {
+  //   redirect('/signin')
+  // }
 
   return (
     <div className="grid grid-cols-12 gap-4 md:gap-6">

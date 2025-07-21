@@ -26,36 +26,35 @@ const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
     name: "Dashboard",
-    subItems: [{ name: "Ecommerce", path: "/", pro: false }],
+    path: "/dashboard/admin",
   },
   {
     icon: <CalenderIcon />,
     name: "Beneficiary Management",
-    path: "/calendar",
+    path: "/dashboard/department-manager",
   },
   {
     icon: <UserCircleIcon />,
     name: "Divisional Administration",
-    path: "/profile",
+    path: "/",
   },
 
   {
     name: "Financial Assistance",
     icon: <ListIcon />,
-    subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+    path: "/",
+    
   },
   {
     name: "Projects and Programs",
     icon: <TableIcon />,
-    subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
+    path: "/",
+    
   },
   {
     name: "Reports & Analytics",
     icon: <PageIcon />,
-    subItems: [
-      { name: "Blank Page", path: "/blank", pro: false },
-      { name: "404 Error", path: "/error-404", pro: false },
-    ],
+    path: "/",
   },
 ];
 
@@ -351,7 +350,7 @@ const AppSidebar: React.FC = () => {
               {renderMenuItems(navItems, "main")}
             </div>
 
-            <div className="">
+            {/* <div className="">
               <h2
                 className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
                   !isExpanded && !isHovered
@@ -366,7 +365,7 @@ const AppSidebar: React.FC = () => {
                 )}
               </h2>
               {renderMenuItems(othersItems, "others")}
-            </div>
+            </div> */}
           </div>
         </nav>
       </div>
