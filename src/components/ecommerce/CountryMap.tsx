@@ -19,7 +19,6 @@ const CountryMap: React.FC<CountryMapProps> = ({ mapColor }) => {
       markerStyle={{
         initial: {
           fill: "#1E3A8A", // darker blue or government green can be used
-          r: 5,
         },
       }}
       markers={[

@@ -104,8 +104,9 @@ export default function MonthlyTarget() {
         </div>
 
         <p className="mx-auto mt-10 w-full max-w-[380px] text-center text-sm text-gray-500 sm:text-base">
-          Rs. 3,287,000 was distributed this month. It's a 10% improvement over last month.
-        </p>
+  Rs. 3,287,000 was distributed this month. It&apos;s a 10% improvement over last month.
+</p>
+
       </div>
 
       <div className="flex items-center justify-center gap-5 px-6 py-3.5 sm:gap-8 sm:py-5">
