@@ -9,10 +9,6 @@ import {
   ChevronDownIcon,
   GridIcon,
   HorizontaLDots,
-  ListIcon,
-  PageIcon,
-  TableIcon,
-  UserCircleIcon,
 } from "../icons/index";
 
 type NavItem = {
