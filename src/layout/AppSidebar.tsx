@@ -33,29 +33,6 @@ const navItems: NavItem[] = [
     name: "Beneficiary Management",
     path: "/dashboard/department-manager",
   },
-  {
-    icon: <UserCircleIcon />,
-    name: "Divisional Administration",
-    path: "/",
-  },
-
-  {
-    name: "Financial Assistance",
-    icon: <ListIcon />,
-    path: "/",
-    
-  },
-  {
-    name: "Projects and Programs",
-    icon: <TableIcon />,
-    path: "/",
-    
-  },
-  {
-    name: "Reports & Analytics",
-    icon: <PageIcon />,
-    path: "/",
-  },
 ];
 
 const othersItems: NavItem[] = [
