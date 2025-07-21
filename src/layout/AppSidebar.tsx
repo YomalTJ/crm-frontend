@@ -7,7 +7,6 @@ import { useSidebar } from "../context/SidebarContext";
 import {
   CalenderIcon,
   ChevronDownIcon,
-  GridIcon,
   HorizontaLDots,
 } from "../icons/index";
 
@@ -19,11 +18,11 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  {
-    icon: <GridIcon />,
-    name: "Dashboard",
-    path: "/dashboard/admin",
-  },
+  // {
+  //   icon: <GridIcon />,
+  //   name: "Dashboard",
+  //   path: "/dashboard/admin",
+  // },
   {
     icon: <CalenderIcon />,
     name: "Beneficiary Management",
@@ -295,7 +294,7 @@ const AppSidebar: React.FC = () => {
             </>
           ) : (
             <Image
-              src="/images/logo/logo-icon.svg"
+              src="/images/logo/samurdi_logo.jpg"
               alt="Logo"
               width={32}
               height={32}
