@@ -12,8 +12,11 @@ import Checkbox from '../form/input/Checkbox';
 import Button from '../ui/button/Button';
 import { createSamurdhiFamily } from '@/services/samurdhiService';
 import { getCurrentEmploymentOptions } from '@/services/employmentService';
-import { getCookie } from 'cookies-next';
 import { getSamurdhiSubsidyOptions } from '@/services/subsidyService';
+import { getAswasumaCategories } from '@/services/aswasumaService';
+import { getProjectTypes } from '@/services/projectService';
+import { getJobFields } from '@/services/jobFieldService';
+import { getResourceNeeded } from '@/services/resourceService';
 
 const SamurdhiFamillyForm = () => {
     const divisionalSecretariatDivisions = [
@@ -54,6 +57,36 @@ const SamurdhiFamillyForm = () => {
         amount: string;
     }>>([]);
 
+    const [aswasumaCategories, setAswasumaCategories] = useState<Array<{
+        id: string;
+        nameEnglish: string;
+        nameSinhala: string;
+        nameTamil: string;
+    }>>([]);
+
+    const [jobFields, setJobFields] = useState<Array<{
+        id: string;
+        nameEnglish: string;
+        nameSinhala: string;
+        nameTamil: string;
+    }>>([]);
+
+
+    const [projectTypes, setProjectTypes] = useState<Array<{
+        id: string;
+        nameEnglish: string;
+        nameSinhala: string;
+        nameTamil: string;
+    }>>([]);
+
+    const [resourcesNeeded, setResourcesNeeded] = useState<Array<{
+        id: string;
+        nameEnglish: string;
+        nameSinhala: string;
+        nameTamil: string;
+    }>>([]);
+
+
     useEffect(() => {
         const fetchEmploymentOptions = async () => {
             try {
@@ -81,8 +114,95 @@ const SamurdhiFamillyForm = () => {
         fetchSubsidyOptions();
     }, []);
 
+    useEffect(() => {
+        const fetchAswasumaCategories = async () => {
+            try {
+                const data = await getAswasumaCategories();
+                setAswasumaCategories(data);
+            } catch (error) {
+                console.error('Error fetching Aswasuma categories:', error);
+            }
+        };
+        
+        fetchAswasumaCategories();
+    }, []);
+
+    useEffect(() => {
+        const fetchProjectTypes = async () => {
+            try {
+                const data = await getProjectTypes();
+                setProjectTypes(data);
+            } catch (error) {
+                console.error('Error fetching project types:', error);
+            }
+        };
+        
+        fetchProjectTypes();
+    }, []);
+
+    useEffect(() => {
+        const fetchJobFields = async () => {
+            try {
+                const data = await getJobFields();
+                setJobFields(data);
+            } catch (error) {
+                console.error('Error fetching job fields:', error);
+            }
+        };
+        
+        fetchJobFields();
+    }, []);
+
+    useEffect(() => {
+        const fetchResourcesNeeded = async () => {
+            try {
+                const data = await getResourceNeeded();
+                setResourcesNeeded(data);
+            } catch (error) {
+                console.error('Error fetching resources needed:', error);
+            }
+        };
+        
+        fetchResourcesNeeded();
+    }, []);
+
+    // Format resource label based on language preference
+    const formatResourceLabel = (resource: {
+        nameEnglish: string;
+        nameSinhala: string;
+        nameTamil: string;
+    }) => {
+        return `${resource.nameSinhala} - ${resource.nameTamil} - ${resource.nameEnglish}`;
+    };
+
+
+    // Format job field label based on language preference
+    const formatJobFieldLabel = (jobField: {
+        nameEnglish: string;
+        nameSinhala: string;
+        nameTamil: string;
+    }) => {
+        return `${jobField.nameSinhala} - ${jobField.nameTamil} - ${jobField.nameEnglish}`;
+    };
+
+    const formatCategoryLabel = (category: {
+        nameEnglish: string;
+        nameSinhala: string;
+        nameTamil: string;
+    }) => {
+        return `${category.nameSinhala} - ${category.nameTamil} - ${category.nameEnglish}`;
+    };
+
     const formatAmount = (amount: string) => {
         return `Rs. ${parseFloat(amount).toFixed(2)}`;
+    };
+
+    const formatProjectLabel = (project: {
+        nameEnglish: string;
+        nameSinhala: string;
+        nameTamil: string;
+    }) => {
+        return `${project.nameSinhala} - ${project.nameTamil} - ${project.nameEnglish}`;
     };
 
     const getEmploymentLabel = (option: {
@@ -540,21 +660,24 @@ const SamurdhiFamillyForm = () => {
                     </div>
                 </div>
 
-                    <div>
-                        <Label>Aswasuma category</Label>
-                        <div className="relative">
-                            <Select
-                                options={aswasumaCategory}
-                                placeholder="Select Option"
-                                onChange={(value) => handleSelectChange('aswasumaCategory', value)}
-                                className="dark:bg-dark-900"
-                                defaultValue={formData.aswasumaCategory}
-                            />
-                            <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
-                                <ChevronDownIcon/>
-                            </span>
-                        </div>
+                <div>
+                    <Label>Aswasuma category</Label>
+                    <div className="relative">
+                        <Select
+                            options={aswasumaCategories.map(category => ({
+                                value: category.nameEnglish,
+                                label: formatCategoryLabel(category)
+                            }))}
+                            placeholder="Select Aswasuma Category"
+                            onChange={(value) => handleSelectChange('aswasumaCategory', value)}
+                            className="dark:bg-dark-900"
+                            defaultValue={formData.aswasumaCategory}
+                        />
+                        <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                            <ChevronDownIcon/>
+                        </span>
                     </div>
+                </div>
 
                     <div>
                         <Label>What is Empowerment Dimension</Label>    
@@ -581,15 +704,15 @@ const SamurdhiFamillyForm = () => {
                     <div className="space-y-2">
                         <Label>Types of Projects</Label>
                         <div className="grid grid-cols-3 gap-4">
-                            {typesOfProjects.map((project, index) => (
+                            {projectTypes.map((project) => (
                                 <Radio
-                                    key={index}
-                                    id={`project-${index}`}
+                                    key={project.id}
+                                    id={`project-${project.id}`}
                                     name="projectType"
-                                    value={project.value}
-                                    checked={formData.projectType === project.value}
-                                    onChange={() => handleRadioChange('projectType', project.value)}
-                                    label={project.label}
+                                    value={project.nameEnglish}
+                                    checked={formData.projectType === project.nameEnglish}
+                                    onChange={() => handleRadioChange('projectType', project.nameEnglish)}
+                                    label={formatProjectLabel(project)}
                                 />
                             ))}
                         </div>
@@ -605,17 +728,86 @@ const SamurdhiFamillyForm = () => {
                         />
                     </div>
 
+                    <div>
+                        <Label>පුහුණුව ලබාදීමට/ රැකියාගත කිරීමට අපේක්ෂිත දරුවාගේ නම</Label>
+                        <Input 
+                            type="text" 
+                            name="otherProject"
+                            defaultValue={formData.otherProject}
+                            onChange={handleInputChange}
+                        />
+                    </div>
+
+                    <div>
+                        <Label>පුහුණුව ලබාදීමට/ රැකියාගත කිරීමට අපේක්ෂිත දරුවාගේ වයස</Label>
+                        <Input 
+                            type="text" 
+                            name="otherProject"
+                            defaultValue={formData.otherProject}
+                            onChange={handleInputChange}
+                        />
+                    </div>
+
+                    <div className="flex flex-col gap-4">
+                        <Label>පුහුණුව ලබාදීමට/ රැකියාගත කිරීමට අපේක්ෂිත දරුවාගේ  ස්ත්‍රී - පුරුෂ භාවය</Label>
+                        <Radio
+                            id="gender-female"
+                            name="gender"
+                            value="Female"
+                            checked={formData.gender === "Female"}
+                            onChange={() => handleRadioChange('gender', "Female")}
+                            label="Female"
+                        />
+                        <Radio
+                            id="gender-male"
+                            name="gender"
+                            value="Male"
+                            checked={formData.gender === "Male"}
+                            onChange={() => handleRadioChange('gender', "Male")}
+                            label="Male"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Job Field</Label>
+                        <div className="grid grid-cols-3 gap-4">
+                            {jobFields.map((jobField) => (
+                                <Radio
+                                    key={jobField.id}
+                                    id={`job-field-${jobField.id}`}
+                                    name="jobField"
+                                    value={jobField.nameEnglish}
+                                    checked={formData.jobField === jobField.nameEnglish}
+                                    onChange={() => handleRadioChange('jobField', jobField.nameEnglish)}
+                                    label={formatJobFieldLabel(jobField)}
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    <div>
+                        <Label>Please specify Other employment fields</Label>
+                        <Input 
+                            type="text" 
+                            name="otherProject"
+                            defaultValue={formData.otherProject}
+                            onChange={handleInputChange}
+                        />
+                    </div>
+
                     <div className="space-y-2">
                         <Label>Resources Needed</Label>
                         <div className="flex flex-col gap-2">
-                            {['Loan', 'Raw materials', 'Training', 'Equipment', 'Marketing help', 'Other'].map((resource, index) => (
-                                <div key={index} className="flex gap-3">
+                            {resourcesNeeded.map((resource) => (
+                                <div key={resource.id} className="flex gap-3">
                                     <Checkbox
-                                        checked={formData.resourcesNeeded.includes(resource)}
-                                        onChange={(checked) => handleCheckboxChange('resourcesNeeded', resource, checked)}
+                                        checked={formData.resourcesNeeded.includes(resource.nameEnglish)}
+                                        onChange={(checked) => 
+                                            handleCheckboxChange('resourcesNeeded', resource.nameEnglish, checked)
+                                        }
                                     />
                                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">
-                                        {resource}
+                                        {formatResourceLabel(resource)}
                                     </span>
                                 </div>
                             ))}
