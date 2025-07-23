@@ -4,35 +4,40 @@
 import axiosInstance from "@/lib/axios";
 import { cookies } from "next/headers";
 
-interface SamurdhiFamilyPayload {
-  district: string;
-  divisionalSecretariat: string;
-  samurdhiBank: string;
-  gramaNiladhariDivision: string;
-  beneficiaryType: string;
-  aswasumaHouseholdNo: string;
-  nic: string;
-  beneficiaryName: string;
-  gender: string;
-  address: string;
-  phone: string;
-  projectOwnerAge: number;
-  male18To60: number;
-  female18To60: number;
-  currentEmployment: string;
-  otherOccupation: string;
-  samurdhiSubsidy: string;
-  aswasumaCategory: string;
-  empowermentDimension: string;
-  projectType: string;
-  otherProject: string;
-  resourcesNeeded: string[];
-  monthlySaving: boolean;
-  savingAmount: number;
-  healthInfo: string[];
-  domesticDynamics: string[];
-  communityParticipation: string[];
-  housingServices: string[];
+export interface SamurdhiFamilyPayload {
+    district_id: string;
+    ds_id: string;
+    zone_id: string;
+    gnd_id: string;
+    beneficiary_type_id: string;
+    aswasumaHouseholdNo: string;
+    nic: string;
+    beneficiaryName: string;
+    gender: string;
+    address: string;
+    phone: string;
+    projectOwnerAge: number;
+    male18To60: number;
+    female18To60: number;
+    employment_id: string;
+    otherOccupation: string;
+    subsisdy_id: string;
+    aswesuma_cat_id: string;
+    empowerment_dimension_id: string;
+    project_type_id: string;
+    otherProject: string;
+    childName?: string;
+    childAge?: number;
+    childGender?: string;
+    job_field_id: string;
+    otherJobField?: string;
+    resource_id: string; // Changed from array to single string
+    monthlySaving: boolean;
+    savingAmount: number;
+    health_indicator_id: string; // Changed from array to single string
+    domestic_dynamic_id: string; // Changed from array to single string
+    community_participation_id: string; // Changed from array to single string
+    housing_service_id: string; // Changed from array to single string
 }
 
 export const createSamurdhiFamily = async (payload: SamurdhiFamilyPayload) => {

@@ -17,7 +17,7 @@ export const getProjectTypes = async () => {
       }
     });
     return response.data;
-  } catch (error) {
+  } catch {
     throw new Error('Failed to fetch project types');
   }
 };

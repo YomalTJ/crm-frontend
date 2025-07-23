@@ -17,7 +17,7 @@ export const getResourceNeeded = async () => {
       }
     });
     return response.data;
-  } catch (error) {
+  } catch {
     throw new Error('Failed to fetch resources needed');
   }
 };

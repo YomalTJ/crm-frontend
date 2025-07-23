@@ -17,7 +17,7 @@ export const getJobFields = async () => {
       }
     });
     return response.data;
-  } catch (error) {
+  } catch {
     throw new Error('Failed to fetch job fields');
   }
 };

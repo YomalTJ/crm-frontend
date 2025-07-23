@@ -3,7 +3,7 @@
 import axiosInstance from "@/lib/axios";
 import { cookies } from 'next/headers';
 
-export const getAswasumaCategories = async () => {
+export const getHealthIndicators = async () => {
   try {
     const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
     
@@ -11,13 +11,13 @@ export const getAswasumaCategories = async () => {
       throw new Error('No authentication token found');
     }
 
-    const response = await axiosInstance.get('/aswasuma-category', {
+    const response = await axiosInstance.get('/health-indicators', {
       headers: {
         Authorization: `Bearer ${token}`
       }
     });
     return response.data;
   } catch {
-    throw new Error('Failed to fetch Aswasuma categories');
+    throw new Error('Failed to fetch health indicators');
   }
 };

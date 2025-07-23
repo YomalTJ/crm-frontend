@@ -17,7 +17,7 @@ export const getSamurdhiSubsidyOptions = async () => {
       }
     });
     return response.data;
-  } catch (error) {
+  } catch {
     throw new Error('Failed to fetch Samurdhi subsidy options');
   }
 };

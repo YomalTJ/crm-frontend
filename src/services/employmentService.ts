@@ -18,7 +18,7 @@ export const getCurrentEmploymentOptions = async () => {
       }
     });
     return response.data;
-  } catch (error) {
+  } catch {
     throw new Error('Failed to fetch current employment options');
   }
 };
