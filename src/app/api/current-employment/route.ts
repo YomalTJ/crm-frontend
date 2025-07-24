@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
 import axiosInstance from '@/lib/axios';
-import { AxiosError } from 'axios'; // ✅ Import AxiosError
+import { AxiosError } from 'axios'; // 👈 Import AxiosError
 
-export async function POST(req: Request) {
+export async function GET(req: Request) {
     try {
-        const body = await req.json();
         const authHeader = req.headers.get('authorization');
 
-        const response = await axiosInstance.post('/samurdhi-family', body, {
+        const response = await axiosInstance.get('/current-employment', {
             headers: {
                 Authorization: authHeader || ''
             }
@@ -17,13 +16,13 @@ export async function POST(req: Request) {
     } catch (error: unknown) {
         if (error instanceof AxiosError) {
             return NextResponse.json(
-                { error: error.response?.data?.message || 'Failed to create Samurdhi family record' },
+                { error: error.response?.data?.message || 'Failed to fetch current employment options' },
                 { status: error.response?.status || 500 }
             );
         }
 
         return NextResponse.json(
-            { error: 'An unknown error occurred while creating Samurdhi family record' },
+            { error: 'An unknown error occurred while fetching current employment options' },
             { status: 500 }
         );
     }
