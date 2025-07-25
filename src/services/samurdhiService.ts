@@ -59,3 +59,23 @@ export const createSamurdhiFamily = async (payload: SamurdhiFamilyPayload) => {
     throw new Error(error.response?.data?.message || 'Failed to create Samurdhi family record');
   }
 };
+
+export const getBeneficiaryByNIC = async (nic: string) => {
+  try {
+    const token = (await cookies()).get('accessToken')?.value || 
+                 (await cookies()).get('staffAccessToken')?.value;
+    
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await axiosInstance.get(`/samurdhi-family/${nic}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch beneficiary details');
+  }
+};

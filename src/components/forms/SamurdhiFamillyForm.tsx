@@ -22,7 +22,7 @@ import { getCommunityParticipation } from '@/services/communityService';
 import { getHousingServices } from '@/services/housingService';
 import { getBeneficiaryStatuses } from '@/services/beneficiaryService';
 import { getEmpowermentDimensions } from '@/services/empowermentService';
-import { createSamurdhiFamily } from '@/services/samurdhiService';
+import { createSamurdhiFamily, getBeneficiaryByNIC } from '@/services/samurdhiService';
 import { ErrorPopup } from '../common/ErrorPopup';
 
 interface BeneficiaryStatus {
@@ -152,10 +152,22 @@ interface HousingService {
 }
 
 interface FormData {
-    district_id: string;
-    ds_id: string;
-    zone_id: string;
-    gnd_id: string;
+    district: {
+        id: string;
+        name: string;
+    };
+    dsDivision: {
+        id: string;
+        name: string;
+    };
+    zone: {
+        id: string;
+        name: string;
+    };
+    gnd: {
+        id: string;
+        name: string;
+    };
     beneficiary_type_id: string;
     aswasumaHouseholdNo: string;
     nic: string;
@@ -273,26 +285,6 @@ interface HealthIndicator {
 // }
 
 const SamurdhiFamillyForm = () => {
-    const divisionalSecretariatDivisions = [
-        { value: "addalaichenai", label: "Addalaichenai" },
-        { value: "akalakulam", label: "Akkaraipattu" },
-        { value: "alayadivembu", label: "Alayadivembu" },
-        { value: "ampara", label: "Ampara" },
-        { value: "damana", label: "Damana" },
-        { value: "dehiattakandiya", label: "Dehiattakandiya" },
-        { value: "irakkamam", label: "Irakkamam" },
-        { value: "kalmunai", label: "Kalmunai" },
-        { value: "karaitivu", label: "Karaitivu" },
-        { value: "lahugala", label: "Lahugala" },
-        { value: "mahaoya", label: "Maha Oya" },
-        { value: "navithanveli", label: "Navithanveli" },
-        { value: "ninthavur", label: "Ninthavur" },
-        { value: "padiyatalawa", label: "Padiyatalawa" },
-        { value: "sainthamaruthu", label: "Sainthamaruthu" },
-        { value: "sammanthurai", label: "Sammanthurai" },
-        { value: "thirukkovil", label: "Thirukkovil" },
-        { value: "ulamamdu", label: "Uhana" }
-    ];
 
     const [employmentOptions, setEmploymentOptions] = useState<Array<{
         employment_id: string;
@@ -337,11 +329,39 @@ const SamurdhiFamillyForm = () => {
 
     const [empowermentDimensions, setEmpowermentDimensions] = useState<EmpowermentDimension[]>([]);
 
+    const [isFetching, setIsFetching] = useState(false);
+
+    useEffect(() => {
+        const storedLocation = localStorage.getItem('staffLocation');
+        if (storedLocation) {
+            const locationDetails = JSON.parse(storedLocation);
+
+            setFormData(prev => ({
+                ...prev,
+                district: {
+                    id: locationDetails.district?.id?.toString() || '',
+                    name: locationDetails.district?.name || ''
+                },
+                dsDivision: {
+                    id: locationDetails.dsDivision?.id?.toString() || '',
+                    name: locationDetails.dsDivision?.name || ''
+                },
+                zone: {
+                    id: locationDetails.zone?.id?.toString() || '',
+                    name: locationDetails.zone?.name || ''
+                },
+                gnd: {
+                    id: locationDetails.gnd?.id?.toString() || '',
+                    name: locationDetails.gnd?.name || ''
+                }
+            }));
+        }
+    }, []);
+
     useEffect(() => {
         const fetchDomesticDynamics = async () => {
             try {
                 const data = await getDomesticDynamics();
-                console.log("fetchDomestic Dynamics: ", data);
                 setDomesticDynamics(data);
             } catch (error) {
                 console.error('Error fetching domestic dynamics:', error);
@@ -355,7 +375,6 @@ const SamurdhiFamillyForm = () => {
         const fetchHealthIndicators = async () => {
             try {
                 const data = await getHealthIndicators();
-                console.log("fetchHealthIndicators: ", data);
                 setHealthIndicators(data);
             } catch (error) {
                 console.error('Error fetching health indicators:', error);
@@ -369,7 +388,6 @@ const SamurdhiFamillyForm = () => {
         const fetchEmploymentOptions = async () => {
             try {
                 const data = await getCurrentEmploymentOptions();
-                console.log('Fetched Employment Options:', data);
                 setEmploymentOptions(data);
             } catch (error) {
                 console.error('Error fetching employment options:', error);
@@ -384,7 +402,6 @@ const SamurdhiFamillyForm = () => {
             try {
 
                 const data = await getSamurdhiSubsidyOptions();
-                console.log('Fetched Samurdhi Subsidy Options:', data);
                 setSubsidyOptions(data);
             } catch (error) {
                 console.error('Error fetching subsidy options:', error);
@@ -398,7 +415,6 @@ const SamurdhiFamillyForm = () => {
         const fetchAswasumaCategories = async () => {
             try {
                 const data = await getAswasumaCategories();
-                console.log('Fetched Aswasuma Categories:', data);
                 setAswasumaCategories(data);
             } catch (error) {
                 console.error('Error fetching Aswasuma categories:', error);
@@ -412,7 +428,6 @@ const SamurdhiFamillyForm = () => {
         const fetchProjectTypes = async () => {
             try {
                 const data = await getProjectTypes();
-                console.log('Fetched Project Types:', data);
                 setProjectTypes(data);
             } catch (error) {
                 console.error('Error fetching project types:', error);
@@ -426,7 +441,6 @@ const SamurdhiFamillyForm = () => {
         const fetchJobFields = async () => {
             try {
                 const data = await getJobFields();
-                console.log('Fetched JobF fields:', data);
                 setJobFields(data);
             } catch (error) {
                 console.error('Error fetching job fields:', error);
@@ -440,7 +454,6 @@ const SamurdhiFamillyForm = () => {
         const fetchResourcesNeeded = async () => {
             try {
                 const data = await getResourceNeeded();
-                console.log('Fetched Resourc Needed:', data);
                 setResourcesNeeded(data);
             } catch (error) {
                 console.error('Error fetching resources needed:', error);
@@ -454,7 +467,6 @@ const SamurdhiFamillyForm = () => {
         const fetchCommunityParticipation = async () => {
             try {
                 const data = await getCommunityParticipation();
-                console.log('Fetched Community Participation:', data);
                 setCommunityParticipationOptions(data);
             } catch (error) {
                 console.error('Error fetching community participation:', error);
@@ -468,7 +480,6 @@ const SamurdhiFamillyForm = () => {
         const fetchHousingServices = async () => {
             try {
                 const data = await getHousingServices();
-                console.log('Fetched Housing Services:', data);
                 setHousingServices(data);
             } catch (error) {
                 console.error('Error fetching housing services:', error);
@@ -481,7 +492,6 @@ const SamurdhiFamillyForm = () => {
         const fetchBeneficiaryStatuses = async () => {
             try {
                 const data = await getBeneficiaryStatuses();
-                console.log('Fetched beneficiary statuses:', data);
                 setBeneficiaryStatuses(data);
             } catch (error) {
                 console.error('Error fetching beneficiary statuses:', error);
@@ -494,7 +504,6 @@ const SamurdhiFamillyForm = () => {
         const fetchEmpowermentDimensions = async () => {
             try {
                 const data = await getEmpowermentDimensions();
-                console.log('Fetched Empowerment Dimensions:', data);
                 setEmpowermentDimensions(data);
             } catch (error) {
                 console.error('Error fetching empowerment dimensions:', error);
@@ -502,6 +511,43 @@ const SamurdhiFamillyForm = () => {
         };
         fetchEmpowermentDimensions();
     }, []);
+
+    const handleNicLookup = async () => {
+        if (!formData.nic) {
+            setErrorPopup({
+                isOpen: true,
+                title: 'Error',
+                message: 'Please enter a NIC number first'
+            });
+            return;
+        }
+
+        setIsFetching(true);
+        try {
+            const data = await getBeneficiaryByNIC(formData.nic);
+
+            setFormData(prev => ({
+                ...prev,
+                beneficiaryName: data.name || '',
+                gender: data.gender || 'Male',
+                address: data.address || '',
+                phone: data.phone || '',
+                projectOwnerAge: data.age || 0,
+                male18To60: data.members18To60?.male || 0,
+                female18To60: data.members18To60?.female || 0,
+                aswasumaHouseholdNo: data.householdNumber || ''
+            }));
+
+        } catch (error: any) {
+            setErrorPopup({
+                isOpen: true,
+                title: 'Error',
+                message: error.message || 'Failed to fetch beneficiary details'
+            });
+        } finally {
+            setIsFetching(false);
+        }
+    };
 
     // Format community participation label
     const formatCommunityLabel = (item: {
@@ -524,12 +570,11 @@ const SamurdhiFamillyForm = () => {
         return `Rs. ${parseFloat(amount).toFixed(2)}`;
     };
 
-
     const [formData, setFormData] = useState<FormData>({
-        district_id: '',
-        ds_id: '',
-        zone_id: '',
-        gnd_id: '',
+        district: { id: '', name: '' },
+        dsDivision: { id: '', name: '' },
+        zone: { id: '', name: '' },
+        gnd: { id: '', name: '' },
         beneficiary_type_id: '',
         aswasumaHouseholdNo: '',
         nic: '',
@@ -563,34 +608,6 @@ const SamurdhiFamillyForm = () => {
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const samurdhiBanks = [
-        { value: "ampara", label: "Ampara" },
-        { value: "namaloya", label: "Namaloya" },
-    ];
-
-    const gramaNiladhariOptions = [
-        { value: "dorakumbura", label: "Dorakumbura" },
-        { value: "galode", label: "Galode" },
-        { value: "hagamwela", label: "Hagamwela" },
-        { value: "holike", label: "Holike" },
-        { value: "kehelulla", label: "Kehelulla" },
-        { value: "kirawana", label: "Kirawana" },
-        { value: "kolamanthalawa", label: "Kolamanthalawa" },
-        { value: "komana", label: "Komana" },
-        { value: "marangala", label: "Marangala" },
-        { value: "miriswatta", label: "Miriswatta" },
-        { value: "moradeniya", label: "Moradeniya" },
-        { value: "padiyathalawa", label: "Padiyathalawa" },
-        { value: "palathuruwella", label: "Palathuruwella" },
-        { value: "pallegama", label: "Pallegama" },
-        { value: "pulungasmulla", label: "Pulungasmulla" },
-        { value: "saranagama", label: "Saranagama" },
-        { value: "serankada", label: "Serankada" },
-        { value: "thalapitaoya_left", label: "Thalapitaoya Left" },
-        { value: "thalapitaoya_south", label: "Thalapitaoya South" },
-        { value: "unapana", label: "Unapana" },
-    ];
-
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type } = e.target;
         setFormData(prev => ({
@@ -611,7 +628,6 @@ const SamurdhiFamillyForm = () => {
             ...prev,
             [name]: value
         }));
-        console.log(`${name}: (ID: ${value})`);
     };
 
     const handleCheckboxChange = (name: string, value: string, isChecked: boolean) => {
@@ -633,10 +649,10 @@ const SamurdhiFamillyForm = () => {
         try {
             // Prepare the payload according to the expected API format
             const payload = {
-                district_id: formData.district_id || "1",
-                ds_id: formData.ds_id || "1",
-                zone_id: formData.zone_id || "1",
-                gnd_id: formData.gnd_id || "1",
+                district_id: formData.district.id || "1",
+                ds_id: formData.dsDivision.id || "1",
+                zone_id: formData.zone.id || "1",
+                gnd_id: formData.gnd.id || "1",
                 beneficiary_type_id: formData.beneficiary_type_id,
                 aswasumaHouseholdNo: formData.aswasumaHouseholdNo,
                 nic: formData.nic,
@@ -668,8 +684,6 @@ const SamurdhiFamillyForm = () => {
                 housing_service_id: formData.housing_service_id.length > 0 ? formData.housing_service_id[0] : ""
             };
 
-            console.log('Submitting payload:', payload);
-
             const response = await createSamurdhiFamily(payload);
 
             if (response.ok) {
@@ -680,10 +694,10 @@ const SamurdhiFamillyForm = () => {
 
                 // Reset form after successful submission
                 setFormData({
-                    district_id: '',
-                    ds_id: '',
-                    zone_id: '',
-                    gnd_id: '',
+                    district: { id: '', name: '' },
+                    dsDivision: { id: '', name: '' },
+                    zone: { id: '', name: '' },
+                    gnd: { id: '', name: '' },
                     beneficiary_type_id: '',
                     aswasumaHouseholdNo: '',
                     nic: '',
@@ -778,58 +792,41 @@ const SamurdhiFamillyForm = () => {
                         <Label>District</Label>
                         <Input
                             type="text"
-                            name="district_id"
-                            defaultValue={formData.district_id}
-                            onChange={handleInputChange}
+                            value={formData.district.name}
+                            readOnly
                         />
+                        <input type="hidden" name="district_id" value={formData.district.id} />
                     </div>
 
                     <div>
                         <Label>Divisional Secretariat Division</Label>
-                        <div className="relative">
-                            <Select
-                                options={divisionalSecretariatDivisions}
-                                placeholder="Select Option"
-                                onChange={(value) => handleSelectChange('ds_id', value)}
-                                className="dark:bg-dark-900"
-                                defaultValue={formData.ds_id}
-                            />
-                            <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
-                                <ChevronDownIcon />
-                            </span>
-                        </div>
+                        <Input
+                            type="text"
+                            value={formData.dsDivision.name}
+                            readOnly
+                        />
+                        <input type="hidden" name="ds_id" value={formData.dsDivision.id} />
                     </div>
+
 
                     <div>
                         <Label>Samurdhi Bank</Label>
-                        <div className="relative">
-                            <Select
-                                options={samurdhiBanks}
-                                placeholder="Select Option"
-                                onChange={(value) => handleSelectChange('zone_id', value)}
-                                className="dark:bg-dark-900"
-                                defaultValue={formData.zone_id}
-                            />
-                            <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
-                                <ChevronDownIcon />
-                            </span>
-                        </div>
+                        <Input
+                            type="text"
+                            value={formData.zone.name}
+                            readOnly
+                        />
+                        <input type="hidden" name="zone_id" value={formData.zone.id} />
                     </div>
 
                     <div>
                         <Label>Grama Nildhari Division</Label>
-                        <div className="relative">
-                            <Select
-                                options={gramaNiladhariOptions}
-                                placeholder="Select Option"
-                                onChange={(value) => handleSelectChange('gnd_id', value)}
-                                className="dark:bg-dark-900"
-                                defaultValue={formData.gnd_id}
-                            />
-                            <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
-                                <ChevronDownIcon />
-                            </span>
-                        </div>
+                        <Input
+                            type="text"
+                            value={formData.gnd.name}
+                            readOnly
+                        />
+                        <input type="hidden" name="gnd_id" value={formData.gnd.id} />
                     </div>
 
                     <div className="flex flex-col gap-4">
@@ -866,14 +863,25 @@ const SamurdhiFamillyForm = () => {
                         />
                     </div>
 
-                    <div>
-                        <Label>National Identity Card Number</Label>
-                        <Input
-                            type="text"
-                            name="nic"
-                            defaultValue={formData.nic}
-                            onChange={handleInputChange}
-                        />
+                    <div className="flex gap-2 items-end">
+                        <div className="flex-1">
+                            <Label>National Identity Card Number</Label>
+                            <Input
+                                type="text"
+                                name="nic"
+                                value={formData.nic}
+                                onChange={handleInputChange}
+                            />
+                        </div>
+                        <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={handleNicLookup}
+                            disabled={isFetching}
+                            className="h-11"
+                        >
+                            {isFetching ? 'Fetching...' : 'Get Details'}
+                        </Button>
                     </div>
 
                     <div>
@@ -1316,10 +1324,10 @@ const SamurdhiFamillyForm = () => {
                             onClick={() => {
                                 // Reset form
                                 setFormData({
-                                    district_id: '',
-                                    ds_id: '',
-                                    zone_id: '',
-                                    gnd_id: '',
+                                    district: { id: '', name: '' },
+                                    dsDivision: { id: '', name: '' },
+                                    zone: { id: '', name: '' },
+                                    gnd: { id: '', name: '' },
                                     beneficiary_type_id: '',
                                     aswasumaHouseholdNo: '',
                                     nic: '',

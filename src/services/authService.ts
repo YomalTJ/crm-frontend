@@ -26,7 +26,12 @@ export const loginUser = async ({ username, password }: LoginPayload) => {
 
     data = await res.json();
 
-    if (res.ok) return { type: "staff", ...data };
+    if (res.ok) return {
+      type: "staff",
+      success: data.success,
+      role: data.role,
+      locationDetails: data.locationDetails
+    };
 
     throw new Error(data.error || "Login failed");
   } catch (err: any) {
@@ -36,6 +41,10 @@ export const loginUser = async ({ username, password }: LoginPayload) => {
 
 export const logoutUser = async () => {
   try {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('staffLocation');
+    }
+
     const res = await fetch("/api/auth/logout", {
       method: "POST",
       credentials: 'include',
