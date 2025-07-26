@@ -1004,17 +1004,22 @@ const SamurdhiFamillyForm = () => {
             // Modified success check - if we got a response with an id, consider it successful
             if (response && response.id) {
                 const successMessage = isExistingBeneficiary
-                    ? 'Beneficiary updated successfully!'
-                    : 'Beneficiary created successfully!';
+                    ? 'Beneficiary updated successfully! 🎉'
+                    : 'Beneficiary created successfully! 🎉';
 
-                // Show success toast first
+                // Show success toast with longer duration and better styling
                 toast.success(successMessage, {
-                    duration: 4000,
+                    duration: 6000, // Increased duration to 6 seconds
                     style: {
-                        background: '#10B981',
+                        background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
                         color: 'white',
-                        fontSize: '14px',
-                        fontWeight: '500',
+                        fontSize: '16px',
+                        fontWeight: '600',
+                        padding: '16px 20px',
+                        borderRadius: '12px',
+                        boxShadow: '0 10px 25px rgba(16, 185, 129, 0.3)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        maxWidth: '400px',
                     },
                     iconTheme: {
                         primary: 'white',
@@ -1022,36 +1027,77 @@ const SamurdhiFamillyForm = () => {
                     },
                 });
 
-                // Wait a bit before resetting the form to ensure toast is visible
+                // Show a loading indicator for the reset process
                 setTimeout(() => {
-                    // Reset form after successful submission
-                    setFormData({
+                    toast.loading('Preparing form for next entry...', {
+                        duration: 2000,
+                        style: {
+                            background: '#3B82F6',
+                            color: 'white',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                        },
+                    });
+                }, 3000); // Show loading after 3 seconds
+
+                // Wait longer before resetting the form to ensure user sees the success message
+                setTimeout(() => {
+                    // Store location data before reset
+                    const storedLocation = localStorage.getItem('staffLocation');
+                    let locationData = {
                         district: { id: '', name: '' },
                         dsDivision: { id: '', name: '' },
                         zone: { id: '', name: '' },
-                        gnd: { id: '', name: '' },
+                        gnd: { id: '', name: '' }
+                    };
+
+                    if (storedLocation) {
+                        const locationDetails = JSON.parse(storedLocation);
+                        locationData = {
+                            district: {
+                                id: locationDetails.district?.id?.toString() || '',
+                                name: locationDetails.district?.name || ''
+                            },
+                            dsDivision: {
+                                id: locationDetails.dsDivision?.id?.toString() || '',
+                                name: locationDetails.dsDivision?.name || ''
+                            },
+                            zone: {
+                                id: locationDetails.zone?.id?.toString() || '',
+                                name: locationDetails.zone?.name || ''
+                            },
+                            gnd: {
+                                id: locationDetails.gnd?.id?.toString() || '',
+                                name: locationDetails.gnd?.name || ''
+                            }
+                        };
+                    }
+
+                    // Reset form with location data preserved
+                    setFormData({
+                        ...locationData, // Preserve location data
                         beneficiary_type_id: '',
-                        aswasumaHouseholdNo: '',
+                        aswasumaHouseholdNo: null,
                         nic: null,
-                        beneficiaryName: '',
-                        gender: 'Male',
-                        address: '',
-                        phone: '',
+                        beneficiaryName: null,
+                        gender: null,
+                        address: null,
+                        phone: null,
                         projectOwnerAge: 0,
                         male18To60: 0,
                         female18To60: 0,
-                        employment_id: '',
-                        otherOccupation: '',
-                        subsisdy_id: '',
-                        aswesuma_cat_id: '',
+                        employment_id: null,
+                        otherOccupation: null,
+                        subsisdy_id: null,
+                        aswesuma_cat_id: null,
                         empowerment_dimension_id: [],
-                        project_type_id: '',
-                        otherProject: '',
-                        childName: '',
+                        project_type_id: null,
+                        otherProject: null,
+                        childName: null,
                         childAge: 0,
-                        childGender: 'Male',
-                        job_field_id: '',
-                        otherJobField: '',
+                        childGender: null,
+                        job_field_id: null,
+                        otherJobField: null,
                         resource_id: [],
                         monthlySaving: false,
                         savingAmount: 0,
@@ -1060,9 +1106,31 @@ const SamurdhiFamillyForm = () => {
                         community_participation_id: [],
                         housing_service_id: []
                     });
+
                     setIsExistingBeneficiary(false);
                     setErrors({}); // Clear any validation errors
-                }, 1000); // Wait 1 second before resetting
+                    setIsAswasumaHouseholdDisabled(false); // Reset disabled states
+
+                    // Scroll to top of form smoothly
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+
+                    // Show a final confirmation toast
+                    setTimeout(() => {
+                        toast.success('Form is ready for next entry! ✨', {
+                            duration: 3000,
+                            style: {
+                                background: '#8B5CF6',
+                                color: 'white',
+                                fontSize: '14px',
+                                fontWeight: '500',
+                            },
+                        });
+                    }, 500);
+
+                }, 5000); // Wait 5 seconds before resetting (increased from 1 second)
 
             } else {
                 // If we didn't get an expected response, throw an error
@@ -1073,7 +1141,21 @@ const SamurdhiFamillyForm = () => {
             const errorMessage = error?.response?.data?.message ||
                 error?.message ||
                 'An error occurred while submitting the form';
-            toast.error(errorMessage);
+
+            toast.error(errorMessage, {
+                duration: 6000, // Longer duration for errors too
+                style: {
+                    background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
+                    color: 'white',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    padding: '16px 20px',
+                    borderRadius: '12px',
+                    boxShadow: '0 10px 25px rgba(239, 68, 68, 0.3)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    maxWidth: '400px',
+                },
+            });
         } finally {
             setIsSubmitting(false);
         }
