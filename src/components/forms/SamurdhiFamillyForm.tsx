@@ -6,7 +6,7 @@ import ComponentCard from '../common/ComponentCard'
 import Label from '../form/Label'
 import Input from '../form/input/InputField'
 import Select from '../form/Select'
-import { BoxIcon, ChevronDownIcon } from '@/icons'
+import { ChevronDownIcon } from '@/icons'
 import Radio from '../form/input/Radio';
 import Checkbox from '../form/input/Checkbox';
 import Button from '../ui/button/Button';
@@ -22,8 +22,8 @@ import { getCommunityParticipation } from '@/services/communityService';
 import { getHousingServices } from '@/services/housingService';
 import { getBeneficiaryStatuses } from '@/services/beneficiaryService';
 import { getEmpowermentDimensions } from '@/services/empowermentService';
-import { createSamurdhiFamily, getBeneficiaryByNIC } from '@/services/samurdhiService';
-import { ErrorPopup } from '../common/ErrorPopup';
+import { createSamurdhiFamily, getBeneficiaryByNIC, getHouseholdDetailsByReference, getHouseholdNumbersByGnCode, updateSamurdhiFamily } from '@/services/samurdhiService';
+import toast, { Toaster } from 'react-hot-toast';
 
 interface BeneficiaryStatus {
     beneficiary_type_id: string;
@@ -170,7 +170,7 @@ interface FormData {
     };
     beneficiary_type_id: string;
     aswasumaHouseholdNo: string;
-    nic: string;
+    nic: string | null;
     beneficiaryName: string;
     gender: string;                    // Main beneficiary gender
     address: string;
@@ -182,7 +182,7 @@ interface FormData {
     otherOccupation: string;
     subsisdy_id: string;
     aswesuma_cat_id: string;
-    empowerment_dimension_id: string;
+    empowerment_dimension_id: string[];
     project_type_id: string;
     otherProject: string;
     childName?: string;
@@ -265,24 +265,15 @@ interface HealthIndicator {
     };
 }
 
-// interface EmploymentOption {
-//     employment_id: string;
-//     nameEnglish: string;
-//     nameSinhala: string;
-//     nameTamil: string;
-//     createdAt: string;
-//     createdBy: {
-//         name: string;
-//         username: string;
-//         language: string;
-//         role: {
-//             name: string;
-//             canAdd: boolean;
-//             canUpdate: boolean;
-//             canDelete: boolean;
-//         };
-//     };
-// }
+const ErrorMessage = ({ error }: { error?: string }) => {
+    if (!error) return null;
+    return (
+        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+            {error}
+        </p>
+    );
+
+}
 
 const SamurdhiFamillyForm = () => {
 
@@ -307,12 +298,6 @@ const SamurdhiFamillyForm = () => {
 
     const [jobFields, setJobFields] = useState<JobField[]>([]);
 
-    const [errorPopup, setErrorPopup] = useState({
-        isOpen: false,
-        title: '',
-        message: '',
-    });
-
     const [projectTypes, setProjectTypes] = useState<ProjectType[]>([]);
 
     const [resourcesNeeded, setResourcesNeeded] = useState<Resource[]>([]);
@@ -330,6 +315,16 @@ const SamurdhiFamillyForm = () => {
     const [empowermentDimensions, setEmpowermentDimensions] = useState<EmpowermentDimension[]>([]);
 
     const [isFetching, setIsFetching] = useState(false);
+
+    const [isExistingBeneficiary, setIsExistingBeneficiary] = useState(false);
+
+    const [isAswasumaHouseholdDisabled, setIsAswasumaHouseholdDisabled] = useState(false);
+
+    const [householdNumbers, setHouseholdNumbers] = useState<string[]>([]);
+
+    const [isLoadingHouseholdNumbers, setIsLoadingHouseholdNumbers] = useState(false);
+
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
     useEffect(() => {
         const storedLocation = localStorage.getItem('staffLocation');
@@ -512,19 +507,95 @@ const SamurdhiFamillyForm = () => {
         fetchEmpowermentDimensions();
     }, []);
 
+    useEffect(() => {
+        const fetchHouseholdNumbers = async () => {
+            try {
+                const storedLocation = localStorage.getItem('staffLocation');
+                console.log('Stored location:', storedLocation); // Debug log
+
+                if (storedLocation) {
+                    const locationDetails = JSON.parse(storedLocation);
+                    console.log('Location details:', locationDetails); // Debug log
+
+                    // Extract all required IDs
+                    const provinceId = locationDetails.provinceId;
+                    const districtId = locationDetails.district?.id;
+                    const dsId = locationDetails.dsDivision?.id;
+                    const zoneId = locationDetails.zone?.id;
+                    const gndId = locationDetails.gnd?.id;
+
+                    console.log('Extracted IDs:', { provinceId, districtId, dsId, zoneId, gndId }); // Debug log
+
+                    // Validate that all required IDs are present
+                    if (provinceId && districtId && dsId && zoneId && gndId) {
+                        // Format each part with leading zeros where necessary
+                        const formattedProvinceId = provinceId.toString();
+                        const formattedDistrictId = districtId.toString();
+
+                        // DS ID needs to be zero-padded to 2 digits
+                        const formattedDsId = dsId.toString().padStart(2, '0');
+
+                        // Zone ID needs to be zero-padded to 2 digits  
+                        const formattedZoneId = zoneId.toString().padStart(2, '0');
+
+                        // GND ID should remain as is (it's already formatted correctly as "175")
+                        const formattedGndId = gndId.toString();
+
+                        // Construct the full GN Code
+                        const gnCode = `${formattedProvinceId}-${formattedDistrictId}-${formattedDsId}-${formattedZoneId}-${formattedGndId}`;
+
+                        console.log('Formatted GN Code:', gnCode); // Debug log
+                        console.log('Individual parts:', {
+                            province: formattedProvinceId,
+                            district: formattedDistrictId,
+                            ds: formattedDsId,
+                            zone: formattedZoneId,
+                            gnd: formattedGndId
+                        });
+
+                        setIsLoadingHouseholdNumbers(true);
+                        console.log('Making API call with GN Code:', gnCode); // Debug log
+
+                        const numbers = await getHouseholdNumbersByGnCode(gnCode);
+                        console.log('API response:', numbers); // Debug log
+
+                        setHouseholdNumbers(numbers);
+                    } else {
+                        console.error('Missing required location data:', {
+                            provinceId, districtId, dsId, zoneId, gndId
+                        });
+                        toast.error('message')
+                    }
+                } else {
+                    console.error('No stored location found');
+                    toast.error('message')
+                }
+            } catch (error) {
+                console.error('Error fetching household numbers:', error);
+                toast.error('message')
+            } finally {
+                setIsLoadingHouseholdNumbers(false);
+            }
+        };
+
+        fetchHouseholdNumbers();
+    }, []);
+
     const handleNicLookup = async () => {
-        if (!formData.nic) {
-            setErrorPopup({
-                isOpen: true,
-                title: 'Error',
-                message: 'Please enter a NIC number first'
-            });
+        if (!formData.nic || formData.nic.trim() === '') {
+            toast.error('message')
             return;
         }
 
         setIsFetching(true);
         try {
             const data = await getBeneficiaryByNIC(formData.nic);
+            setIsExistingBeneficiary(true);
+
+            const isPreviousSamurdhi = data.beneficiary_type_id === '77744e4d-48a4-4295-8a5d-38d2100599f9' ||
+                data.beneficiary_type_name?.includes("Previous Samurdhi") ||
+                data.beneficiary_type_name?.includes("Low income");
+            setIsAswasumaHouseholdDisabled(isPreviousSamurdhi);
 
             setFormData(prev => ({
                 ...prev,
@@ -535,17 +606,148 @@ const SamurdhiFamillyForm = () => {
                 projectOwnerAge: data.age || 0,
                 male18To60: data.members18To60?.male || 0,
                 female18To60: data.members18To60?.female || 0,
-                aswasumaHouseholdNo: data.householdNumber || ''
+                aswasumaHouseholdNo: data.householdNumber || '',
+                beneficiary_type_id: data.beneficiary_type_id || '',
+                employment_id: data.employment_id || '',
+                otherOccupation: data.otherOccupation || '',
+                subsisdy_id: data.subsisdy_id || '',
+                aswesuma_cat_id: data.aswesuma_cat_id || '',
+                empowerment_dimension_id: data.empowerment_dimension_id || '',
+                project_type_id: data.project_type_id || '',
+                otherProject: data.otherProject || '',
+                childName: data.childName || '',
+                childAge: data.childAge || 0,
+                childGender: data.childGender || 'Male',
+                job_field_id: data.job_field_id || '',
+                otherJobField: data.otherJobField || '',
+                resource_id: data.resource_id ? [data.resource_id] : [],
+                monthlySaving: data.monthlySaving || false,
+                savingAmount: data.savingAmount || 0,
+                health_indicator_id: data.health_indicator_id ? [data.health_indicator_id] : [],
+                domestic_dynamic_id: data.domestic_dynamic_id ? [data.domestic_dynamic_id] : [],
+                community_participation_id: data.community_participation_id ? [data.community_participation_id] : [],
+                housing_service_id: data.housing_service_id ? [data.housing_service_id] : []
             }));
-
         } catch (error: any) {
-            setErrorPopup({
-                isOpen: true,
-                title: 'Error',
-                message: error.message || 'Failed to fetch beneficiary details'
-            });
+            setIsExistingBeneficiary(false);
+            toast.error('message', error)
         } finally {
             setIsFetching(false);
+        }
+    };
+
+    const validateForm = (): boolean => {
+        const newErrors: { [key: string]: string } = {};
+
+        // Basic required fields
+        if (!formData.beneficiary_type_id) {
+            newErrors.beneficiary_type_id = 'Please select beneficiary type';
+        }
+
+        const selectedBeneficiaryType = beneficiaryStatuses.find(
+            status => status.beneficiary_type_id === formData.beneficiary_type_id
+        );
+        const isSamurdhiBeneficiary = selectedBeneficiaryType?.nameEnglish.includes("Samurdhi beneficiary");
+
+        if (isSamurdhiBeneficiary) {
+            if (!formData.nic || formData.nic.trim() === '') {
+                newErrors.nic = 'NIC number is required for Samurdhi beneficiaries';
+            } else if (formData.nic.length < 10) {
+                newErrors.nic = 'NIC must be at least 10 characters';
+            }
+        }
+
+        if (!formData.beneficiaryName.trim()) {
+            newErrors.beneficiaryName = 'Beneficiary name is required';
+        }
+
+        if (!formData.address.trim()) {
+            newErrors.address = 'Address is required';
+        }
+
+        if (!formData.phone.trim()) {
+            newErrors.phone = 'Phone number is required';
+        } else if (!/^[0-9+\-\s()]+$/.test(formData.phone)) {
+            newErrors.phone = 'Please enter a valid phone number';
+        }
+
+        if (!formData.projectOwnerAge || formData.projectOwnerAge <= 0) {
+            newErrors.projectOwnerAge = 'Valid age is required';
+        } else if (formData.projectOwnerAge > 120) {
+            newErrors.projectOwnerAge = 'Please enter a valid age';
+        }
+
+        // if (!formData.employment_id) {
+        //     newErrors.employment_id = 'Please select current employment';
+        // }
+
+        // if (formData.empowerment_dimension_id) {
+        //     const selectedEmpowerment = empowermentDimensions.find(
+        //         dim => dim.empowerment_dimension_id === formData.empowerment_dimension_id
+        //     );
+
+        //     // Check if "Employment Facilitation" is selected
+        //     if (selectedEmpowerment?.nameEnglish.includes("Employment Facilitation") ||
+        //         selectedEmpowerment?.nameEnglish.includes("EMPLOYMENT FACILITATION")) {
+        //         if (!formData.project_type_id) {
+        //             newErrors.project_type_id = 'Project type is mandatory when Employment Facilitation is selected';
+        //         }
+        //     }
+        // }
+
+        // Conditional validations
+        if (formData.beneficiary_type_id && !isAswasumaHouseholdDisabled && !formData.aswasumaHouseholdNo) {
+            newErrors.aswasumaHouseholdNo = 'Aswasuma household number is required';
+        }
+
+        if (formData.monthlySaving && (!formData.savingAmount || formData.savingAmount <= 0)) {
+            newErrors.savingAmount = 'Please enter a valid saving amount';
+        }
+
+        // Check if Employment Facilitation is selected
+        const hasEmploymentFacilitation = formData.empowerment_dimension_id.some(id => {
+            const dimension = empowermentDimensions.find(dim => dim.empowerment_dimension_id === id);
+            return dimension?.nameEnglish.includes("Employment Facilitation");
+        });
+
+        // Check if Business Opportunities is selected
+        const hasBusinessOpportunities = formData.empowerment_dimension_id.some(id => {
+            const dimension = empowermentDimensions.find(dim => dim.empowerment_dimension_id === id);
+            return dimension?.nameEnglish.includes("Business Opportunities") ||
+                dimension?.nameEnglish.includes("Self-Employment");
+        });
+
+        // Validate child details if Employment Facilitation is selected
+        if (hasEmploymentFacilitation) {
+            if (!formData.childName?.trim()) {
+                newErrors.childName = 'Child name is required for Employment Facilitation';
+            }
+            if (!formData.childAge || formData.childAge <= 0) {
+                newErrors.childAge = 'Valid child age is required for Employment Facilitation';
+            }
+            if (!formData.job_field_id) {
+                newErrors.job_field_id = 'Job field is required for Employment Facilitation';
+            }
+        }
+
+        // Validate project type if Business Opportunities is selected
+        if (hasBusinessOpportunities) {
+            if (!formData.project_type_id) {
+                newErrors.project_type_id = 'Project type is required for Business Opportunities/Self-Employment';
+            }
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const clearError = (fieldName: string) => {
+        if (errors[fieldName]) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[fieldName];
+                return newErrors;
+            });
         }
     };
 
@@ -577,9 +779,9 @@ const SamurdhiFamillyForm = () => {
         gnd: { id: '', name: '' },
         beneficiary_type_id: '',
         aswasumaHouseholdNo: '',
-        nic: '',
+        nic: null,
         beneficiaryName: '',
-        gender: 'Male',
+        gender: '',
         address: '',
         phone: '',
         projectOwnerAge: 0,
@@ -589,12 +791,12 @@ const SamurdhiFamillyForm = () => {
         otherOccupation: '',
         subsisdy_id: '',
         aswesuma_cat_id: '',
-        empowerment_dimension_id: '',
+        empowerment_dimension_id: [],
         project_type_id: '',
         otherProject: '',
         childName: '',
         childAge: 0,
-        childGender: 'Male',              // Add default value for child gender
+        childGender: '',              // Add default value for child gender
         job_field_id: '',
         otherJobField: '',
         resource_id: [],
@@ -610,6 +812,17 @@ const SamurdhiFamillyForm = () => {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type } = e.target;
+
+        // Clear error when user starts typing
+        clearError(name);
+
+        if (name === 'nic') {
+            setFormData(prev => ({
+                ...prev,
+                nic: value.trim() === '' ? null : value.trim()
+            }));
+            return;
+        }
         setFormData(prev => ({
             ...prev,
             [name]: type === 'number' ? parseInt(value) || 0 : value
@@ -617,6 +830,7 @@ const SamurdhiFamillyForm = () => {
     };
 
     const handleSelectChange = (name: string, value: string) => {
+        clearError(name);
         setFormData(prev => ({
             ...prev,
             [name]: value
@@ -624,6 +838,7 @@ const SamurdhiFamillyForm = () => {
     };
 
     const handleRadioChange = (name: string, value: string) => {
+        clearError(name);
         setFormData(prev => ({
             ...prev,
             [name]: value
@@ -631,6 +846,7 @@ const SamurdhiFamillyForm = () => {
     };
 
     const handleCheckboxChange = (name: string, value: string, isChecked: boolean) => {
+        clearError(name);
         setFormData(prev => {
             const currentArray = prev[name as keyof typeof formData] as string[];
             return {
@@ -642,12 +858,105 @@ const SamurdhiFamillyForm = () => {
         });
     };
 
+    const handleHouseholdSelection = async (selectedHhNumber: string) => {
+        if (!selectedHhNumber) {
+            return;
+        }
+
+        try {
+            setIsLoadingHouseholdNumbers(true);
+            console.log('Fetching details for household:', selectedHhNumber);
+
+            const householdData = await getHouseholdDetailsByReference(selectedHhNumber);
+            console.log('Household data received:', householdData);
+
+            // Get the primary citizen (usually the first one or the applicant)
+            const primaryCitizen = householdData.citizens?.[0];
+
+            if (householdData.household && primaryCitizen) {
+                // Auto-fill form fields with household data
+                setFormData(prev => ({
+                    ...prev,
+                    aswasumaHouseholdNo: selectedHhNumber,
+                    beneficiaryName: householdData.household.applicantName || primaryCitizen.name || '',
+                    address: [
+                        householdData.household.addressLine1,
+                        householdData.household.addressLine2,
+                        householdData.household.addressLine3
+                    ].filter(line => line && line.trim()).join(', ') || '',
+
+                    // Calculate age from date of birth if available
+                    projectOwnerAge: primaryCitizen.age || 0,
+
+                    // Set gender based on citizen data
+                    gender: primaryCitizen.gender === 'male' ? 'Male' : 'Female',
+
+                    // Set Aswasuma category based on level
+                    aswesuma_cat_id: getAswasumaIdByLevel(householdData.household.level)
+                }));
+
+                // Calculate household members aged 18-60
+                if (householdData.citizens && householdData.citizens.length > 0) {
+                    let male18To60 = 0;
+                    let female18To60 = 0;
+
+                    householdData.citizens.forEach((citizen: any) => {
+                        const age = citizen.age;
+                        if (age >= 18 && age <= 60) {
+                            if (citizen.gender === 'male') {
+                                male18To60++;
+                            } else if (citizen.gender === 'female') {
+                                female18To60++;
+                            }
+                        }
+                    });
+
+                    setFormData(prev => ({
+                        ...prev,
+                        male18To60,
+                        female18To60
+                    }));
+                }
+            }
+        } catch (error: any) {
+            console.error('Error fetching household details:', error);
+            toast.error('message')
+        } finally {
+            setIsLoadingHouseholdNumbers(false);
+        }
+    };
+
+    const getAswasumaIdByLevel = (level: number): string => {
+        // You'll need to map this based on your actual aswasuma categories
+        // This is just an example - adjust according to your data
+        const levelToIdMap: { [key: number]: string } = {
+            1: '5563333f-1ac4-450f-ae77-aee6907fff6d',
+            2: 'd934f9b8-b849-4195-acac-a421d367eef8',
+            3: '598eed9f-4b0a-457c-98d4-9c70498c8a50',
+            4: '8091882c-a474-4982-91fe-3ba9b5f78200',
+        };
+
+        return levelToIdMap[level] || '';
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+        e.preventDefault(); // This prevents the default form submission behavior
+
+        if (!validateForm()) {
+            toast.error('Please fix all validation errors before submitting');
+            const firstErrorField = Object.keys(errors)[0];
+            const errorElement = document.querySelector(`[name="${firstErrorField}"]`);
+            if (errorElement) {
+                errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return;
+        }
+
         setIsSubmitting(true);
 
         try {
-            // Prepare the payload according to the expected API format
+            console.log('Form data being submitted:', formData);
+
             const payload = {
                 district_id: formData.district.id || "1",
                 ds_id: formData.dsDivision.id || "1",
@@ -655,7 +964,7 @@ const SamurdhiFamillyForm = () => {
                 gnd_id: formData.gnd.id || "1",
                 beneficiary_type_id: formData.beneficiary_type_id,
                 aswasumaHouseholdNo: formData.aswasumaHouseholdNo,
-                nic: formData.nic,
+                nic: formData.nic || "",
                 beneficiaryName: formData.beneficiaryName,
                 gender: formData.gender,
                 address: formData.address,
@@ -667,7 +976,7 @@ const SamurdhiFamillyForm = () => {
                 otherOccupation: formData.otherOccupation,
                 subsisdy_id: formData.subsisdy_id,
                 aswesuma_cat_id: formData.aswesuma_cat_id,
-                empowerment_dimension_id: formData.empowerment_dimension_id,
+                empowerment_dimension_id: formData.empowerment_dimension_id.length > 0 ? formData.empowerment_dimension_id[0] : "",
                 project_type_id: formData.project_type_id,
                 otherProject: formData.otherProject,
                 childName: formData.childName || "",
@@ -684,101 +993,81 @@ const SamurdhiFamillyForm = () => {
                 housing_service_id: formData.housing_service_id.length > 0 ? formData.housing_service_id[0] : ""
             };
 
-            const response = await createSamurdhiFamily(payload);
+            console.log('Prepared payload:', payload);
 
-            if (response.ok) {
-                const data = await response.json();
-                // Success notification (you can create a similar success popup if needed)
-                alert('Form submitted successfully!');
-                console.log('Response:', data);
-
-                // Reset form after successful submission
-                setFormData({
-                    district: { id: '', name: '' },
-                    dsDivision: { id: '', name: '' },
-                    zone: { id: '', name: '' },
-                    gnd: { id: '', name: '' },
-                    beneficiary_type_id: '',
-                    aswasumaHouseholdNo: '',
-                    nic: '',
-                    beneficiaryName: '',
-                    gender: 'Male',
-                    address: '',
-                    phone: '',
-                    projectOwnerAge: 0,
-                    male18To60: 0,
-                    female18To60: 0,
-                    employment_id: '',
-                    otherOccupation: '',
-                    subsisdy_id: '',
-                    aswesuma_cat_id: '',
-                    empowerment_dimension_id: '',
-                    project_type_id: '',
-                    otherProject: '',
-                    childName: '',
-                    childAge: 0,
-                    childGender: 'Male',
-                    job_field_id: '',
-                    otherJobField: '',
-                    resource_id: [],
-                    monthlySaving: false,
-                    savingAmount: 0,
-                    health_indicator_id: [],
-                    domestic_dynamic_id: [],
-                    community_participation_id: [],
-                    housing_service_id: []
-                });
-            } else {
-                // Handle different types of errors
-                let errorMessage = 'Failed to submit form';
-
-                try {
-                    const errorData = await response.json();
-                    console.error('Error Response:', errorData);
-
-                    // Handle different error response formats
-                    if (errorData.message) {
-                        errorMessage = errorData.message;
-                    } else if (errorData.error) {
-                        errorMessage = errorData.error;
-                    } else if (errorData.errors) {
-                        // Handle validation errors (array format)
-                        if (Array.isArray(errorData.errors)) {
-                            errorMessage = 'Validation errors occurred';
-                        } else if (typeof errorData.errors === 'object') {
-                            errorMessage = 'Validation errors occurred';
-                        }
-                    }
-
-                } catch (parseError) {
-                    console.error('Failed to parse error response:', parseError);
-                    errorMessage = `Server Error (${response.status}): ${response.statusText}`;
+            let response;
+            if (isExistingBeneficiary) {
+                if (!formData.nic) {
+                    throw new Error("NIC is required for updating existing beneficiary");
                 }
+                response = await updateSamurdhiFamily(formData.nic, payload);
+            } else {
+                response = await createSamurdhiFamily(payload);
+            }
 
-                // Show error popup
-                setErrorPopup({
-                    isOpen: true,
-                    title: `Submission Failed (${response.status})`,
-                    message: errorMessage,
-                });
+            console.log('API Response:', response);
+
+            // Modified success check - if we got a response with an id, consider it successful
+            if (response && response.id) {
+                const successMessage = isExistingBeneficiary
+                    ? 'Beneficiary updated successfully!'
+                    : 'Beneficiary created successfully!';
+
+                // Show success toast first
+                toast.success(successMessage);
+
+                // Wait a bit before resetting the form to ensure toast is visible
+                setTimeout(() => {
+                    // Reset form after successful submission
+                    setFormData({
+                        district: { id: '', name: '' },
+                        dsDivision: { id: '', name: '' },
+                        zone: { id: '', name: '' },
+                        gnd: { id: '', name: '' },
+                        beneficiary_type_id: '',
+                        aswasumaHouseholdNo: '',
+                        nic: null,
+                        beneficiaryName: '',
+                        gender: 'Male',
+                        address: '',
+                        phone: '',
+                        projectOwnerAge: 0,
+                        male18To60: 0,
+                        female18To60: 0,
+                        employment_id: '',
+                        otherOccupation: '',
+                        subsisdy_id: '',
+                        aswesuma_cat_id: '',
+                        empowerment_dimension_id: [],
+                        project_type_id: '',
+                        otherProject: '',
+                        childName: '',
+                        childAge: 0,
+                        childGender: 'Male',
+                        job_field_id: '',
+                        otherJobField: '',
+                        resource_id: [],
+                        monthlySaving: false,
+                        savingAmount: 0,
+                        health_indicator_id: [],
+                        domestic_dynamic_id: [],
+                        community_participation_id: [],
+                        housing_service_id: []
+                    });
+                    setIsExistingBeneficiary(false);
+                    setErrors({}); // Clear any validation errors
+                }, 1000); // Wait 1 second before resetting
+
+            } else {
+                // If we didn't get an expected response, throw an error
+                throw new Error(response?.message || 'Unexpected response from server');
             }
         } catch (error: any) {
-            console.error('Submission error:', error);
-
-            let errorMessage = error.message || 'An error occurred';
-
-            // For server errors, extract the meaningful part
-            if (error.message.includes('createSamurdhiFamily')) {
-                errorMessage = 'Failed to save family data';
-            } else if (error.response?.data?.message) {
-                errorMessage = error.response.data.message;
-            }
-
-            setErrorPopup({
-                isOpen: true,
-                title: 'Error',
-                message: errorMessage
-            });
+            console.error('Error submitting form:', error);
+            const errorMessage = error?.response?.data?.message ||
+                error?.message ||
+                'An error occurred while submitting the form';
+            toast.error(errorMessage);
         } finally {
             setIsSubmitting(false);
         }
@@ -786,7 +1075,8 @@ const SamurdhiFamillyForm = () => {
 
     return (
         <ComponentCard title="Family Development plan for Community Empowerment">
-            <form onSubmit={handleSubmit}>
+            <ErrorMessage />
+            <form onSubmit={handleSubmit} noValidate>
                 <div className="space-y-6">
                     <div>
                         <Label>District</Label>
@@ -841,6 +1131,23 @@ const SamurdhiFamillyForm = () => {
                                 onChange={() => {
                                     console.log('Selected beneficiary_type_id:', status.beneficiary_type_id);
                                     handleRadioChange('beneficiary_type_id', status.beneficiary_type_id);
+
+                                    // Check if it's Samurdhi beneficiary (disable household dropdown)
+                                    const isSamurdhiBeneficiary = status.nameEnglish.includes("Samurdhi beneficiary");
+
+                                    // Check if it's Previous Samurdhi or low income (disable household dropdown)
+                                    const isPreviousSamurdhi = status.nameEnglish.includes("Previous Samurdhi beneficiary") ||
+                                        status.nameEnglish.includes("Low income earner");
+
+                                    // Disable household dropdown for both Samurdhi and Previous Samurdhi/Low income
+                                    setIsAswasumaHouseholdDisabled(isSamurdhiBeneficiary || isPreviousSamurdhi);
+
+                                    if (isSamurdhiBeneficiary || isPreviousSamurdhi) {
+                                        setFormData(prev => ({
+                                            ...prev,
+                                            aswasumaHouseholdNo: ''
+                                        }));
+                                    }
                                 }}
                                 label={
                                     <div className="flex flex-col">
@@ -851,27 +1158,70 @@ const SamurdhiFamillyForm = () => {
                                 }
                             />
                         ))}
+                        <ErrorMessage error={errors.beneficiary_type_id} />
                     </div>
 
                     <div>
-                        <Label>Aswasuma household number</Label>
-                        <Input
-                            type="text"
-                            name="aswasumaHouseholdNo"
-                            defaultValue={formData.aswasumaHouseholdNo}
-                            onChange={handleInputChange}
-                        />
+                        <Label>
+                            Aswasuma household number
+                            {(() => {
+                                const selectedBeneficiaryType = beneficiaryStatuses.find(
+                                    status => status.beneficiary_type_id === formData.beneficiary_type_id
+                                );
+                                const isAswasumaBeneficiary = selectedBeneficiaryType?.nameEnglish.includes("Aswasuma beneficiary");
+                                return isAswasumaBeneficiary ? <span className="text-red-500"> *</span> : '';
+                            })()}
+                        </Label>
+                        <div className="relative">
+                            <Select
+                                options={householdNumbers.map(number => ({
+                                    value: number,
+                                    label: number
+                                }))}
+                                placeholder={
+                                    isLoadingHouseholdNumbers
+                                        ? 'Loading household numbers...'
+                                        : householdNumbers.length === 0
+                                            ? 'No household numbers available for this GN division'
+                                            : isAswasumaHouseholdDisabled
+                                                ? 'Not available for selected beneficiary type'
+                                                : 'Select household number'
+                                }
+                                onChange={async (value) => {
+                                    handleSelectChange('aswasumaHouseholdNo', value);
+                                    await handleHouseholdSelection(value);
+                                }}
+                                className={`dark:bg-dark-900 ${errors.aswasumaHouseholdNo ? 'border-red-500' : ''}`}
+                                value={formData.aswasumaHouseholdNo}
+                                disabled={isAswasumaHouseholdDisabled || isLoadingHouseholdNumbers}
+                            />
+                            <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                                <ChevronDownIcon />
+                            </span>
+                        </div>
+                        <ErrorMessage error={errors.aswasumaHouseholdNo} />
                     </div>
 
                     <div className="flex gap-2 items-end">
                         <div className="flex-1">
-                            <Label>National Identity Card Number</Label>
+                            <Label>
+                                National Identity Card Number
+                                {(() => {
+                                    const selectedBeneficiaryType = beneficiaryStatuses.find(
+                                        status => status.beneficiary_type_id === formData.beneficiary_type_id
+                                    );
+                                    const isSamurdhiBeneficiary = selectedBeneficiaryType?.nameEnglish.includes("Samurdhi beneficiary");
+                                    return isSamurdhiBeneficiary ? <span className="text-red-500"> *</span> : '';
+                                })()}
+                            </Label>
                             <Input
                                 type="text"
                                 name="nic"
-                                value={formData.nic}
+                                value={formData.nic || ''}
                                 onChange={handleInputChange}
+                                className={errors.nic ? 'border-red-500' : ''}
                             />
+                            <ErrorMessage error={errors.nic} />
                         </div>
                         <Button
                             size="sm"
@@ -889,9 +1239,11 @@ const SamurdhiFamillyForm = () => {
                         <Input
                             type="text"
                             name="beneficiaryName"
-                            defaultValue={formData.beneficiaryName}
+                            value={formData.beneficiaryName}
                             onChange={handleInputChange}
+                            className={errors.beneficiaryName ? 'border-red-500' : ''}
                         />
+                        <ErrorMessage error={errors.beneficiaryName} />
                     </div>
 
                     <div className="flex flex-col gap-4">
@@ -919,9 +1271,11 @@ const SamurdhiFamillyForm = () => {
                         <Input
                             type="text"
                             name="address"
-                            defaultValue={formData.address}
+                            value={formData.address}
                             onChange={handleInputChange}
+                            className={errors.address ? 'border-red-500' : ''}
                         />
+                        <ErrorMessage error={errors.address} />
                     </div>
 
                     <div>
@@ -929,9 +1283,11 @@ const SamurdhiFamillyForm = () => {
                         <Input
                             type="text"
                             name="phone"
-                            defaultValue={formData.phone}
+                            value={formData.phone}
                             onChange={handleInputChange}
+                            className={errors.phone ? 'border-red-500' : ''}
                         />
+                        <ErrorMessage error={errors.phone} />
                     </div>
 
                     <div>
@@ -939,9 +1295,11 @@ const SamurdhiFamillyForm = () => {
                         <Input
                             type="number"
                             name="projectOwnerAge"
-                            defaultValue={formData.projectOwnerAge}
+                            value={formData.projectOwnerAge}
                             onChange={handleInputChange}
+                            className={errors.projectOwnerAge ? 'border-red-500' : ''}
                         />
+                        <ErrorMessage error={errors.projectOwnerAge} />
                     </div>
 
                     <div>
@@ -977,10 +1335,11 @@ const SamurdhiFamillyForm = () => {
                                         handleRadioChange('employment_id', option.employment_id);
                                     }}
                                     label={`${option.nameSinhala} - ${option.nameTamil} - ${option.nameEnglish}`}
-                                    className="text-sm sm:text-base" // Responsive text size
+                                    className="text-sm sm:text-base"
                                 />
                             ))}
                         </div>
+                        <ErrorMessage error={errors.employment_id} />
                     </div>
 
                     <div>
@@ -1036,53 +1395,56 @@ const SamurdhiFamillyForm = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                             {empowermentDimensions.map((dimension) => (
                                 <div key={dimension.empowerment_dimension_id} className="flex gap-3 items-start">
-                                    <Radio
-                                        id={`empowerment-${dimension.empowerment_dimension_id}`}
-                                        name="empowerment_dimension_id"
-                                        value={dimension.empowerment_dimension_id}
-                                        checked={formData.empowerment_dimension_id === dimension.empowerment_dimension_id}
-                                        onChange={() => {
+                                    <Checkbox  // Changed from Radio to Checkbox
+                                        checked={formData.empowerment_dimension_id.includes(dimension.empowerment_dimension_id)}
+                                        onChange={(checked) => {
                                             console.log('Selected empowerment_dimension_id:', dimension.empowerment_dimension_id);
-                                            handleRadioChange('empowerment_dimension_id', dimension.empowerment_dimension_id);
+                                            handleCheckboxChange('empowerment_dimension_id', dimension.empowerment_dimension_id, checked);
                                         }}
-                                        label={
-                                            <div className="flex flex-col text-sm sm:text-base">
-                                                <span className="font-sinhala">{dimension.nameSinhala}</span>
-                                                <span className="font-tamil">{dimension.nameTamil}</span>
-                                                <span>{dimension.nameEnglish}</span>
-                                            </div>
-                                        }
                                     />
+                                    <div className="flex flex-col text-sm sm:text-base font-medium text-gray-700 dark:text-gray-400">
+                                        <span className="font-sinhala">{dimension.nameSinhala}</span>
+                                        <span className="font-tamil">{dimension.nameTamil}</span>
+                                        <span>{dimension.nameEnglish}</span>
+                                    </div>
                                 </div>
                             ))}
                         </div>
+                        <ErrorMessage error={errors.empowerment_dimension_id} />
                     </div>
 
-                    <div className="space-y-2">
-                        <Label>Types of Projects</Label>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                            {projectTypes.map((project) => (
-                                <Radio
-                                    key={project.project_type_id}
-                                    id={`project-${project.project_type_id}`}
-                                    name="project_type_id"
-                                    value={project.project_type_id}
-                                    checked={formData.project_type_id === project.project_type_id}
-                                    onChange={() => {
-                                        console.log('Selected project_type_id:', project.project_type_id);
-                                        handleRadioChange('project_type_id', project.project_type_id);
-                                    }}
-                                    label={
-                                        <div className="flex flex-col text-sm sm:text-base">
-                                            <span className="font-sinhala">{project.nameSinhala}</span>
-                                            <span className="font-tamil">{project.nameTamil}</span>
-                                            <span>{project.nameEnglish}</span>
-                                        </div>
-                                    }
-                                />
-                            ))}
-                        </div>
-                    </div>
+                    {formData.empowerment_dimension_id.some(id => {
+                        const dimension = empowermentDimensions.find(dim => dim.empowerment_dimension_id === id);
+                        return dimension?.nameEnglish.includes("Business Opportunities") ||
+                            dimension?.nameEnglish.includes("Self-Employment");
+                    }) && (
+                            <div className="space-y-2">
+                                <Label>Types of Projects</Label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                                    {projectTypes.map((project) => (
+                                        <Radio
+                                            key={project.project_type_id}
+                                            id={`project-${project.project_type_id}`}
+                                            name="project_type_id"
+                                            value={project.project_type_id}
+                                            checked={formData.project_type_id === project.project_type_id}
+                                            onChange={() => {
+                                                console.log('Selected project_type_id:', project.project_type_id);
+                                                handleRadioChange('project_type_id', project.project_type_id);
+                                            }}
+                                            label={
+                                                <div className="flex flex-col text-sm sm:text-base">
+                                                    <span className="font-sinhala">{project.nameSinhala}</span>
+                                                    <span className="font-tamil">{project.nameTamil}</span>
+                                                    <span>{project.nameEnglish}</span>
+                                                </div>
+                                            }
+                                        />
+                                    ))}
+                                </div>
+                                <ErrorMessage error={errors.project_type_id} />
+                            </div>
+                        )}
 
                     <div>
                         <Label>Specify other projects</Label>
@@ -1094,81 +1456,89 @@ const SamurdhiFamillyForm = () => {
                         />
                     </div>
 
-                    <div>
-                        <Label>පුහුණුව ලබාදීමට/ රැකියාගත කිරීමට අපේක්ෂිත දරුවාගේ නම</Label>
-                        <Input
-                            type="text"
-                            name="childName"                   // Changed from "otherProject"
-                            defaultValue={formData.childName}  // Changed to correct field
-                            onChange={handleInputChange}
-                        />
-                    </div>
+                    {formData.empowerment_dimension_id.some(id => {
+                        const dimension = empowermentDimensions.find(dim => dim.empowerment_dimension_id === id);
+                        return dimension?.nameEnglish.includes("Employment Facilitation");
+                    }) && (
+                            <>
+                                <div>
+                                    <Label>පුහුණුව ලබාදීමට/ රැකියාගත කිරීමට අපේක්ෂිත දරුවාගේ නම</Label>
+                                    <Input
+                                        type="text"
+                                        name="childName"
+                                        value={formData.childName}
+                                        onChange={handleInputChange}
+                                    />
+                                </div>
 
-                    <div>
-                        <Label>පුහුණුව ලබාදීමට/ රැකියාගත කිරීමට අපේක්ෂිත දරුවාගේ වයස</Label>
-                        <Input
-                            type="number"                      // Changed to number
-                            name="childAge"                    // Changed from "otherProject"
-                            defaultValue={formData.childAge}   // Changed to correct field
-                            onChange={handleInputChange}
-                        />
-                    </div>
+                                <div>
+                                    <Label>පුහුණුව ලබාදීමට/ රැකියාගත කිරීමට අපේක්ෂිත දරුවාගේ වයස</Label>
+                                    <Input
+                                        type="number"
+                                        name="childAge"
+                                        value={formData.childAge}
+                                        onChange={handleInputChange}
+                                    />
+                                </div>
 
-                    <div className="flex flex-col gap-4">
-                        <Label>පුහුණුව ලබාදීමට/ රැකියාගත කිරීමට අපේක්ෂිත දරුවාගේ  ස්ත්‍රී - පුරුෂ භාවය</Label>
-                        <Radio
-                            id="child-gender-female"           // Changed ID
-                            name="childGender"                 // Changed name attribute
-                            value="Female"
-                            checked={formData.childGender === "Female"}  // Changed to childGender
-                            onChange={() => handleRadioChange('childGender', "Female")}  // Changed field name
-                            label="Female"
-                        />
-                        <Radio
-                            id="child-gender-male"             // Changed ID
-                            name="childGender"                 // Changed name attribute
-                            value="Male"
-                            checked={formData.childGender === "Male"}    // Changed to childGender
-                            onChange={() => handleRadioChange('childGender', "Male")}    // Changed field name
-                            label="Male"
-                        />
-                    </div>
+                                <div className="flex flex-col gap-4">
+                                    <Label>පුහුණුව ලබාදීමට/ රැකියාගත කිරීමට අපේක්ෂිත දරුවාගේ  ස්ත්‍රී - පුරුෂ භාවය</Label>
+                                    <Radio
+                                        id="child-gender-female"
+                                        name="childGender"
+                                        value="Female"
+                                        checked={formData.childGender === "Female"}
+                                        onChange={() => handleRadioChange('childGender', "Female")}
+                                        label="Female"
+                                    />
+                                    <Radio
+                                        id="child-gender-male"
+                                        name="childGender"
+                                        value="Male"
+                                        checked={formData.childGender === "Male"}
+                                        onChange={() => handleRadioChange('childGender', "Male")}
+                                        label="Male"
+                                    />
+                                </div>
 
-                    <div className="space-y-2">
-                        <Label>Job Field</Label>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                            {jobFields.map((jobField) => (
-                                <Radio
-                                    key={jobField.job_field_id}
-                                    id={`job-field-${jobField.job_field_id}`}
-                                    name="job_field_id"
-                                    value={jobField.job_field_id}
-                                    checked={formData.job_field_id === jobField.job_field_id}
-                                    onChange={() => {
-                                        console.log('Selected job_field_id:', jobField.job_field_id);
-                                        handleRadioChange('job_field_id', jobField.job_field_id);
-                                    }}
-                                    label={
-                                        <div className="flex flex-col text-sm sm:text-base">
-                                            <span className="font-sinhala">{jobField.nameSinhala}</span>
-                                            <span className="font-tamil">{jobField.nameTamil}</span>
-                                            <span>{jobField.nameEnglish}</span>
-                                        </div>
-                                    }
-                                />
-                            ))}
-                        </div>
-                    </div>
+                                <div className="space-y-2">
+                                    <Label>Job Field</Label>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                                        {jobFields.map((jobField) => (
+                                            <Radio
+                                                key={jobField.job_field_id}
+                                                id={`job-field-${jobField.job_field_id}`}
+                                                name="job_field_id"
+                                                value={jobField.job_field_id}
+                                                checked={formData.job_field_id === jobField.job_field_id}
+                                                onChange={() => {
+                                                    console.log('Selected job_field_id:', jobField.job_field_id);
+                                                    handleRadioChange('job_field_id', jobField.job_field_id);
+                                                }}
+                                                label={
+                                                    <div className="flex flex-col text-sm sm:text-base">
+                                                        <span className="font-sinhala">{jobField.nameSinhala}</span>
+                                                        <span className="font-tamil">{jobField.nameTamil}</span>
+                                                        <span>{jobField.nameEnglish}</span>
+                                                    </div>
+                                                }
+                                            />
+                                        ))}
+                                    </div>
+                                    <ErrorMessage error={errors.job_field_id} />
+                                </div>
 
-                    <div>
-                        <Label>Please specify Other employment fields</Label>
-                        <Input
-                            type="text"
-                            name="otherJobField"                    // Changed from "otherProject"
-                            defaultValue={formData.otherJobField}   // Changed to correct field
-                            onChange={handleInputChange}
-                        />
-                    </div>
+                                <div>
+                                    <Label>Please specify Other employment fields</Label>
+                                    <Input
+                                        type="text"
+                                        name="otherJobField"
+                                        value={formData.otherJobField}
+                                        onChange={handleInputChange}
+                                    />
+                                </div>
+                            </>
+                        )}
 
                     <div className="space-y-2">
                         <Label>Resources Needed</Label>
@@ -1188,6 +1558,7 @@ const SamurdhiFamillyForm = () => {
                                 </div>
                             ))}
                         </div>
+                        <ErrorMessage error={errors.resource_id} />
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -1206,9 +1577,11 @@ const SamurdhiFamillyForm = () => {
                             <Input
                                 type="number"
                                 name="savingAmount"
-                                defaultValue={formData.savingAmount}
+                                value={formData.savingAmount}
                                 onChange={handleInputChange}
+                                className={errors.savingAmount ? 'border-red-500' : ''}
                             />
+                            <ErrorMessage error={errors.savingAmount} />
                         </div>
                     )}
 
@@ -1237,6 +1610,7 @@ const SamurdhiFamillyForm = () => {
                                 </div>
                             ))}
                         </div>
+                        <ErrorMessage error={errors.health_indicator_id} />
                     </div>
 
                     <div className="space-y-2">
@@ -1264,6 +1638,7 @@ const SamurdhiFamillyForm = () => {
                                 </div>
                             ))}
                         </div>
+                        <ErrorMessage error={errors.domestic_dynamic_id} />
                     </div>
 
                     <div className="space-y-2">
@@ -1283,6 +1658,7 @@ const SamurdhiFamillyForm = () => {
                                 </div>
                             ))}
                         </div>
+                        <ErrorMessage error={errors.community_participation_id} />
                     </div>
 
                     <div className="space-y-2">
@@ -1304,24 +1680,24 @@ const SamurdhiFamillyForm = () => {
                                 </div>
                             ))}
                         </div>
+                        <ErrorMessage error={errors.housing_service_id} />
                     </div>
 
                     <div className="flex items-center gap-5">
                         <Button
                             size="sm"
                             variant="primary"
-                            startIcon={<BoxIcon />}
                             type="submit"  // Add this line
                             disabled={isSubmitting}
                         >
-                            {isSubmitting ? 'Submitting...' : 'Submit'}
+                            {isSubmitting ? (isExistingBeneficiary ? 'Updating...' : 'Submitting...') : (isExistingBeneficiary ? 'Update' : 'Submit')}
                         </Button>
                         <Button
                             size="md"
-                            variant="primary"
-                            startIcon={<BoxIcon />}
-                            type="button"  // Add this line
-                            onClick={() => {
+                            variant="danger"
+                            type="button"  // Explicitly set type to button to prevent form submission
+                            onClick={(e) => {
+                                e.preventDefault(); // Prevent any default behavior
                                 // Reset form
                                 setFormData({
                                     district: { id: '', name: '' },
@@ -1330,7 +1706,7 @@ const SamurdhiFamillyForm = () => {
                                     gnd: { id: '', name: '' },
                                     beneficiary_type_id: '',
                                     aswasumaHouseholdNo: '',
-                                    nic: '',
+                                    nic: null, // Changed from '' to null
                                     beneficiaryName: '',
                                     gender: 'Male',
                                     address: '',
@@ -1342,7 +1718,7 @@ const SamurdhiFamillyForm = () => {
                                     otherOccupation: '',
                                     subsisdy_id: '',
                                     aswesuma_cat_id: '',
-                                    empowerment_dimension_id: '',
+                                    empowerment_dimension_id: [],
                                     project_type_id: '',
                                     otherProject: '',
                                     childName: '',
@@ -1358,6 +1734,9 @@ const SamurdhiFamillyForm = () => {
                                     community_participation_id: [],
                                     housing_service_id: []
                                 });
+                                setIsExistingBeneficiary(false);
+                                setErrors({}); // Clear validation errors
+                                setIsAswasumaHouseholdDisabled(false); // Reset any disabled states
                             }}
                         >
                             Cancel
@@ -1365,11 +1744,30 @@ const SamurdhiFamillyForm = () => {
                     </div>
                 </div>
             </form>
-            <ErrorPopup
-                isOpen={errorPopup.isOpen}
-                onClose={() => setErrorPopup(prev => ({ ...prev, isOpen: false }))}
-                title={errorPopup.title}
-                message={errorPopup.message}
+            <Toaster
+                position="top-right"
+                toastOptions={{
+                    duration: 4000,
+                    style: {
+                        maxWidth: '500px',
+                    },
+                    success: {
+                        style: {
+                            background: '#10B981',
+                            color: 'white',
+                        },
+                    },
+                    error: {
+                        style: {
+                            background: '#EF4444',
+                            color: 'white',
+                        },
+                    },
+                }}
+                containerStyle={{
+                    top: 20,
+                    right: 20,
+                }}
             />
         </ComponentCard>
     )
