@@ -583,7 +583,7 @@ const SamurdhiFamillyForm = () => {
 
     const handleNicLookup = async () => {
         if (!formData.nic || formData.nic.trim() === '') {
-            toast.error('message')
+            toast.error('Please enter NIC number');
             return;
         }
 
@@ -612,7 +612,7 @@ const SamurdhiFamillyForm = () => {
                 otherOccupation: data.otherOccupation || '',
                 subsisdy_id: data.subsisdy_id || '',
                 aswesuma_cat_id: data.aswesuma_cat_id || '',
-                empowerment_dimension_id: data.empowerment_dimension_id || '',
+                empowerment_dimension_id: data.empowerment_dimension_id ? [data.empowerment_dimension_id] : [],
                 project_type_id: data.project_type_id || '',
                 otherProject: data.otherProject || '',
                 childName: data.childName || '',
@@ -620,17 +620,18 @@ const SamurdhiFamillyForm = () => {
                 childGender: data.childGender || 'Male',
                 job_field_id: data.job_field_id || '',
                 otherJobField: data.otherJobField || '',
-                resource_id: data.resource_id ? [data.resource_id] : [],
+                // Updated to handle arrays from backend
+                resource_id: Array.isArray(data.resource_id) ? data.resource_id : (data.resource_id ? [data.resource_id] : []),
                 monthlySaving: data.monthlySaving || false,
                 savingAmount: data.savingAmount || 0,
-                health_indicator_id: data.health_indicator_id ? [data.health_indicator_id] : [],
-                domestic_dynamic_id: data.domestic_dynamic_id ? [data.domestic_dynamic_id] : [],
-                community_participation_id: data.community_participation_id ? [data.community_participation_id] : [],
-                housing_service_id: data.housing_service_id ? [data.housing_service_id] : []
+                health_indicator_id: Array.isArray(data.health_indicator_id) ? data.health_indicator_id : (data.health_indicator_id ? [data.health_indicator_id] : []),
+                domestic_dynamic_id: Array.isArray(data.domestic_dynamic_id) ? data.domestic_dynamic_id : (data.domestic_dynamic_id ? [data.domestic_dynamic_id] : []),
+                community_participation_id: Array.isArray(data.community_participation_id) ? data.community_participation_id : (data.community_participation_id ? [data.community_participation_id] : []),
+                housing_service_id: Array.isArray(data.housing_service_id) ? data.housing_service_id : (data.housing_service_id ? [data.housing_service_id] : [])
             }));
-        } catch (error: any) {
+        } catch {
             setIsExistingBeneficiary(false);
-            toast.error('message', error)
+            toast.error('Failed to fetch beneficiary details');
         } finally {
             setIsFetching(false);
         }
@@ -978,13 +979,14 @@ const SamurdhiFamillyForm = () => {
                 childGender: convertEmptyToNull(formData.childGender) || "Male",
                 job_field_id: convertEmptyToNull(formData.job_field_id),
                 otherJobField: convertEmptyToNull(formData.otherJobField),
-                resource_id: formData.resource_id.length > 0 ? formData.resource_id[0] : null,
+                // Updated to send arrays instead of single values
+                resource_id: formData.resource_id || [],
                 monthlySaving: formData.monthlySaving,
                 savingAmount: formData.savingAmount || 0,
-                health_indicator_id: formData.health_indicator_id.length > 0 ? formData.health_indicator_id[0] : null,
-                domestic_dynamic_id: formData.domestic_dynamic_id.length > 0 ? formData.domestic_dynamic_id[0] : null,
-                community_participation_id: formData.community_participation_id.length > 0 ? formData.community_participation_id[0] : null,
-                housing_service_id: formData.housing_service_id.length > 0 ? formData.housing_service_id[0] : null
+                health_indicator_id: formData.health_indicator_id || [],
+                domestic_dynamic_id: formData.domestic_dynamic_id || [],
+                community_participation_id: formData.community_participation_id || [],
+                housing_service_id: formData.housing_service_id || []
             };
 
             console.log('Prepared payload:', payload);

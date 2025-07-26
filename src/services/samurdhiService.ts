@@ -10,34 +10,35 @@ export interface SamurdhiFamilyPayload {
   zone_id: string;
   gnd_id: string;
   beneficiary_type_id: string;
-  aswasumaHouseholdNo: string | null;  // Changed to allow null
-  nic: string | null;                  // Changed to allow null
-  beneficiaryName: string | null;      // Changed to allow null
-  gender: string | null;               // Changed to allow null
-  address: string | null;              // Changed to allow null
-  phone: string | null;                // Changed to allow null
+  aswasumaHouseholdNo: string | null;
+  nic: string | null;
+  beneficiaryName: string | null;
+  gender: string | null;
+  address: string | null;
+  phone: string | null;
   projectOwnerAge: number;
   male18To60: number;
   female18To60: number;
-  employment_id: string | null;        // Changed to allow null
-  otherOccupation: string | null;      // Already nullable
-  subsisdy_id: string | null;          // Changed to allow null
-  aswesuma_cat_id: string | null;      // Changed to allow null
-  empowerment_dimension_id: string | null; // Changed to allow null
-  project_type_id: string | null;      // Changed to allow null
-  otherProject: string | null;         // Changed to allow null
-  childName?: string | null;           // Already optional and nullable
-  childAge?: number;                   // Keep as is
-  childGender?: string | null;         // Already optional and nullable
-  job_field_id: string | null;         // Changed to allow null
-  otherJobField?: string | null;       // Already optional and nullable
-  resource_id: string | null;          // Changed to allow null (was single string, now nullable)
+  employment_id: string | null;
+  otherOccupation: string | null;
+  subsisdy_id: string | null;
+  aswesuma_cat_id: string | null;
+  empowerment_dimension_id: string | null;
+  project_type_id: string | null;
+  otherProject: string | null;
+  childName?: string | null;
+  childAge?: number;
+  childGender?: string | null;
+  job_field_id: string | null;
+  otherJobField?: string | null;
+  // Updated to arrays
+  resource_id: string[];
   monthlySaving: boolean;
   savingAmount: number;
-  health_indicator_id: string | null;  // Changed to allow null
-  domestic_dynamic_id: string | null;  // Changed to allow null
-  community_participation_id: string | null; // Changed to allow null
-  housing_service_id: string | null;   // Changed to allow null
+  health_indicator_id: string[];
+  domestic_dynamic_id: string[];
+  community_participation_id: string[];
+  housing_service_id: string[];
 }
 
 export const createSamurdhiFamily = async (payload: SamurdhiFamilyPayload) => {
