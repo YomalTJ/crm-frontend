@@ -168,28 +168,28 @@ interface FormData {
         id: string;
         name: string;
     };
-    beneficiary_type_id: string;
-    aswasumaHouseholdNo: string;
+    beneficiary_type_id: string | null; // Remove null from here
+    aswasumaHouseholdNo: string | null;
     nic: string | null;
-    beneficiaryName: string;
-    gender: string;                    // Main beneficiary gender
-    address: string;
-    phone: string;
+    beneficiaryName: string | null;
+    gender: string | null;
+    address: string | null;
+    phone: string | null;
     projectOwnerAge: number;
     male18To60: number;
     female18To60: number;
-    employment_id: string;
-    otherOccupation: string;
-    subsisdy_id: string;
-    aswesuma_cat_id: string;
+    employment_id: string | null;
+    otherOccupation: string | null;
+    subsisdy_id: string | null;
+    aswesuma_cat_id: string | null;
     empowerment_dimension_id: string[];
-    project_type_id: string;
-    otherProject: string;
-    childName?: string;
+    project_type_id: string | null;
+    otherProject: string | null;
+    childName?: string | null;
     childAge?: number;
-    childGender?: string;              // Add separate field for child gender
-    job_field_id: string;
-    otherJobField?: string;
+    childGender?: string | null;
+    job_field_id: string | null;
+    otherJobField?: string | null;
     resource_id: string[];
     monthlySaving: boolean;
     savingAmount: number;
@@ -636,10 +636,17 @@ const SamurdhiFamillyForm = () => {
         }
     };
 
+    const convertEmptyToNull = (value: string | null | undefined): string | null => {
+        if (value === undefined || value === null || value === '' || (typeof value === 'string' && value.trim() === '')) {
+            return null;
+        }
+        return value;
+    };
+
     const validateForm = (): boolean => {
         const newErrors: { [key: string]: string } = {};
 
-        // Basic required fields
+        // Basic required fields - check for null or empty
         if (!formData.beneficiary_type_id) {
             newErrors.beneficiary_type_id = 'Please select beneficiary type';
         }
@@ -657,15 +664,15 @@ const SamurdhiFamillyForm = () => {
             }
         }
 
-        if (!formData.beneficiaryName.trim()) {
+        if (!formData.beneficiaryName || formData.beneficiaryName.trim() === '') {
             newErrors.beneficiaryName = 'Beneficiary name is required';
         }
 
-        if (!formData.address.trim()) {
+        if (!formData.address || formData.address.trim() === '') {
             newErrors.address = 'Address is required';
         }
 
-        if (!formData.phone.trim()) {
+        if (!formData.phone || formData.phone.trim() === '') {
             newErrors.phone = 'Phone number is required';
         } else if (!/^[0-9+\-\s()]+$/.test(formData.phone)) {
             newErrors.phone = 'Please enter a valid phone number';
@@ -677,25 +684,7 @@ const SamurdhiFamillyForm = () => {
             newErrors.projectOwnerAge = 'Please enter a valid age';
         }
 
-        // if (!formData.employment_id) {
-        //     newErrors.employment_id = 'Please select current employment';
-        // }
-
-        // if (formData.empowerment_dimension_id) {
-        //     const selectedEmpowerment = empowermentDimensions.find(
-        //         dim => dim.empowerment_dimension_id === formData.empowerment_dimension_id
-        //     );
-
-        //     // Check if "Employment Facilitation" is selected
-        //     if (selectedEmpowerment?.nameEnglish.includes("Employment Facilitation") ||
-        //         selectedEmpowerment?.nameEnglish.includes("EMPLOYMENT FACILITATION")) {
-        //         if (!formData.project_type_id) {
-        //             newErrors.project_type_id = 'Project type is mandatory when Employment Facilitation is selected';
-        //         }
-        //     }
-        // }
-
-        // Conditional validations
+        // Conditional validations with null checks
         if (formData.beneficiary_type_id && !isAswasumaHouseholdDisabled && !formData.aswasumaHouseholdNo) {
             newErrors.aswasumaHouseholdNo = 'Aswasuma household number is required';
         }
@@ -719,7 +708,7 @@ const SamurdhiFamillyForm = () => {
 
         // Validate child details if Employment Facilitation is selected
         if (hasEmploymentFacilitation) {
-            if (!formData.childName?.trim()) {
+            if (!formData.childName || formData.childName.trim() === '') {
                 newErrors.childName = 'Child name is required for Employment Facilitation';
             }
             if (!formData.childAge || formData.childAge <= 0) {
@@ -777,28 +766,28 @@ const SamurdhiFamillyForm = () => {
         dsDivision: { id: '', name: '' },
         zone: { id: '', name: '' },
         gnd: { id: '', name: '' },
-        beneficiary_type_id: '',
-        aswasumaHouseholdNo: '',
+        beneficiary_type_id: '', // Change from null to empty string
+        aswasumaHouseholdNo: null,
         nic: null,
-        beneficiaryName: '',
-        gender: '',
-        address: '',
-        phone: '',
+        beneficiaryName: null,
+        gender: null,
+        address: null,
+        phone: null,
         projectOwnerAge: 0,
         male18To60: 0,
         female18To60: 0,
-        employment_id: '',
-        otherOccupation: '',
-        subsisdy_id: '',
-        aswesuma_cat_id: '',
+        employment_id: null,
+        otherOccupation: null,
+        subsisdy_id: null,
+        aswesuma_cat_id: null,
         empowerment_dimension_id: [],
-        project_type_id: '',
-        otherProject: '',
-        childName: '',
+        project_type_id: null,
+        otherProject: null,
+        childName: null,
         childAge: 0,
-        childGender: '',              // Add default value for child gender
-        job_field_id: '',
-        otherJobField: '',
+        childGender: null,
+        job_field_id: null,
+        otherJobField: null,
         resource_id: [],
         monthlySaving: false,
         savingAmount: 0,
@@ -952,6 +941,11 @@ const SamurdhiFamillyForm = () => {
             return;
         }
 
+        if (!formData.beneficiary_type_id) {
+            toast.error('Beneficiary type is required');
+            return;
+        }
+
         setIsSubmitting(true);
 
         try {
@@ -962,35 +956,35 @@ const SamurdhiFamillyForm = () => {
                 ds_id: formData.dsDivision.id || "1",
                 zone_id: formData.zone.id || "1",
                 gnd_id: formData.gnd.id || "1",
-                beneficiary_type_id: formData.beneficiary_type_id,
-                aswasumaHouseholdNo: formData.aswasumaHouseholdNo,
-                nic: formData.nic || "",
-                beneficiaryName: formData.beneficiaryName,
-                gender: formData.gender,
-                address: formData.address,
-                phone: formData.phone,
-                projectOwnerAge: formData.projectOwnerAge,
-                male18To60: formData.male18To60,
-                female18To60: formData.female18To60,
-                employment_id: formData.employment_id,
-                otherOccupation: formData.otherOccupation,
-                subsisdy_id: formData.subsisdy_id,
-                aswesuma_cat_id: formData.aswesuma_cat_id,
-                empowerment_dimension_id: formData.empowerment_dimension_id.length > 0 ? formData.empowerment_dimension_id[0] : "",
-                project_type_id: formData.project_type_id,
-                otherProject: formData.otherProject,
-                childName: formData.childName || "",
+                beneficiary_type_id: formData.beneficiary_type_id as string,
+                aswasumaHouseholdNo: convertEmptyToNull(formData.aswasumaHouseholdNo),
+                nic: convertEmptyToNull(formData.nic),
+                beneficiaryName: convertEmptyToNull(formData.beneficiaryName),
+                gender: convertEmptyToNull(formData.gender),
+                address: convertEmptyToNull(formData.address),
+                phone: convertEmptyToNull(formData.phone),
+                projectOwnerAge: formData.projectOwnerAge || 0,
+                male18To60: formData.male18To60 || 0,
+                female18To60: formData.female18To60 || 0,
+                employment_id: convertEmptyToNull(formData.employment_id),
+                otherOccupation: convertEmptyToNull(formData.otherOccupation),
+                subsisdy_id: convertEmptyToNull(formData.subsisdy_id),
+                aswesuma_cat_id: convertEmptyToNull(formData.aswesuma_cat_id),
+                empowerment_dimension_id: formData.empowerment_dimension_id.length > 0 ? formData.empowerment_dimension_id[0] : null,
+                project_type_id: convertEmptyToNull(formData.project_type_id),
+                otherProject: convertEmptyToNull(formData.otherProject),
+                childName: convertEmptyToNull(formData.childName),
                 childAge: formData.childAge || 0,
-                childGender: formData.childGender || "Male",
-                job_field_id: formData.job_field_id,
-                otherJobField: formData.otherJobField || "",
-                resource_id: formData.resource_id.length > 0 ? formData.resource_id[0] : "",
+                childGender: convertEmptyToNull(formData.childGender) || "Male",
+                job_field_id: convertEmptyToNull(formData.job_field_id),
+                otherJobField: convertEmptyToNull(formData.otherJobField),
+                resource_id: formData.resource_id.length > 0 ? formData.resource_id[0] : null,
                 monthlySaving: formData.monthlySaving,
-                savingAmount: formData.savingAmount,
-                health_indicator_id: formData.health_indicator_id.length > 0 ? formData.health_indicator_id[0] : "",
-                domestic_dynamic_id: formData.domestic_dynamic_id.length > 0 ? formData.domestic_dynamic_id[0] : "",
-                community_participation_id: formData.community_participation_id.length > 0 ? formData.community_participation_id[0] : "",
-                housing_service_id: formData.housing_service_id.length > 0 ? formData.housing_service_id[0] : ""
+                savingAmount: formData.savingAmount || 0,
+                health_indicator_id: formData.health_indicator_id.length > 0 ? formData.health_indicator_id[0] : null,
+                domestic_dynamic_id: formData.domestic_dynamic_id.length > 0 ? formData.domestic_dynamic_id[0] : null,
+                community_participation_id: formData.community_participation_id.length > 0 ? formData.community_participation_id[0] : null,
+                housing_service_id: formData.housing_service_id.length > 0 ? formData.housing_service_id[0] : null
             };
 
             console.log('Prepared payload:', payload);
@@ -1014,7 +1008,19 @@ const SamurdhiFamillyForm = () => {
                     : 'Beneficiary created successfully!';
 
                 // Show success toast first
-                toast.success(successMessage);
+                toast.success(successMessage, {
+                    duration: 4000,
+                    style: {
+                        background: '#10B981',
+                        color: 'white',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                    },
+                    iconTheme: {
+                        primary: 'white',
+                        secondary: '#10B981',
+                    },
+                });
 
                 // Wait a bit before resetting the form to ensure toast is visible
                 setTimeout(() => {
@@ -1192,7 +1198,7 @@ const SamurdhiFamillyForm = () => {
                                     await handleHouseholdSelection(value);
                                 }}
                                 className={`dark:bg-dark-900 ${errors.aswasumaHouseholdNo ? 'border-red-500' : ''}`}
-                                value={formData.aswasumaHouseholdNo}
+                                value={formData.aswasumaHouseholdNo || undefined}  // Convert null to undefined
                                 disabled={isAswasumaHouseholdDisabled || isLoadingHouseholdNumbers}
                             />
                             <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
@@ -1239,7 +1245,7 @@ const SamurdhiFamillyForm = () => {
                         <Input
                             type="text"
                             name="beneficiaryName"
-                            value={formData.beneficiaryName}
+                            value={formData.beneficiaryName || undefined}
                             onChange={handleInputChange}
                             className={errors.beneficiaryName ? 'border-red-500' : ''}
                         />
@@ -1271,7 +1277,7 @@ const SamurdhiFamillyForm = () => {
                         <Input
                             type="text"
                             name="address"
-                            value={formData.address}
+                            value={formData.address || undefined}
                             onChange={handleInputChange}
                             className={errors.address ? 'border-red-500' : ''}
                         />
@@ -1283,7 +1289,7 @@ const SamurdhiFamillyForm = () => {
                         <Input
                             type="text"
                             name="phone"
-                            value={formData.phone}
+                            value={formData.phone || undefined}
                             onChange={handleInputChange}
                             className={errors.phone ? 'border-red-500' : ''}
                         />
@@ -1347,7 +1353,7 @@ const SamurdhiFamillyForm = () => {
                         <Input
                             type="text"
                             name="otherOccupation"
-                            defaultValue={formData.otherOccupation}
+                            defaultValue={formData.otherOccupation || undefined}
                             onChange={handleInputChange}
                         />
                     </div>
@@ -1363,7 +1369,7 @@ const SamurdhiFamillyForm = () => {
                                 placeholder="Select Subsidy Amount"
                                 onChange={(value) => handleSelectChange('subsisdy_id', value)}  // Changed to correct field name
                                 className="dark:bg-dark-900"
-                                defaultValue={formData.subsisdy_id}  // Changed to correct field name
+                                defaultValue={formData.subsisdy_id || undefined}  // Changed to correct field name
                             />
                             <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
                                 <ChevronDownIcon />
@@ -1382,7 +1388,7 @@ const SamurdhiFamillyForm = () => {
                                 placeholder="Select Aswasuma Category"
                                 onChange={(value) => handleSelectChange('aswesuma_cat_id', value)}  // Changed to correct API field name
                                 className="dark:bg-dark-900"
-                                defaultValue={formData.aswesuma_cat_id}  // Changed to correct field name
+                                defaultValue={formData.aswesuma_cat_id || undefined}  // Changed to correct field name
                             />
                             <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
                                 <ChevronDownIcon />
@@ -1451,7 +1457,7 @@ const SamurdhiFamillyForm = () => {
                         <Input
                             type="text"
                             name="otherProject"
-                            defaultValue={formData.otherProject}
+                            defaultValue={formData.otherProject || undefined}
                             onChange={handleInputChange}
                         />
                     </div>
@@ -1466,7 +1472,7 @@ const SamurdhiFamillyForm = () => {
                                     <Input
                                         type="text"
                                         name="childName"
-                                        value={formData.childName}
+                                        value={formData.childName || undefined}
                                         onChange={handleInputChange}
                                     />
                                 </div>
@@ -1533,7 +1539,7 @@ const SamurdhiFamillyForm = () => {
                                     <Input
                                         type="text"
                                         name="otherJobField"
-                                        value={formData.otherJobField}
+                                        value={formData.otherJobField || undefined}
                                         onChange={handleInputChange}
                                     />
                                 </div>
@@ -1704,28 +1710,28 @@ const SamurdhiFamillyForm = () => {
                                     dsDivision: { id: '', name: '' },
                                     zone: { id: '', name: '' },
                                     gnd: { id: '', name: '' },
-                                    beneficiary_type_id: '',
-                                    aswasumaHouseholdNo: '',
-                                    nic: null, // Changed from '' to null
-                                    beneficiaryName: '',
-                                    gender: 'Male',
-                                    address: '',
-                                    phone: '',
+                                    beneficiary_type_id: null,
+                                    aswasumaHouseholdNo: null,
+                                    nic: null,
+                                    beneficiaryName: null,
+                                    gender: null,
+                                    address: null,
+                                    phone: null,
                                     projectOwnerAge: 0,
                                     male18To60: 0,
                                     female18To60: 0,
-                                    employment_id: '',
-                                    otherOccupation: '',
-                                    subsisdy_id: '',
-                                    aswesuma_cat_id: '',
+                                    employment_id: null,
+                                    otherOccupation: null,
+                                    subsisdy_id: null,
+                                    aswesuma_cat_id: null,
                                     empowerment_dimension_id: [],
-                                    project_type_id: '',
-                                    otherProject: '',
-                                    childName: '',
+                                    project_type_id: null,
+                                    otherProject: null,
+                                    childName: null,
                                     childAge: 0,
-                                    childGender: 'Male',
-                                    job_field_id: '',
-                                    otherJobField: '',
+                                    childGender: null,
+                                    job_field_id: null,
+                                    otherJobField: null,
                                     resource_id: [],
                                     monthlySaving: false,
                                     savingAmount: 0,
@@ -1752,15 +1758,28 @@ const SamurdhiFamillyForm = () => {
                         maxWidth: '500px',
                     },
                     success: {
+                        duration: 5000, // Longer duration for success messages
                         style: {
                             background: '#10B981',
                             color: 'white',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            border: '1px solid #059669',
+                            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.15)',
+                        },
+                        iconTheme: {
+                            primary: 'white',
+                            secondary: '#10B981',
                         },
                     },
                     error: {
                         style: {
                             background: '#EF4444',
                             color: 'white',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            border: '1px solid #DC2626',
+                            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.15)',
                         },
                     },
                 }}
