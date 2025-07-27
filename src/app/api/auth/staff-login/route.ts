@@ -13,6 +13,7 @@ export async function POST(req: NextRequest) {
     });
 
     const staffToken = res.data.staffAccessToken;
+    const locationDetails = res.data.locationDetails;
 
     // Decode role from JWT payload
     const decoded: any = JSON.parse(
@@ -29,7 +30,12 @@ export async function POST(req: NextRequest) {
       sameSite: "lax",
     });
 
-    return NextResponse.json({ success: true, role });
+    return NextResponse.json({
+      success: true,
+      role,
+      type: "staff",
+      locationDetails
+    });
   } catch (error: any) {
     return NextResponse.json(
       { error: error?.response?.data?.message || "Staff login failed" },
