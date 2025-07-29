@@ -753,3 +753,42 @@ span.flatpickr-weekday,
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out forwards;
 }
+
+.toast-container-fixed {
+        pointer-events: none;
+    }
+    
+    .toast-container-fixed > div {
+        pointer-events: auto;
+        transform: none !important;
+        animation: none !important;
+        transition: none !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    .toast-no-animation {
+        transform: none !important;
+        animation: none !important;
+        transition: none !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    /* Override react-hot-toast default animations */
+    .toast-container-fixed [data-hot-toast] {
+        transform: none !important;
+        animation: none !important;
+        transition: none !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    /* Ensure toast content is always fully visible */
+    .toast-container-fixed .toast-no-animation > div {
+        white-space: normal;
+        word-wrap: break-word;
+        overflow: visible;
+        text-overflow: visible;
+        max-width: none;
+    }

@@ -62,7 +62,7 @@ export default function SignInForm() {
         // Format role name (e.g., "HR Executive" → "hr-executive")
         const formattedRole = roleName.toLowerCase().replace(/\s+/g, "-");
 
-        console.log(`➡️ Redirecting based on role: ${roleName} -> ${formattedRole}`);
+        console.log(`Redirecting based on role: ${roleName} -> ${formattedRole}`);
 
         switch (formattedRole) {
           case "department-manager":
@@ -88,7 +88,7 @@ export default function SignInForm() {
         }
       }
     } catch (error: any) {
-      console.error("❌ Login error:", error.message);
+      console.error("Login error:", error.message);
       alert(error.message || "Login failed");
     }
   };

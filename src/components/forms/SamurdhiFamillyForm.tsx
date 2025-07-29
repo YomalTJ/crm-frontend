@@ -324,6 +324,8 @@ const SamurdhiFamillyForm = () => {
 
     const [isLoadingHouseholdNumbers, setIsLoadingHouseholdNumbers] = useState(false);
 
+    const [isFormResetting, setIsFormResetting] = useState(false);
+
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
     useEffect(() => {
@@ -930,7 +932,7 @@ const SamurdhiFamillyForm = () => {
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault(); // This prevents the default form submission behavior
+        e.preventDefault();
 
         if (!validateForm()) {
             toast.error('Please fix all validation errors before submitting');
@@ -979,7 +981,6 @@ const SamurdhiFamillyForm = () => {
                 childGender: convertEmptyToNull(formData.childGender) || "Male",
                 job_field_id: convertEmptyToNull(formData.job_field_id),
                 otherJobField: convertEmptyToNull(formData.otherJobField),
-                // Updated to send arrays instead of single values
                 resource_id: formData.resource_id || [],
                 monthlySaving: formData.monthlySaving,
                 savingAmount: formData.savingAmount || 0,
@@ -1003,15 +1004,16 @@ const SamurdhiFamillyForm = () => {
 
             console.log('API Response:', response);
 
-            // Modified success check - if we got a response with an id, consider it successful
             if (response && response.id) {
-                const successMessage = isExistingBeneficiary
-                    ? 'Beneficiary updated successfully! 🎉'
-                    : 'Beneficiary created successfully! 🎉';
+                // Set form resetting state to keep button disabled
+                setIsFormResetting(true);
 
-                // Show success toast with longer duration and better styling
+                const successMessage = isExistingBeneficiary
+                    ? 'Beneficiary updated successfully!'
+                    : 'Beneficiary created successfully!';
+
                 toast.success(successMessage, {
-                    duration: 6000, // Increased duration to 6 seconds
+                    duration: 6000,
                     style: {
                         background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
                         color: 'white',
@@ -1022,6 +1024,9 @@ const SamurdhiFamillyForm = () => {
                         boxShadow: '0 10px 25px rgba(16, 185, 129, 0.3)',
                         border: '1px solid rgba(255, 255, 255, 0.2)',
                         maxWidth: '400px',
+                        minHeight: '60px',
+                        display: 'flex',
+                        alignItems: 'center',
                     },
                     iconTheme: {
                         primary: 'white',
@@ -1029,7 +1034,6 @@ const SamurdhiFamillyForm = () => {
                     },
                 });
 
-                // Show a loading indicator for the reset process
                 setTimeout(() => {
                     toast.loading('Preparing form for next entry...', {
                         duration: 2000,
@@ -1038,13 +1042,15 @@ const SamurdhiFamillyForm = () => {
                             color: 'white',
                             fontSize: '14px',
                             fontWeight: '500',
+                            minHeight: '60px',
+                            padding: '16px 20px',
+                            display: 'flex',
+                            alignItems: 'center',
                         },
                     });
-                }, 3000); // Show loading after 3 seconds
+                }, 3000);
 
-                // Wait longer before resetting the form to ensure user sees the success message
                 setTimeout(() => {
-                    // Store location data before reset
                     const storedLocation = localStorage.getItem('staffLocation');
                     let locationData = {
                         district: { id: '', name: '' },
@@ -1075,9 +1081,8 @@ const SamurdhiFamillyForm = () => {
                         };
                     }
 
-                    // Reset form with location data preserved
                     setFormData({
-                        ...locationData, // Preserve location data
+                        ...locationData,
                         beneficiary_type_id: '',
                         aswasumaHouseholdNo: null,
                         nic: null,
@@ -1110,32 +1115,36 @@ const SamurdhiFamillyForm = () => {
                     });
 
                     setIsExistingBeneficiary(false);
-                    setErrors({}); // Clear any validation errors
-                    setIsAswasumaHouseholdDisabled(false); // Reset disabled states
+                    setErrors({});
+                    setIsAswasumaHouseholdDisabled(false);
 
-                    // Scroll to top of form smoothly
                     window.scrollTo({
                         top: 0,
                         behavior: 'smooth'
                     });
 
-                    // Show a final confirmation toast
                     setTimeout(() => {
-                        toast.success('Form is ready for next entry! ✨', {
+                        toast.success('Form is ready for next entry!', {
                             duration: 3000,
                             style: {
                                 background: '#8B5CF6',
                                 color: 'white',
                                 fontSize: '14px',
                                 fontWeight: '500',
+                                minHeight: '60px',
+                                padding: '16px 20px',
+                                display: 'flex',
+                                alignItems: 'center',
                             },
                         });
+
+                        // Enable the form after everything is complete
+                        setIsFormResetting(false);
                     }, 500);
 
-                }, 5000); // Wait 5 seconds before resetting (increased from 1 second)
+                }, 5000);
 
             } else {
-                // If we didn't get an expected response, throw an error
                 throw new Error(response?.message || 'Unexpected response from server');
             }
         } catch (error: any) {
@@ -1145,7 +1154,7 @@ const SamurdhiFamillyForm = () => {
                 'An error occurred while submitting the form';
 
             toast.error(errorMessage, {
-                duration: 6000, // Longer duration for errors too
+                duration: 6000,
                 style: {
                     background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
                     color: 'white',
@@ -1156,6 +1165,9 @@ const SamurdhiFamillyForm = () => {
                     boxShadow: '0 10px 25px rgba(239, 68, 68, 0.3)',
                     border: '1px solid rgba(255, 255, 255, 0.2)',
                     maxWidth: '400px',
+                    minHeight: '60px',
+                    display: 'flex',
+                    alignItems: 'center',
                 },
             });
         } finally {
@@ -1777,10 +1789,15 @@ const SamurdhiFamillyForm = () => {
                         <Button
                             size="sm"
                             variant="primary"
-                            type="submit"  // Add this line
-                            disabled={isSubmitting}
+                            type="submit"
+                            disabled={isSubmitting || isFormResetting}
                         >
-                            {isSubmitting ? (isExistingBeneficiary ? 'Updating...' : 'Submitting...') : (isExistingBeneficiary ? 'Update' : 'Submit')}
+                            {isSubmitting
+                                ? (isExistingBeneficiary ? 'Updating...' : 'Submitting...')
+                                : isFormResetting
+                                    ? 'Processing...'
+                                    : (isExistingBeneficiary ? 'Update' : 'Submit')
+                            }
                         </Button>
                         <Button
                             size="md"
@@ -1868,7 +1885,7 @@ const SamurdhiFamillyForm = () => {
                     },
                 }}
                 containerStyle={{
-                    top: 20,
+                    top: '100px',
                     right: 20,
                 }}
             />
