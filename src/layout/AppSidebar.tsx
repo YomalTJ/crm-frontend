@@ -26,7 +26,7 @@ const navItems: NavItem[] = [
   {
     icon: <CalenderIcon />,
     name: "Beneficiary Management",
-    path: "/dashboard/department-manager",
+    path: "/dashboard/gnd-user",
   },
 ];
 

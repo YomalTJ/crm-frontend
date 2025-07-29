@@ -168,7 +168,7 @@ interface FormData {
         id: string;
         name: string;
     };
-    beneficiary_type_id: string | null; // Remove null from here
+    beneficiary_type_id: string | null;
     aswasumaHouseholdNo: string | null;
     nic: string | null;
     beneficiaryName: string | null;
@@ -318,7 +318,7 @@ const SamurdhiFamillyForm = () => {
 
     const [isExistingBeneficiary, setIsExistingBeneficiary] = useState(false);
 
-    const [isAswasumaHouseholdDisabled, setIsAswasumaHouseholdDisabled] = useState(false);
+    const [, setIsAswasumaHouseholdDisabled] = useState(false);
 
     const [householdNumbers, setHouseholdNumbers] = useState<string[]>([]);
 
@@ -327,6 +327,8 @@ const SamurdhiFamillyForm = () => {
     const [isFormResetting, setIsFormResetting] = useState(false);
 
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+    const [showAllFieldsForExistingBeneficiary, setShowAllFieldsForExistingBeneficiary] = useState(false);
 
     useEffect(() => {
         const storedLocation = localStorage.getItem('staffLocation');
@@ -599,6 +601,23 @@ const SamurdhiFamillyForm = () => {
                 data.beneficiary_type_name?.includes("Low income");
             setIsAswasumaHouseholdDisabled(isPreviousSamurdhi);
 
+            // Check if the fetched data has values for fields that might be hidden
+            const hasHiddenFieldValues = data.aswasumaHouseholdNo ||
+                data.empowerment_dimension_id?.length > 0 ||
+                data.project_type_id ||
+                data.childName ||
+                data.job_field_id ||
+                data.resource_id?.length > 0 ||
+                data.health_indicator_id?.length > 0 ||
+                data.domestic_dynamic_id?.length > 0 ||
+                data.community_participation_id?.length > 0 ||
+                data.housing_service_id?.length > 0;
+
+            // If existing beneficiary has values for conditional fields, show them
+            if (hasHiddenFieldValues) {
+                setShowAllFieldsForExistingBeneficiary(true);
+            }
+
             setFormData(prev => ({
                 ...prev,
                 beneficiaryName: data.name || '',
@@ -622,7 +641,6 @@ const SamurdhiFamillyForm = () => {
                 childGender: data.childGender || 'Male',
                 job_field_id: data.job_field_id || '',
                 otherJobField: data.otherJobField || '',
-                // Updated to handle arrays from backend
                 resource_id: Array.isArray(data.resource_id) ? data.resource_id : (data.resource_id ? [data.resource_id] : []),
                 monthlySaving: data.monthlySaving || false,
                 savingAmount: data.savingAmount || 0,
@@ -633,6 +651,7 @@ const SamurdhiFamillyForm = () => {
             }));
         } catch {
             setIsExistingBeneficiary(false);
+            setShowAllFieldsForExistingBeneficiary(false);
             toast.error('Failed to fetch beneficiary details');
         } finally {
             setIsFetching(false);
@@ -657,9 +676,16 @@ const SamurdhiFamillyForm = () => {
         const selectedBeneficiaryType = beneficiaryStatuses.find(
             status => status.beneficiary_type_id === formData.beneficiary_type_id
         );
-        const isSamurdhiBeneficiary = selectedBeneficiaryType?.nameEnglish.includes("Samurdhi beneficiary");
 
-        if (isSamurdhiBeneficiary) {
+        const isSamurdhiBeneficiary = selectedBeneficiaryType?.nameEnglish.includes("Samurdhi beneficiary");
+        const isAswasumaBeneficiary = selectedBeneficiaryType?.nameEnglish.includes("Aswasuma beneficiary") &&
+            !selectedBeneficiaryType?.nameEnglish.includes("Samurdhi") &&
+            !selectedBeneficiaryType?.nameEnglish.includes("low income");
+        const isSamurdhiOrLowIncome = selectedBeneficiaryType?.nameEnglish.includes("Samurdhi") ||
+            selectedBeneficiaryType?.nameEnglish.includes("low income");
+
+        // Conditional NIC validation - only for non-pure Aswasuma beneficiaries
+        if (!isAswasumaBeneficiary && isSamurdhiBeneficiary) {
             if (!formData.nic || formData.nic.trim() === '') {
                 newErrors.nic = 'NIC number is required for Samurdhi beneficiaries';
             } else if (formData.nic.length < 10) {
@@ -687,8 +713,8 @@ const SamurdhiFamillyForm = () => {
             newErrors.projectOwnerAge = 'Please enter a valid age';
         }
 
-        // Conditional validations with null checks
-        if (formData.beneficiary_type_id && !isAswasumaHouseholdDisabled && !formData.aswasumaHouseholdNo) {
+        // Conditional household number validation - only for non-Samurdhi/low-income beneficiaries
+        if (!isSamurdhiOrLowIncome && isAswasumaBeneficiary && !formData.aswasumaHouseholdNo) {
             newErrors.aswasumaHouseholdNo = 'Aswasuma household number is required';
         }
 
@@ -769,7 +795,7 @@ const SamurdhiFamillyForm = () => {
         dsDivision: { id: '', name: '' },
         zone: { id: '', name: '' },
         gnd: { id: '', name: '' },
-        beneficiary_type_id: '', // Change from null to empty string
+        beneficiary_type_id: null, // Change from null to empty string
         aswasumaHouseholdNo: null,
         nic: null,
         beneficiaryName: null,
@@ -1223,118 +1249,160 @@ const SamurdhiFamillyForm = () => {
 
                     <div className="flex flex-col gap-4">
                         <Label>Are you a Samurdhi beneficiary?/ Aswasuma beneficiary?/low-income earner?</Label>
-                        {beneficiaryStatuses.map((status) => (
-                            <Radio
-                                key={status.beneficiary_type_id}
-                                id={`status-${status.beneficiary_type_id}`}
-                                name="beneficiary_type_id"
-                                value={status.beneficiary_type_id}
-                                checked={formData.beneficiary_type_id === status.beneficiary_type_id}
-                                onChange={() => {
-                                    console.log('Selected beneficiary_type_id:', status.beneficiary_type_id);
-                                    handleRadioChange('beneficiary_type_id', status.beneficiary_type_id);
+                        <div className='flex flex-col md:flex-row gap-5 md:gap-20'>
+                            {beneficiaryStatuses.map((status) => (
+                                <Radio
+                                    key={status.beneficiary_type_id}
+                                    id={`status-${status.beneficiary_type_id}`}
+                                    name="beneficiary_type_id"
+                                    value={status.beneficiary_type_id}
+                                    checked={formData.beneficiary_type_id === status.beneficiary_type_id}
+                                    onChange={() => {
+                                        console.log('Selected beneficiary_type_id:', status.beneficiary_type_id);
+                                        handleRadioChange('beneficiary_type_id', status.beneficiary_type_id);
 
-                                    // Check if it's Samurdhi beneficiary (disable household dropdown)
-                                    const isSamurdhiBeneficiary = status.nameEnglish.includes("Samurdhi beneficiary");
+                                        // Check if it's Aswasuma beneficiary (hide NIC field)
+                                        const isAswasumaBeneficiary = status.nameEnglish.includes("Aswasuma beneficiary") &&
+                                            !status.nameEnglish.includes("Samurdhi") &&
+                                            !status.nameEnglish.includes("low income");
 
-                                    // Check if it's Previous Samurdhi or low income (disable household dropdown)
-                                    const isPreviousSamurdhi = status.nameEnglish.includes("Previous Samurdhi beneficiary") ||
-                                        status.nameEnglish.includes("Low income earner");
+                                        // Check if it's Samurdhi/Previous Samurdhi/Low income (hide household dropdown)
+                                        const isSamurdhiOrLowIncome = status.nameEnglish.includes("Samurdhi") ||
+                                            status.nameEnglish.includes("low income");
 
-                                    // Disable household dropdown for both Samurdhi and Previous Samurdhi/Low income
-                                    setIsAswasumaHouseholdDisabled(isSamurdhiBeneficiary || isPreviousSamurdhi);
+                                        setIsAswasumaHouseholdDisabled(isSamurdhiOrLowIncome);
 
-                                    if (isSamurdhiBeneficiary || isPreviousSamurdhi) {
-                                        setFormData(prev => ({
-                                            ...prev,
-                                            aswasumaHouseholdNo: ''
-                                        }));
+                                        // Clear the hidden fields when switching types
+                                        if (isAswasumaBeneficiary) {
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                nic: null
+                                            }));
+                                        }
+
+                                        if (isSamurdhiOrLowIncome) {
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                aswasumaHouseholdNo: null
+                                            }));
+                                        }
+                                    }}
+                                    label={
+                                        <div className="flex flex-col">
+                                            <span className="font-sinhala">{status.nameSinhala}</span>
+                                            <span className="font-tamil">{status.nameTamil}</span>
+                                            <span>{status.nameEnglish}</span>
+                                        </div>
                                     }
-                                }}
-                                label={
-                                    <div className="flex flex-col">
-                                        <span className="font-sinhala">{status.nameSinhala}</span>
-                                        <span className="font-tamil">{status.nameTamil}</span>
-                                        <span>{status.nameEnglish}</span>
-                                    </div>
-                                }
-                            />
-                        ))}
+                                />
+                            ))}
+                        </div>
                         <ErrorMessage error={errors.beneficiary_type_id} />
                     </div>
 
-                    <div>
-                        <Label>
-                            Aswasuma household number
-                            {(() => {
-                                const selectedBeneficiaryType = beneficiaryStatuses.find(
-                                    status => status.beneficiary_type_id === formData.beneficiary_type_id
-                                );
-                                const isAswasumaBeneficiary = selectedBeneficiaryType?.nameEnglish.includes("Aswasuma beneficiary");
-                                return isAswasumaBeneficiary ? <span className="text-red-500"> *</span> : '';
-                            })()}
-                        </Label>
-                        <div className="relative">
-                            <Select
-                                options={householdNumbers.map(number => ({
-                                    value: number,
-                                    label: number
-                                }))}
-                                placeholder={
-                                    isLoadingHouseholdNumbers
-                                        ? 'Loading household numbers...'
-                                        : householdNumbers.length === 0
-                                            ? 'No household numbers available for this GN division'
-                                            : isAswasumaHouseholdDisabled
-                                                ? 'Not available for selected beneficiary type'
-                                                : 'Select household number'
-                                }
-                                onChange={async (value) => {
-                                    handleSelectChange('aswasumaHouseholdNo', value);
-                                    await handleHouseholdSelection(value);
-                                }}
-                                className={`dark:bg-dark-900 ${errors.aswasumaHouseholdNo ? 'border-red-500' : ''}`}
-                                value={formData.aswasumaHouseholdNo || undefined}  // Convert null to undefined
-                                disabled={isAswasumaHouseholdDisabled || isLoadingHouseholdNumbers}
-                            />
-                            <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
-                                <ChevronDownIcon />
-                            </span>
-                        </div>
-                        <ErrorMessage error={errors.aswasumaHouseholdNo} />
-                    </div>
+                    {(() => {
+                        const selectedBeneficiaryType = beneficiaryStatuses.find(
+                            status => status.beneficiary_type_id === formData.beneficiary_type_id
+                        );
 
-                    <div className="flex gap-2 items-end">
-                        <div className="flex-1">
-                            <Label>
-                                National Identity Card Number
-                                {(() => {
-                                    const selectedBeneficiaryType = beneficiaryStatuses.find(
-                                        status => status.beneficiary_type_id === formData.beneficiary_type_id
-                                    );
-                                    const isSamurdhiBeneficiary = selectedBeneficiaryType?.nameEnglish.includes("Samurdhi beneficiary");
-                                    return isSamurdhiBeneficiary ? <span className="text-red-500"> *</span> : '';
-                                })()}
-                            </Label>
-                            <Input
-                                type="text"
-                                name="nic"
-                                value={formData.nic || ''}
-                                onChange={handleInputChange}
-                                className={errors.nic ? 'border-red-500' : ''}
-                            />
-                            <ErrorMessage error={errors.nic} />
-                        </div>
-                        <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={handleNicLookup}
-                            disabled={isFetching}
-                            className="h-11"
-                        >
-                            {isFetching ? 'Fetching...' : 'Get Details'}
-                        </Button>
-                    </div>
+                        // Only show if a beneficiary type is selected AND it's not Samurdhi or low income
+                        if (formData.beneficiary_type_id && selectedBeneficiaryType) {
+                            const isSamurdhiOrLowIncome = selectedBeneficiaryType.nameEnglish.includes("Samurdhi") ||
+                                selectedBeneficiaryType.nameEnglish.includes("low income");
+
+                            // Only show if NOT Samurdhi or low income beneficiary
+                            if (!isSamurdhiOrLowIncome) {
+                                return (
+                                    <div>
+                                        <Label>
+                                            Aswasuma household number
+                                            {(() => {
+                                                const isAswasumaBeneficiary = selectedBeneficiaryType.nameEnglish.includes("Aswasuma beneficiary") &&
+                                                    !selectedBeneficiaryType.nameEnglish.includes("Samurdhi") &&
+                                                    !selectedBeneficiaryType.nameEnglish.includes("low income");
+                                                return isAswasumaBeneficiary ? <span className="text-red-500"> *</span> : '';
+                                            })()}
+                                        </Label>
+                                        <div className="relative">
+                                            <Select
+                                                options={householdNumbers.map(number => ({
+                                                    value: number,
+                                                    label: number
+                                                }))}
+                                                placeholder={
+                                                    isLoadingHouseholdNumbers
+                                                        ? 'Loading household numbers...'
+                                                        : householdNumbers.length === 0
+                                                            ? 'No household numbers available for this GN division'
+                                                            : 'Select household number'
+                                                }
+                                                onChange={async (value) => {
+                                                    handleSelectChange('aswasumaHouseholdNo', value);
+                                                    await handleHouseholdSelection(value);
+                                                }}
+                                                className={`dark:bg-dark-900 ${errors.aswasumaHouseholdNo ? 'border-red-500' : ''}`}
+                                                value={formData.aswasumaHouseholdNo || undefined}
+                                                disabled={isLoadingHouseholdNumbers}
+                                            />
+                                            <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                                                <ChevronDownIcon />
+                                            </span>
+                                        </div>
+                                        <ErrorMessage error={errors.aswasumaHouseholdNo} />
+                                    </div>
+                                );
+                            }
+                        }
+                        return null;
+                    })()}
+
+                    {(() => {
+                        const selectedBeneficiaryType = beneficiaryStatuses.find(
+                            status => status.beneficiary_type_id === formData.beneficiary_type_id
+                        );
+
+                        // Only show if a beneficiary type is selected AND it's not pure Aswasuma beneficiary
+                        if (formData.beneficiary_type_id && selectedBeneficiaryType) {
+                            const isAswasumaBeneficiary = selectedBeneficiaryType.nameEnglish.includes("Aswasuma beneficiary") &&
+                                !selectedBeneficiaryType.nameEnglish.includes("Samurdhi") &&
+                                !selectedBeneficiaryType.nameEnglish.includes("low income");
+
+                            // Only show if NOT pure Aswasuma beneficiary
+                            if (!isAswasumaBeneficiary) {
+                                return (
+                                    <div className="flex gap-2 items-end">
+                                        <div className="flex-1">
+                                            <Label>
+                                                National Identity Card Number
+                                                {(() => {
+                                                    const isSamurdhiBeneficiary = selectedBeneficiaryType.nameEnglish.includes("Samurdhi beneficiary");
+                                                    return isSamurdhiBeneficiary ? <span className="text-red-500"> *</span> : '';
+                                                })()}
+                                            </Label>
+                                            <Input
+                                                type="text"
+                                                name="nic"
+                                                value={formData.nic || ''}
+                                                onChange={handleInputChange}
+                                                className={errors.nic ? 'border-red-500' : ''}
+                                            />
+                                            <ErrorMessage error={errors.nic} />
+                                        </div>
+                                        <Button
+                                            size="sm"
+                                            variant="secondary"
+                                            onClick={handleNicLookup}
+                                            disabled={isFetching}
+                                            className="h-11"
+                                        >
+                                            {isFetching ? 'Fetching...' : 'Get Details'}
+                                        </Button>
+                                    </div>
+                                );
+                            }
+                        }
+                        return null;
+                    })()}
 
                     <div>
                         <Label>Name of the Beneficiary</Label>
@@ -1497,7 +1565,7 @@ const SamurdhiFamillyForm = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                             {empowermentDimensions.map((dimension) => (
                                 <div key={dimension.empowerment_dimension_id} className="flex gap-3 items-start">
-                                    <Checkbox  // Changed from Radio to Checkbox
+                                    <Checkbox
                                         checked={formData.empowerment_dimension_id.includes(dimension.empowerment_dimension_id)}
                                         onChange={(checked) => {
                                             console.log('Selected empowerment_dimension_id:', dimension.empowerment_dimension_id);
@@ -1515,11 +1583,11 @@ const SamurdhiFamillyForm = () => {
                         <ErrorMessage error={errors.empowerment_dimension_id} />
                     </div>
 
-                    {formData.empowerment_dimension_id.some(id => {
+                    {(formData.empowerment_dimension_id.some(id => {
                         const dimension = empowermentDimensions.find(dim => dim.empowerment_dimension_id === id);
                         return dimension?.nameEnglish.includes("Business Opportunities") ||
                             dimension?.nameEnglish.includes("Self-Employment");
-                    }) && (
+                    }) || (showAllFieldsForExistingBeneficiary && formData.project_type_id)) && (
                             <div className="space-y-2">
                                 <Label>Types of Projects</Label>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
@@ -1558,10 +1626,10 @@ const SamurdhiFamillyForm = () => {
                         />
                     </div>
 
-                    {formData.empowerment_dimension_id.some(id => {
+                    {(formData.empowerment_dimension_id.some(id => {
                         const dimension = empowermentDimensions.find(dim => dim.empowerment_dimension_id === id);
                         return dimension?.nameEnglish.includes("Employment Facilitation");
-                    }) && (
+                    }) || (showAllFieldsForExistingBeneficiary && (formData.childName || formData.job_field_id))) && (
                             <>
                                 <div>
                                     <Label>පුහුණුව ලබාදීමට/ රැකියාගත කිරීමට අපේක්ෂිත දරුවාගේ නම</Label>
@@ -1570,7 +1638,9 @@ const SamurdhiFamillyForm = () => {
                                         name="childName"
                                         value={formData.childName || undefined}
                                         onChange={handleInputChange}
+                                        className={errors.childName ? 'border-red-500' : ''}
                                     />
+                                    <ErrorMessage error={errors.childName} />
                                 </div>
 
                                 <div>
@@ -1580,7 +1650,9 @@ const SamurdhiFamillyForm = () => {
                                         name="childAge"
                                         value={formData.childAge}
                                         onChange={handleInputChange}
+                                        className={errors.childAge ? 'border-red-500' : ''}
                                     />
+                                    <ErrorMessage error={errors.childAge} />
                                 </div>
 
                                 <div className="flex flex-col gap-4">
@@ -1662,30 +1734,6 @@ const SamurdhiFamillyForm = () => {
                         </div>
                         <ErrorMessage error={errors.resource_id} />
                     </div>
-
-                    <div className="flex items-center gap-3">
-                        <Checkbox
-                            checked={formData.monthlySaving}
-                            onChange={(checked) => setFormData(prev => ({ ...prev, monthlySaving: checked }))}
-                        />
-                        <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">
-                            Monthly Saving
-                        </span>
-                    </div>
-
-                    {formData.monthlySaving && (
-                        <div>
-                            <Label>Saving Amount</Label>
-                            <Input
-                                type="number"
-                                name="savingAmount"
-                                value={formData.savingAmount}
-                                onChange={handleInputChange}
-                                className={errors.savingAmount ? 'border-red-500' : ''}
-                            />
-                            <ErrorMessage error={errors.savingAmount} />
-                        </div>
-                    )}
 
                     <div className="space-y-2">
                         <Label>Health/Nutrition/Education</Label>
