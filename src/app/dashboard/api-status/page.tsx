@@ -1,0 +1,489 @@
+'use client'
+
+import { useTheme } from '@/context/ThemeContext'
+import React, { useState, useEffect } from 'react'
+
+interface ApiEndpoint {
+    name: string
+    url: string
+    method: 'GET' | 'POST'
+    status: 'checking' | 'online' | 'offline' | 'error'
+    responseTime: number | null
+    lastChecked: Date | null
+    statusCode: number | null
+    testPayload?: unknown
+    requiresAuth?: boolean
+    authToken?: string | null
+}
+
+const ApiStatus = () => {
+    const { theme } = useTheme()
+    const [endpoints, setEndpoints] = useState<ApiEndpoint[]>([
+        {
+            name: 'User Registration',
+            url: 'https://api.wbb.gov.lk/api/samurthi/AuthSamurthi/register',
+            method: 'POST',
+            status: 'checking',
+            responseTime: null,
+            lastChecked: null,
+            statusCode: null,
+            testPayload: {
+                officerName: "KODITHUWAKKU ARACHCHIGE VAJIRA THARANGA PERERA",
+                nic: "822820700V",
+                phone: "0758913001",
+                password: "TestPass123",
+                gn_code: ["1-1-9-3-265"],
+                role: "Samurthi"
+            }
+        },
+        {
+            name: 'User Login',
+            url: 'https://api.wbb.gov.lk/api/samurthi/AuthSamurthi/login',
+            method: 'POST',
+            status: 'checking',
+            responseTime: null,
+            lastChecked: null,
+            statusCode: null,
+            testPayload: {
+                username: "12345678",
+                password: "@7@7sdsss"
+            }
+        },
+        {
+            name: 'Get Household Details',
+            url: 'https://api.wbb.gov.lk/api/Samurthis/GetByGn',
+            method: 'POST',
+            status: 'checking',
+            responseTime: null,
+            lastChecked: null,
+            statusCode: null,
+            requiresAuth: true,
+            authToken: null,
+            testPayload: {
+                gn_code: "1-1-09-03-175",
+                level: 2
+            }
+        }
+    ])
+
+    const [isChecking, setIsChecking] = useState(false)
+    const [autoRefresh, setAutoRefresh] = useState(false)
+    const [refreshInterval, setRefreshInterval] = useState(30) // seconds
+    const [authToken, setAuthToken] = useState<string | null>(null)
+
+    // Function to get auth token from login endpoint
+    const getAuthToken = async (): Promise<string | null> => {
+        try {
+            const response = await fetch('/api/get-auth-token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+
+            if (response.ok) {
+                const result = await response.json()
+                if (result.success && result.accessToken) {
+                    setAuthToken(result.accessToken)
+                    return result.accessToken
+                }
+            }
+            return null
+        } catch (error) {
+            console.error('Failed to get auth token:', error)
+            return null
+        }
+    }
+
+    const checkApiStatus = async (endpoint: ApiEndpoint): Promise<ApiEndpoint> => {
+        const startTime = Date.now()
+
+        try {
+            // If endpoint requires auth and we don't have a token, get one first
+            if (endpoint.requiresAuth && !authToken) {
+                const token = await getAuthToken()
+                if (!token) {
+                    return {
+                        ...endpoint,
+                        status: 'error',
+                        responseTime: Date.now() - startTime,
+                        lastChecked: new Date(),
+                        statusCode: 401
+                    }
+                }
+            }
+
+            // Make the API call through our proxy
+            const response = await fetch('/api/check-external-api', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    url: endpoint.url,
+                    method: endpoint.method,
+                    payload: endpoint.testPayload,
+                    requiresAuth: endpoint.requiresAuth,
+                    authToken: endpoint.requiresAuth ? authToken : undefined
+                })
+            })
+
+            const responseTime = Date.now() - startTime
+
+            if (response.ok) {
+                const result = await response.json()
+
+                // If this is the login endpoint and it was successful, store the token
+                if (endpoint.name === 'User Login' && result.success && result.data?.data?.token?.accessToken) {
+                    setAuthToken(result.data.data.token.accessToken)
+                }
+
+                return {
+                    ...endpoint,
+                    status: result.success ? 'online' : result.statusCode === 401 ? 'error' : 'offline',
+                    responseTime,
+                    lastChecked: new Date(),
+                    statusCode: result.statusCode,
+                    authToken: result.data?.data?.token?.accessToken || endpoint.authToken
+                }
+            } else {
+                throw new Error('Proxy failed')
+            }
+        } catch (error) {
+            console.error(`API ${endpoint.name} check failed:`, error)
+
+            // Fallback to simple health check
+            try {
+                const healthResponse = await fetch('/api/simple-health-check', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: endpoint.url })
+                })
+
+                if (healthResponse.ok) {
+                    const result = await healthResponse.json()
+                    const responseTime = Date.now() - startTime
+
+                    return {
+                        ...endpoint,
+                        status: result.isReachable ? 'online' : 'offline',
+                        responseTime: result.responseTime || responseTime,
+                        lastChecked: new Date(),
+                        statusCode: result.statusCode
+                    }
+                }
+            } catch (healthError) {
+                console.log(`Health check failed for ${endpoint.name}:`, healthError)
+            }
+
+            // Final fallback - mark as offline
+            const responseTime = Date.now() - startTime
+            return {
+                ...endpoint,
+                status: 'offline',
+                responseTime,
+                lastChecked: new Date(),
+                statusCode: null
+            }
+        }
+    }
+
+    const checkAllApis = async () => {
+        setIsChecking(true)
+
+        // Check login endpoint first to get auth token
+        const loginEndpoint = endpoints.find(ep => ep.name === 'User Login')
+        if (loginEndpoint) {
+            const updatedLogin = await checkApiStatus(loginEndpoint)
+            setEndpoints(prev => prev.map(ep =>
+                ep.name === 'User Login' ? updatedLogin : ep
+            ))
+        }
+
+        // Then check other endpoints
+        const otherEndpoints = endpoints.filter(ep => ep.name !== 'User Login')
+        const updatedEndpoints = await Promise.all(
+            otherEndpoints.map(endpoint => checkApiStatus(endpoint))
+        )
+
+        // Update all endpoints
+        setEndpoints(prev => prev.map(ep => {
+            if (ep.name === 'User Login') return ep // Already updated above
+            const updated = updatedEndpoints.find(updated => updated.name === ep.name)
+            return updated || ep
+        }))
+
+        setIsChecking(false)
+    }
+
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'online':
+                return 'bg-green-500'
+            case 'offline':
+                return 'bg-red-500'
+            case 'error':
+                return 'bg-yellow-500'
+            case 'checking':
+                return 'bg-blue-500 animate-pulse'
+            default:
+                return 'bg-gray-500'
+        }
+    }
+
+    const getStatusText = (status: string) => {
+        switch (status) {
+            case 'online':
+                return 'Online'
+            case 'offline':
+                return 'Offline'
+            case 'error':
+                return 'Error'
+            case 'checking':
+                return 'Checking...'
+            default:
+                return 'Unknown'
+        }
+    }
+
+    const formatResponseTime = (time: number | null) => {
+        if (time === null) return 'N/A'
+        return `${time}ms`
+    }
+
+    const formatLastChecked = (date: Date | null) => {
+        if (!date) return 'Never'
+        return date.toLocaleTimeString()
+    }
+
+    // Auto refresh functionality
+    useEffect(() => {
+        let interval: NodeJS.Timeout | null = null
+
+        if (autoRefresh) {
+            interval = setInterval(() => {
+                checkAllApis()
+            }, refreshInterval * 1000)
+        }
+
+        return () => {
+            if (interval) clearInterval(interval)
+        }
+    }, [autoRefresh, refreshInterval])
+
+    // Initial check on component mount
+    useEffect(() => {
+        checkAllApis()
+    }, [])
+
+    const overallStatus = endpoints.every(ep => ep.status === 'online') ? 'All Systems Operational' :
+        endpoints.some(ep => ep.status === 'online') ? 'Partial Outage' : 'Major Outage'
+
+    const overallStatusColor = endpoints.every(ep => ep.status === 'online') ? 'text-green-600' :
+        endpoints.some(ep => ep.status === 'online') ? 'text-yellow-600' : 'text-red-600'
+
+    return (
+        <div>
+            <h1 className={`text-3xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
+                API Status Monitor
+            </h1>
+
+            <div className="space-y-6 mt-10">
+                {/* Overall Status */}
+                <div className={`p-6 rounded-lg border ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm`}>
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h2 className={`text-xl font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                System Status
+                            </h2>
+                            <p className={`text-lg font-semibold ${overallStatusColor}`}>
+                                {overallStatus}
+                            </p>
+                            <p className={`text-sm mt-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                External APIs monitored via proxy to handle CORS restrictions
+                            </p>
+                            {authToken && (
+                                <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>
+                                    Auth Token: Active
+                                </p>
+                            )}
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={checkAllApis}
+                                disabled={isChecking}
+                                className={`px-4 py-2 rounded-md font-medium transition-colors ${isChecking
+                                    ? 'bg-gray-400 cursor-not-allowed'
+                                    : 'bg-blue-600 hover:bg-blue-700'
+                                    } text-white`}
+                            >
+                                {isChecking ? 'Checking...' : 'Check All'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Auto Refresh Controls */}
+                <div className={`p-4 rounded-lg border ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm`}>
+                    <div className="flex items-center gap-4">
+                        <label className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                checked={autoRefresh}
+                                onChange={(e) => setAutoRefresh(e.target.checked)}
+                                className="w-4 h-4"
+                            />
+                            <span className={theme === 'dark' ? 'text-white' : 'text-gray-900'}>
+                                Auto Refresh
+                            </span>
+                        </label>
+                        <select
+                            value={refreshInterval}
+                            onChange={(e) => setRefreshInterval(Number(e.target.value))}
+                            disabled={!autoRefresh}
+                            className={`px-3 py-1 rounded border ${theme === 'dark'
+                                ? 'bg-gray-700 border-gray-600 text-white'
+                                : 'bg-white border-gray-300 text-gray-900'
+                                } ${!autoRefresh ? 'opacity-50' : ''}`}
+                        >
+                            <option value={10}>10 seconds</option>
+                            <option value={30}>30 seconds</option>
+                            <option value={60}>1 minute</option>
+                            <option value={300}>5 minutes</option>
+                        </select>
+                    </div>
+                </div>
+
+                {/* API Endpoints Status */}
+                <div className="grid gap-4">
+                    {endpoints.map((endpoint, index) => (
+                        <div
+                            key={index}
+                            className={`p-6 rounded-lg border ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm`}
+                        >
+                            <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className={`w-3 h-3 rounded-full ${getStatusColor(endpoint.status)}`}></div>
+                                        <h3 className={`text-lg font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                            {endpoint.name}
+                                        </h3>
+                                        <span className={`px-2 py-1 text-xs rounded-full font-medium ${endpoint.method === 'GET'
+                                            ? 'bg-green-100 text-green-800'
+                                            : 'bg-blue-100 text-blue-800'
+                                            }`}>
+                                            {endpoint.method}
+                                        </span>
+                                        {endpoint.requiresAuth && (
+                                            <span className="px-2 py-1 text-xs rounded-full font-medium bg-purple-100 text-purple-800">
+                                                AUTH
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} mb-3`}>
+                                        {endpoint.url}
+                                    </p>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                        <div>
+                                            <span className={`block font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                                                Status
+                                            </span>
+                                            <span className={`${endpoint.status === 'online' ? 'text-green-600' :
+                                                endpoint.status === 'offline' ? 'text-red-600' :
+                                                    endpoint.status === 'error' ? 'text-yellow-600' :
+                                                        'text-blue-600'
+                                                }`}>
+                                                {getStatusText(endpoint.status)}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span className={`block font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                                                Response Time
+                                            </span>
+                                            <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
+                                                {formatResponseTime(endpoint.responseTime)}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span className={`block font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                                                Status Code
+                                            </span>
+                                            <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
+                                                {endpoint.statusCode || 'N/A'}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span className={`block font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                                                Last Checked
+                                            </span>
+                                            <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
+                                                {formatLastChecked(endpoint.lastChecked)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        setEndpoints(prev => prev.map((ep, i) =>
+                                            i === index
+                                                ? { ...ep, status: 'checking' }
+                                                : ep
+                                        ))
+                                        checkApiStatus(endpoint).then(updated => {
+                                            setEndpoints(prev => prev.map((ep, i) =>
+                                                i === index ? updated : ep
+                                            ))
+                                        })
+                                    }}
+                                    className={`px-3 py-1 text-sm rounded-md transition-colors ${theme === 'dark'
+                                        ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                                        }`}
+                                >
+                                    Test
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Summary Statistics */}
+                <div className={`p-6 rounded-lg border ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm`}>
+                    <h3 className={`text-lg font-medium mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                        Summary
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div className="text-center">
+                            <div className="text-2xl font-bold text-green-600">
+                                {endpoints.filter(ep => ep.status === 'online').length}
+                            </div>
+                            <div className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
+                                Online
+                            </div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-2xl font-bold text-red-600">
+                                {endpoints.filter(ep => ep.status === 'offline').length}
+                            </div>
+                            <div className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
+                                Offline
+                            </div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-2xl font-bold text-yellow-600">
+                                {endpoints.filter(ep => ep.status === 'error').length}
+                            </div>
+                            <div className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
+                                Errors
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+export default ApiStatus

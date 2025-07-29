@@ -28,6 +28,11 @@ const navItems: NavItem[] = [
     name: "Beneficiary Management",
     path: "/dashboard/gnd-user",
   },
+  {
+    icon: <CalenderIcon />,
+    name: "API Status",
+    path: "/dashboard/api-status",
+  },
 ];
 
 const othersItems: NavItem[] = [
