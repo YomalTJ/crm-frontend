@@ -24,6 +24,9 @@ import { getBeneficiaryStatuses } from '@/services/beneficiaryService';
 import { getEmpowermentDimensions } from '@/services/empowermentService';
 import { createSamurdhiFamily, getBeneficiaryByNIC, getHouseholdDetailsByReference, getHouseholdNumbersByGnCode, updateSamurdhiFamily } from '@/services/samurdhiService';
 import toast, { Toaster } from 'react-hot-toast';
+import FormSkeleton from '../loading/FormSkeleton';
+import LoadingOverlay from '../loading/LoadingOverlay';
+import LoadingSpinner from '../loading/LoadingSpinner';
 
 interface BeneficiaryStatus {
     beneficiary_type_id: string;
@@ -330,6 +333,8 @@ const SamurdhiFamillyForm = () => {
 
     const [showAllFieldsForExistingBeneficiary, setShowAllFieldsForExistingBeneficiary] = useState(false);
 
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
+
     useEffect(() => {
         const storedLocation = localStorage.getItem('staffLocation');
         if (storedLocation) {
@@ -358,157 +363,98 @@ const SamurdhiFamillyForm = () => {
     }, []);
 
     useEffect(() => {
-        const fetchDomesticDynamics = async () => {
+        const initializeFormData = async () => {
+            setIsInitialLoading(true);
+
             try {
-                const data = await getDomesticDynamics();
-                setDomesticDynamics(data);
+                // Load all data in parallel for better performance
+                const [
+                    employmentData,
+                    subsidyData,
+                    aswasumaData,
+                    jobFieldsData,
+                    projectTypesData,
+                    resourcesData,
+                    healthIndicatorsData,
+                    domesticDynamicsData,
+                    communityParticipationData,
+                    housingServicesData,
+                    beneficiaryStatusesData,
+                    empowermentDimensionsData
+                ] = await Promise.all([
+                    getCurrentEmploymentOptions().catch(err => {
+                        console.error('Error fetching employment options:', err);
+                        return [];
+                    }),
+                    getSamurdhiSubsidyOptions().catch(err => {
+                        console.error('Error fetching subsidy options:', err);
+                        return [];
+                    }),
+                    getAswasumaCategories().catch(err => {
+                        console.error('Error fetching Aswasuma categories:', err);
+                        return [];
+                    }),
+                    getJobFields().catch(err => {
+                        console.error('Error fetching job fields:', err);
+                        return [];
+                    }),
+                    getProjectTypes().catch(err => {
+                        console.error('Error fetching project types:', err);
+                        return [];
+                    }),
+                    getResourceNeeded().catch(err => {
+                        console.error('Error fetching resources needed:', err);
+                        return [];
+                    }),
+                    getHealthIndicators().catch(err => {
+                        console.error('Error fetching health indicators:', err);
+                        return [];
+                    }),
+                    getDomesticDynamics().catch(err => {
+                        console.error('Error fetching domestic dynamics:', err);
+                        return [];
+                    }),
+                    getCommunityParticipation().catch(err => {
+                        console.error('Error fetching community participation:', err);
+                        return [];
+                    }),
+                    getHousingServices().catch(err => {
+                        console.error('Error fetching housing services:', err);
+                        return [];
+                    }),
+                    getBeneficiaryStatuses().catch(err => {
+                        console.error('Error fetching beneficiary statuses:', err);
+                        return [];
+                    }),
+                    getEmpowermentDimensions().catch(err => {
+                        console.error('Error fetching empowerment dimensions:', err);
+                        return [];
+                    })
+                ]);
+
+                // Set all the state data
+                setEmploymentOptions(employmentData);
+                setSubsidyOptions(subsidyData);
+                setAswasumaCategories(aswasumaData);
+                setJobFields(jobFieldsData);
+                setProjectTypes(projectTypesData);
+                setResourcesNeeded(resourcesData);
+                setHealthIndicators(healthIndicatorsData);
+                setDomesticDynamics(domesticDynamicsData);
+                setCommunityParticipationOptions(communityParticipationData);
+                setHousingServices(housingServicesData);
+                setBeneficiaryStatuses(beneficiaryStatusesData);
+                setEmpowermentDimensions(empowermentDimensionsData);
+
             } catch (error) {
-                console.error('Error fetching domestic dynamics:', error);
+                console.error('Error initializing form data:', error);
+                toast.error('Failed to load form data. Please refresh the page.');
+            } finally {
+                setIsInitialLoading(false);
             }
         };
 
-        fetchDomesticDynamics();
-    }, []);
-
-    useEffect(() => {
-        const fetchHealthIndicators = async () => {
-            try {
-                const data = await getHealthIndicators();
-                setHealthIndicators(data);
-            } catch (error) {
-                console.error('Error fetching health indicators:', error);
-            }
-        };
-
-        fetchHealthIndicators();
-    }, []);
-
-    useEffect(() => {
-        const fetchEmploymentOptions = async () => {
-            try {
-                const data = await getCurrentEmploymentOptions();
-                setEmploymentOptions(data);
-            } catch (error) {
-                console.error('Error fetching employment options:', error);
-            }
-        };
-
-        fetchEmploymentOptions();
-    }, []);
-
-    useEffect(() => {
-        const fetchSubsidyOptions = async () => {
-            try {
-
-                const data = await getSamurdhiSubsidyOptions();
-                setSubsidyOptions(data);
-            } catch (error) {
-                console.error('Error fetching subsidy options:', error);
-            }
-        };
-
-        fetchSubsidyOptions();
-    }, []);
-
-    useEffect(() => {
-        const fetchAswasumaCategories = async () => {
-            try {
-                const data = await getAswasumaCategories();
-                setAswasumaCategories(data);
-            } catch (error) {
-                console.error('Error fetching Aswasuma categories:', error);
-            }
-        };
-
-        fetchAswasumaCategories();
-    }, []);
-
-    useEffect(() => {
-        const fetchProjectTypes = async () => {
-            try {
-                const data = await getProjectTypes();
-                setProjectTypes(data);
-            } catch (error) {
-                console.error('Error fetching project types:', error);
-            }
-        };
-
-        fetchProjectTypes();
-    }, []);
-
-    useEffect(() => {
-        const fetchJobFields = async () => {
-            try {
-                const data = await getJobFields();
-                setJobFields(data);
-            } catch (error) {
-                console.error('Error fetching job fields:', error);
-            }
-        };
-
-        fetchJobFields();
-    }, []);
-
-    useEffect(() => {
-        const fetchResourcesNeeded = async () => {
-            try {
-                const data = await getResourceNeeded();
-                setResourcesNeeded(data);
-            } catch (error) {
-                console.error('Error fetching resources needed:', error);
-            }
-        };
-
-        fetchResourcesNeeded();
-    }, []);
-
-    useEffect(() => {
-        const fetchCommunityParticipation = async () => {
-            try {
-                const data = await getCommunityParticipation();
-                setCommunityParticipationOptions(data);
-            } catch (error) {
-                console.error('Error fetching community participation:', error);
-            }
-        };
-
-        fetchCommunityParticipation();
-    }, []);
-
-    useEffect(() => {
-        const fetchHousingServices = async () => {
-            try {
-                const data = await getHousingServices();
-                setHousingServices(data);
-            } catch (error) {
-                console.error('Error fetching housing services:', error);
-            }
-        };
-        fetchHousingServices();
-    }, []);
-
-    useEffect(() => {
-        const fetchBeneficiaryStatuses = async () => {
-            try {
-                const data = await getBeneficiaryStatuses();
-                setBeneficiaryStatuses(data);
-            } catch (error) {
-                console.error('Error fetching beneficiary statuses:', error);
-            }
-        };
-        fetchBeneficiaryStatuses();
-    }, []);
-
-    useEffect(() => {
-        const fetchEmpowermentDimensions = async () => {
-            try {
-                const data = await getEmpowermentDimensions();
-                setEmpowermentDimensions(data);
-            } catch (error) {
-                console.error('Error fetching empowerment dimensions:', error);
-            }
-        };
-        fetchEmpowermentDimensions();
+        initializeFormData();
     }, []);
 
     useEffect(() => {
@@ -1204,739 +1150,768 @@ const SamurdhiFamillyForm = () => {
     return (
         <ComponentCard title="Family Development plan for Community Empowerment">
             <ErrorMessage />
-            <form onSubmit={handleSubmit} noValidate>
+
+            {isInitialLoading ? (
                 <div className="space-y-6">
-                    <div>
-                        <Label>District</Label>
-                        <Input
-                            type="text"
-                            value={formData.district.name}
-                            readOnly
-                        />
-                        <input type="hidden" name="district_id" value={formData.district.id} />
+                    <div className="flex items-center justify-center py-12">
+                        <div className="flex flex-col items-center gap-4">
+                            <LoadingSpinner size="lg" />
+                            <div className="text-center">
+                                <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
+                                    Loading Form Data...
+                                </p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                    Please wait while we prepare the form
+                                </p>
+                            </div>
+                        </div>
                     </div>
-
-                    <div>
-                        <Label>Divisional Secretariat Division</Label>
-                        <Input
-                            type="text"
-                            value={formData.dsDivision.name}
-                            readOnly
-                        />
-                        <input type="hidden" name="ds_id" value={formData.dsDivision.id} />
-                    </div>
-
-
-                    <div>
-                        <Label>Samurdhi Bank</Label>
-                        <Input
-                            type="text"
-                            value={formData.zone.name}
-                            readOnly
-                        />
-                        <input type="hidden" name="zone_id" value={formData.zone.id} />
-                    </div>
-
-                    <div>
-                        <Label>Grama Nildhari Division</Label>
-                        <Input
-                            type="text"
-                            value={formData.gnd.name}
-                            readOnly
-                        />
-                        <input type="hidden" name="gnd_id" value={formData.gnd.id} />
-                    </div>
-
-                    <div className="flex flex-col gap-4">
-                        <Label>Are you a Samurdhi beneficiary?/ Aswasuma beneficiary?/low-income earner?</Label>
-                        <div className='flex flex-col md:flex-row gap-5 md:gap-20'>
-                            {beneficiaryStatuses.map((status) => (
-                                <Radio
-                                    key={status.beneficiary_type_id}
-                                    id={`status-${status.beneficiary_type_id}`}
-                                    name="beneficiary_type_id"
-                                    value={status.beneficiary_type_id}
-                                    checked={formData.beneficiary_type_id === status.beneficiary_type_id}
-                                    onChange={() => {
-                                        console.log('Selected beneficiary_type_id:', status.beneficiary_type_id);
-                                        handleRadioChange('beneficiary_type_id', status.beneficiary_type_id);
-
-                                        // Check if it's Aswasuma beneficiary (hide NIC field)
-                                        const isAswasumaBeneficiary = status.nameEnglish.includes("Aswasuma beneficiary") &&
-                                            !status.nameEnglish.includes("Samurdhi") &&
-                                            !status.nameEnglish.includes("low income");
-
-                                        // Check if it's Samurdhi/Previous Samurdhi/Low income (hide household dropdown)
-                                        const isSamurdhiOrLowIncome = status.nameEnglish.includes("Samurdhi") ||
-                                            status.nameEnglish.includes("low income");
-
-                                        setIsAswasumaHouseholdDisabled(isSamurdhiOrLowIncome);
-
-                                        // Clear the hidden fields when switching types
-                                        if (isAswasumaBeneficiary) {
-                                            setFormData(prev => ({
-                                                ...prev,
-                                                nic: null
-                                            }));
-                                        }
-
-                                        if (isSamurdhiOrLowIncome) {
-                                            setFormData(prev => ({
-                                                ...prev,
-                                                aswasumaHouseholdNo: null
-                                            }));
-                                        }
-                                    }}
-                                    label={
-                                        <div className="flex flex-col">
-                                            <span className="font-sinhala">{status.nameSinhala}</span>
-                                            <span className="font-tamil">{status.nameTamil}</span>
-                                            <span>{status.nameEnglish}</span>
-                                        </div>
-                                    }
+                    <FormSkeleton />
+                </div>
+            ) : (
+                <LoadingOverlay
+                    isLoading={isFetching || isLoadingHouseholdNumbers}
+                    message={isFetching ? "Fetching beneficiary details..." : "Loading household numbers..."}
+                >
+                    <form onSubmit={handleSubmit} noValidate>
+                        <div className="space-y-6">
+                            <div>
+                                <Label>District</Label>
+                                <Input
+                                    type="text"
+                                    value={formData.district.name}
+                                    readOnly
                                 />
-                            ))}
-                        </div>
-                        <ErrorMessage error={errors.beneficiary_type_id} />
-                    </div>
+                                <input type="hidden" name="district_id" value={formData.district.id} />
+                            </div>
 
-                    {(() => {
-                        const selectedBeneficiaryType = beneficiaryStatuses.find(
-                            status => status.beneficiary_type_id === formData.beneficiary_type_id
-                        );
-
-                        // Only show if a beneficiary type is selected AND it's not Samurdhi or low income
-                        if (formData.beneficiary_type_id && selectedBeneficiaryType) {
-                            const isSamurdhiOrLowIncome = selectedBeneficiaryType.nameEnglish.includes("Samurdhi") ||
-                                selectedBeneficiaryType.nameEnglish.includes("low income");
-
-                            // Only show if NOT Samurdhi or low income beneficiary
-                            if (!isSamurdhiOrLowIncome) {
-                                return (
-                                    <div>
-                                        <Label>
-                                            Aswasuma household number
-                                            {(() => {
-                                                const isAswasumaBeneficiary = selectedBeneficiaryType.nameEnglish.includes("Aswasuma beneficiary") &&
-                                                    !selectedBeneficiaryType.nameEnglish.includes("Samurdhi") &&
-                                                    !selectedBeneficiaryType.nameEnglish.includes("low income");
-                                                return isAswasumaBeneficiary ? <span className="text-red-500"> *</span> : '';
-                                            })()}
-                                        </Label>
-                                        <div className="relative">
-                                            <Select
-                                                options={householdNumbers.map(number => ({
-                                                    value: number,
-                                                    label: number
-                                                }))}
-                                                placeholder={
-                                                    isLoadingHouseholdNumbers
-                                                        ? 'Loading household numbers...'
-                                                        : householdNumbers.length === 0
-                                                            ? 'No household numbers available for this GN division'
-                                                            : 'Select household number'
-                                                }
-                                                onChange={async (value) => {
-                                                    handleSelectChange('aswasumaHouseholdNo', value);
-                                                    await handleHouseholdSelection(value);
-                                                }}
-                                                className={`dark:bg-dark-900 ${errors.aswasumaHouseholdNo ? 'border-red-500' : ''}`}
-                                                value={formData.aswasumaHouseholdNo || undefined}
-                                                disabled={isLoadingHouseholdNumbers}
-                                            />
-                                            <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
-                                                <ChevronDownIcon />
-                                            </span>
-                                        </div>
-                                        <ErrorMessage error={errors.aswasumaHouseholdNo} />
-                                    </div>
-                                );
-                            }
-                        }
-                        return null;
-                    })()}
-
-                    {(() => {
-                        const selectedBeneficiaryType = beneficiaryStatuses.find(
-                            status => status.beneficiary_type_id === formData.beneficiary_type_id
-                        );
-
-                        // Only show if a beneficiary type is selected AND it's not pure Aswasuma beneficiary
-                        if (formData.beneficiary_type_id && selectedBeneficiaryType) {
-                            const isAswasumaBeneficiary = selectedBeneficiaryType.nameEnglish.includes("Aswasuma beneficiary") &&
-                                !selectedBeneficiaryType.nameEnglish.includes("Samurdhi") &&
-                                !selectedBeneficiaryType.nameEnglish.includes("low income");
-
-                            // Only show if NOT pure Aswasuma beneficiary
-                            if (!isAswasumaBeneficiary) {
-                                return (
-                                    <div className="flex flex-col md:flex-row gap-2 md:items-end">
-                                        <div className="md:flex-1">
-                                            <Label>
-                                                National Identity Card Number
-                                                {(() => {
-                                                    const isSamurdhiBeneficiary = selectedBeneficiaryType.nameEnglish.includes("Samurdhi beneficiary");
-                                                    return isSamurdhiBeneficiary ? <span className="text-red-500"> *</span> : '';
-                                                })()}
-                                            </Label>
-                                            <Input
-                                                type="text"
-                                                name="nic"
-                                                value={formData.nic || ''}
-                                                onChange={handleInputChange}
-                                                className={errors.nic ? 'border-red-500' : ''}
-                                            />
-                                            <ErrorMessage error={errors.nic} />
-                                        </div>
-                                        <Button
-                                            size="sm"
-                                            variant="secondary"
-                                            onClick={handleNicLookup}
-                                            disabled={isFetching}
-                                            className="h-11 w-full md:w-auto"
-                                        >
-                                            {isFetching ? 'Fetching...' : 'Get Details'}
-                                        </Button>
-                                    </div>
-                                );
-                            }
-                        }
-                        return null;
-                    })()}
-
-                    <div>
-                        <Label>Name of the Beneficiary</Label>
-                        <Input
-                            type="text"
-                            name="beneficiaryName"
-                            value={formData.beneficiaryName || undefined}
-                            onChange={handleInputChange}
-                            className={errors.beneficiaryName ? 'border-red-500' : ''}
-                        />
-                        <ErrorMessage error={errors.beneficiaryName} />
-                    </div>
-
-                    <div className="flex flex-col gap-4">
-                        <Label>Gender</Label>
-                        <Radio
-                            id="gender-female"
-                            name="gender"
-                            value="Female"
-                            checked={formData.gender === "Female"}
-                            onChange={() => handleRadioChange('gender', "Female")}
-                            label="Female"
-                        />
-                        <Radio
-                            id="gender-male"
-                            name="gender"
-                            value="Male"
-                            checked={formData.gender === "Male"}
-                            onChange={() => handleRadioChange('gender', "Male")}
-                            label="Male"
-                        />
-                    </div>
-
-                    <div>
-                        <Label>Address</Label>
-                        <Input
-                            type="text"
-                            name="address"
-                            value={formData.address || undefined}
-                            onChange={handleInputChange}
-                            className={errors.address ? 'border-red-500' : ''}
-                        />
-                        <ErrorMessage error={errors.address} />
-                    </div>
-
-                    <div>
-                        <Label>Phone Number</Label>
-                        <Input
-                            type="text"
-                            name="phone"
-                            value={formData.phone || undefined}
-                            onChange={handleInputChange}
-                            className={errors.phone ? 'border-red-500' : ''}
-                        />
-                        <ErrorMessage error={errors.phone} />
-                    </div>
-
-                    <div>
-                        <Label>Age of Project Owner</Label>
-                        <Input
-                            type="number"
-                            name="projectOwnerAge"
-                            value={formData.projectOwnerAge}
-                            onChange={handleInputChange}
-                            className={errors.projectOwnerAge ? 'border-red-500' : ''}
-                        />
-                        <ErrorMessage error={errors.projectOwnerAge} />
-                    </div>
-
-                    <div>
-                        <Label>No. of Household Members Aged 18–60</Label>
-                        <Label>Female</Label>
-                        <Input
-                            type="number"
-                            name="female18To60"
-                            defaultValue={formData.female18To60}
-                            onChange={handleInputChange}
-                        />
-                        <Label>Male</Label>
-                        <Input
-                            type="number"
-                            name="male18To60"
-                            defaultValue={formData.male18To60}
-                            onChange={handleInputChange}
-                        />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label>Current Employment</Label>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                            {employmentOptions.map((option) => (
-                                <Radio
-                                    key={option.employment_id}
-                                    id={`employment-${option.employment_id}`}
-                                    name="employment_id"
-                                    value={option.employment_id}
-                                    checked={formData.employment_id === option.employment_id}
-                                    onChange={() => {
-                                        console.log('Selected employment_id:', option.employment_id);
-                                        handleRadioChange('employment_id', option.employment_id);
-                                    }}
-                                    label={`${option.nameSinhala} - ${option.nameTamil} - ${option.nameEnglish}`}
-                                    className="text-sm sm:text-base"
+                            <div>
+                                <Label>Divisional Secretariat Division</Label>
+                                <Input
+                                    type="text"
+                                    value={formData.dsDivision.name}
+                                    readOnly
                                 />
-                            ))}
-                        </div>
-                        <ErrorMessage error={errors.employment_id} />
-                    </div>
+                                <input type="hidden" name="ds_id" value={formData.dsDivision.id} />
+                            </div>
 
-                    <div>
-                        <Label>Other Occupation (if any)</Label>
-                        <Input
-                            type="text"
-                            name="otherOccupation"
-                            defaultValue={formData.otherOccupation || undefined}
-                            onChange={handleInputChange}
-                        />
-                    </div>
 
-                    <div>
-                        <Label>Samurdhi subsidy received</Label>
-                        <div className="relative">
-                            <Select
-                                options={subsidyOptions.map(option => ({
-                                    value: option.subsisdy_id,  // Changed from amount to id
-                                    label: formatAmount(option.amount)  // Keep formatted amount as display label
-                                }))}
-                                placeholder="Select Subsidy Amount"
-                                onChange={(value) => handleSelectChange('subsisdy_id', value)}  // Changed to correct field name
-                                className="dark:bg-dark-900"
-                                defaultValue={formData.subsisdy_id || undefined}  // Changed to correct field name
-                            />
-                            <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
-                                <ChevronDownIcon />
-                            </span>
-                        </div>
-                    </div>
+                            <div>
+                                <Label>Samurdhi Bank</Label>
+                                <Input
+                                    type="text"
+                                    value={formData.zone.name}
+                                    readOnly
+                                />
+                                <input type="hidden" name="zone_id" value={formData.zone.id} />
+                            </div>
 
-                    <div>
-                        <Label>Aswasuma category</Label>
-                        <div className="relative">
-                            <Select
-                                options={aswasumaCategories.map(category => ({
-                                    value: category.aswesuma_cat_id,  // Changed from nameEnglish to id
-                                    label: formatCategoryLabel(category)  // Keep formatted label for display
-                                }))}
-                                placeholder="Select Aswasuma Category"
-                                onChange={(value) => handleSelectChange('aswesuma_cat_id', value)}  // Changed to correct API field name
-                                className="dark:bg-dark-900"
-                                defaultValue={formData.aswesuma_cat_id || undefined}  // Changed to correct field name
-                            />
-                            <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
-                                <ChevronDownIcon />
-                            </span>
-                        </div>
-                    </div>
+                            <div>
+                                <Label>Grama Nildhari Division</Label>
+                                <Input
+                                    type="text"
+                                    value={formData.gnd.name}
+                                    readOnly
+                                />
+                                <input type="hidden" name="gnd_id" value={formData.gnd.id} />
+                            </div>
 
-                    <div className="space-y-2">
-                        <Label>What is Empowerment Dimension</Label>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                            {empowermentDimensions.map((dimension) => (
-                                <div key={dimension.empowerment_dimension_id} className="flex gap-3 items-start">
-                                    <Checkbox
-                                        checked={formData.empowerment_dimension_id.includes(dimension.empowerment_dimension_id)}
-                                        onChange={(checked) => {
-                                            console.log('Selected empowerment_dimension_id:', dimension.empowerment_dimension_id);
-                                            handleCheckboxChange('empowerment_dimension_id', dimension.empowerment_dimension_id, checked);
-                                        }}
-                                    />
-                                    <div className="flex flex-col text-sm sm:text-base font-medium text-gray-700 dark:text-gray-400">
-                                        <span className="font-sinhala">{dimension.nameSinhala}</span>
-                                        <span className="font-tamil">{dimension.nameTamil}</span>
-                                        <span>{dimension.nameEnglish}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        <ErrorMessage error={errors.empowerment_dimension_id} />
-                    </div>
-
-                    {(formData.empowerment_dimension_id.some(id => {
-                        const dimension = empowermentDimensions.find(dim => dim.empowerment_dimension_id === id);
-                        return dimension?.nameEnglish.includes("Business Opportunities") ||
-                            dimension?.nameEnglish.includes("Self-Employment");
-                    }) || (showAllFieldsForExistingBeneficiary && formData.project_type_id)) && (
-                            <div className="space-y-2">
-                                <Label>Types of Projects</Label>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                                    {projectTypes.map((project) => (
+                            <div className="flex flex-col gap-4">
+                                <Label>Are you a Samurdhi beneficiary?/ Aswasuma beneficiary?/low-income earner?</Label>
+                                <div className='flex flex-col md:flex-row gap-5 md:gap-20'>
+                                    {beneficiaryStatuses.map((status) => (
                                         <Radio
-                                            key={project.project_type_id}
-                                            id={`project-${project.project_type_id}`}
-                                            name="project_type_id"
-                                            value={project.project_type_id}
-                                            checked={formData.project_type_id === project.project_type_id}
+                                            key={status.beneficiary_type_id}
+                                            id={`status-${status.beneficiary_type_id}`}
+                                            name="beneficiary_type_id"
+                                            value={status.beneficiary_type_id}
+                                            checked={formData.beneficiary_type_id === status.beneficiary_type_id}
                                             onChange={() => {
-                                                console.log('Selected project_type_id:', project.project_type_id);
-                                                handleRadioChange('project_type_id', project.project_type_id);
+                                                console.log('Selected beneficiary_type_id:', status.beneficiary_type_id);
+                                                handleRadioChange('beneficiary_type_id', status.beneficiary_type_id);
+
+                                                // Check if it's Aswasuma beneficiary (hide NIC field)
+                                                const isAswasumaBeneficiary = status.nameEnglish.includes("Aswasuma beneficiary") &&
+                                                    !status.nameEnglish.includes("Samurdhi") &&
+                                                    !status.nameEnglish.includes("low income");
+
+                                                // Check if it's Samurdhi/Previous Samurdhi/Low income (hide household dropdown)
+                                                const isSamurdhiOrLowIncome = status.nameEnglish.includes("Samurdhi") ||
+                                                    status.nameEnglish.includes("low income");
+
+                                                setIsAswasumaHouseholdDisabled(isSamurdhiOrLowIncome);
+
+                                                // Clear the hidden fields when switching types
+                                                if (isAswasumaBeneficiary) {
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        nic: null
+                                                    }));
+                                                }
+
+                                                if (isSamurdhiOrLowIncome) {
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        aswasumaHouseholdNo: null
+                                                    }));
+                                                }
                                             }}
                                             label={
-                                                <div className="flex flex-col text-sm sm:text-base">
-                                                    <span className="font-sinhala">{project.nameSinhala}</span>
-                                                    <span className="font-tamil">{project.nameTamil}</span>
-                                                    <span>{project.nameEnglish}</span>
+                                                <div className="flex flex-col">
+                                                    <span className="font-sinhala">{status.nameSinhala}</span>
+                                                    <span className="font-tamil">{status.nameTamil}</span>
+                                                    <span>{status.nameEnglish}</span>
                                                 </div>
                                             }
                                         />
                                     ))}
                                 </div>
-                                <ErrorMessage error={errors.project_type_id} />
+                                <ErrorMessage error={errors.beneficiary_type_id} />
                             </div>
-                        )}
 
-                    <div>
-                        <Label>Specify other projects</Label>
-                        <Input
-                            type="text"
-                            name="otherProject"
-                            defaultValue={formData.otherProject || undefined}
-                            onChange={handleInputChange}
-                        />
-                    </div>
+                            {(() => {
+                                const selectedBeneficiaryType = beneficiaryStatuses.find(
+                                    status => status.beneficiary_type_id === formData.beneficiary_type_id
+                                );
 
-                    {(formData.empowerment_dimension_id.some(id => {
-                        const dimension = empowermentDimensions.find(dim => dim.empowerment_dimension_id === id);
-                        return dimension?.nameEnglish.includes("Employment Facilitation");
-                    }) || (showAllFieldsForExistingBeneficiary && (formData.childName || formData.job_field_id))) && (
-                            <>
-                                <div>
-                                    <Label>පුහුණුව ලබාදීමට/ රැකියාගත කිරීමට අපේක්ෂිත දරුවාගේ නම</Label>
-                                    <Input
-                                        type="text"
-                                        name="childName"
-                                        value={formData.childName || undefined}
-                                        onChange={handleInputChange}
-                                        className={errors.childName ? 'border-red-500' : ''}
-                                    />
-                                    <ErrorMessage error={errors.childName} />
+                                // Only show if a beneficiary type is selected AND it's not Samurdhi or low income
+                                if (formData.beneficiary_type_id && selectedBeneficiaryType) {
+                                    const isSamurdhiOrLowIncome = selectedBeneficiaryType.nameEnglish.includes("Samurdhi") ||
+                                        selectedBeneficiaryType.nameEnglish.includes("low income");
+
+                                    // Only show if NOT Samurdhi or low income beneficiary
+                                    if (!isSamurdhiOrLowIncome) {
+                                        return (
+                                            <div>
+                                                <Label>
+                                                    Aswasuma household number
+                                                    {(() => {
+                                                        const isAswasumaBeneficiary = selectedBeneficiaryType.nameEnglish.includes("Aswasuma beneficiary") &&
+                                                            !selectedBeneficiaryType.nameEnglish.includes("Samurdhi") &&
+                                                            !selectedBeneficiaryType.nameEnglish.includes("low income");
+                                                        return isAswasumaBeneficiary ? <span className="text-red-500"> *</span> : '';
+                                                    })()}
+                                                </Label>
+                                                <div className="relative">
+                                                    <Select
+                                                        options={householdNumbers.map(number => ({
+                                                            value: number,
+                                                            label: number
+                                                        }))}
+                                                        placeholder={
+                                                            householdNumbers.length === 0
+                                                                ? 'No household numbers available for this GN division'
+                                                                : 'Select household number'
+                                                        }
+                                                        onChange={async (value) => {
+                                                            handleSelectChange('aswasumaHouseholdNo', value);
+                                                            await handleHouseholdSelection(value);
+                                                        }}
+                                                        className={`dark:bg-dark-900 ${errors.aswasumaHouseholdNo ? 'border-red-500' : ''}`}
+                                                        value={formData.aswasumaHouseholdNo || undefined}
+                                                        disabled={isLoadingHouseholdNumbers}
+                                                    />
+                                                    {isLoadingHouseholdNumbers && (
+                                                        <div className="absolute top-2 right-3">
+                                                            <LoadingSpinner size="sm" />
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <ErrorMessage error={errors.aswasumaHouseholdNo} />
+                                            </div>
+                                        );
+                                    }
+                                }
+                                return null;
+                            })()}
+
+                            {(() => {
+                                const selectedBeneficiaryType = beneficiaryStatuses.find(
+                                    status => status.beneficiary_type_id === formData.beneficiary_type_id
+                                );
+
+                                // Only show if a beneficiary type is selected AND it's not pure Aswasuma beneficiary
+                                if (formData.beneficiary_type_id && selectedBeneficiaryType) {
+                                    const isAswasumaBeneficiary = selectedBeneficiaryType.nameEnglish.includes("Aswasuma beneficiary") &&
+                                        !selectedBeneficiaryType.nameEnglish.includes("Samurdhi") &&
+                                        !selectedBeneficiaryType.nameEnglish.includes("low income");
+
+                                    // Only show if NOT pure Aswasuma beneficiary
+                                    if (!isAswasumaBeneficiary) {
+                                        return (
+                                            <div className="flex flex-col md:flex-row gap-2 md:items-end">
+                                                <div className="md:flex-1">
+                                                    <Label>
+                                                        National Identity Card Number
+                                                        {(() => {
+                                                            const isSamurdhiBeneficiary = selectedBeneficiaryType.nameEnglish.includes("Samurdhi beneficiary");
+                                                            return isSamurdhiBeneficiary ? <span className="text-red-500"> *</span> : '';
+                                                        })()}
+                                                    </Label>
+                                                    <Input
+                                                        type="text"
+                                                        name="nic"
+                                                        value={formData.nic || ''}
+                                                        onChange={handleInputChange}
+                                                        className={errors.nic ? 'border-red-500' : ''}
+                                                    />
+                                                    <ErrorMessage error={errors.nic} />
+                                                </div>
+                                                <Button
+                                                    size="sm"
+                                                    variant="secondary"
+                                                    onClick={handleNicLookup}
+                                                    disabled={isFetching}
+                                                    className="h-11 w-full md:w-auto flex items-center gap-2"
+                                                >
+                                                    {isFetching && <LoadingSpinner size="sm" color="white" />}
+                                                    {isFetching ? 'Fetching...' : 'Get Details'}
+                                                </Button>
+                                            </div>
+                                        );
+                                    }
+                                }
+                                return null;
+                            })()}
+
+                            <div>
+                                <Label>Name of the Beneficiary</Label>
+                                <Input
+                                    type="text"
+                                    name="beneficiaryName"
+                                    value={formData.beneficiaryName || undefined}
+                                    onChange={handleInputChange}
+                                    className={errors.beneficiaryName ? 'border-red-500' : ''}
+                                />
+                                <ErrorMessage error={errors.beneficiaryName} />
+                            </div>
+
+                            <div className="flex flex-col gap-4">
+                                <Label>Gender</Label>
+                                <Radio
+                                    id="gender-female"
+                                    name="gender"
+                                    value="Female"
+                                    checked={formData.gender === "Female"}
+                                    onChange={() => handleRadioChange('gender', "Female")}
+                                    label="Female"
+                                />
+                                <Radio
+                                    id="gender-male"
+                                    name="gender"
+                                    value="Male"
+                                    checked={formData.gender === "Male"}
+                                    onChange={() => handleRadioChange('gender', "Male")}
+                                    label="Male"
+                                />
+                            </div>
+
+                            <div>
+                                <Label>Address</Label>
+                                <Input
+                                    type="text"
+                                    name="address"
+                                    value={formData.address || undefined}
+                                    onChange={handleInputChange}
+                                    className={errors.address ? 'border-red-500' : ''}
+                                />
+                                <ErrorMessage error={errors.address} />
+                            </div>
+
+                            <div>
+                                <Label>Phone Number</Label>
+                                <Input
+                                    type="text"
+                                    name="phone"
+                                    value={formData.phone || undefined}
+                                    onChange={handleInputChange}
+                                    className={errors.phone ? 'border-red-500' : ''}
+                                />
+                                <ErrorMessage error={errors.phone} />
+                            </div>
+
+                            <div>
+                                <Label>Age of Project Owner</Label>
+                                <Input
+                                    type="number"
+                                    name="projectOwnerAge"
+                                    value={formData.projectOwnerAge}
+                                    onChange={handleInputChange}
+                                    className={errors.projectOwnerAge ? 'border-red-500' : ''}
+                                />
+                                <ErrorMessage error={errors.projectOwnerAge} />
+                            </div>
+
+                            <div>
+                                <Label>No. of Household Members Aged 18–60</Label>
+                                <Label>Female</Label>
+                                <Input
+                                    type="number"
+                                    name="female18To60"
+                                    defaultValue={formData.female18To60}
+                                    onChange={handleInputChange}
+                                />
+                                <Label>Male</Label>
+                                <Input
+                                    type="number"
+                                    name="male18To60"
+                                    defaultValue={formData.male18To60}
+                                    onChange={handleInputChange}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>Current Employment</Label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                                    {employmentOptions.map((option) => (
+                                        <Radio
+                                            key={option.employment_id}
+                                            id={`employment-${option.employment_id}`}
+                                            name="employment_id"
+                                            value={option.employment_id}
+                                            checked={formData.employment_id === option.employment_id}
+                                            onChange={() => {
+                                                console.log('Selected employment_id:', option.employment_id);
+                                                handleRadioChange('employment_id', option.employment_id);
+                                            }}
+                                            label={`${option.nameSinhala} - ${option.nameTamil} - ${option.nameEnglish}`}
+                                            className="text-sm sm:text-base"
+                                        />
+                                    ))}
                                 </div>
+                                <ErrorMessage error={errors.employment_id} />
+                            </div>
 
-                                <div>
-                                    <Label>පුහුණුව ලබාදීමට/ රැකියාගත කිරීමට අපේක්ෂිත දරුවාගේ වයස</Label>
-                                    <Input
-                                        type="number"
-                                        name="childAge"
-                                        value={formData.childAge}
-                                        onChange={handleInputChange}
-                                        className={errors.childAge ? 'border-red-500' : ''}
+                            <div>
+                                <Label>Other Occupation (if any)</Label>
+                                <Input
+                                    type="text"
+                                    name="otherOccupation"
+                                    defaultValue={formData.otherOccupation || undefined}
+                                    onChange={handleInputChange}
+                                />
+                            </div>
+
+                            <div>
+                                <Label>Samurdhi subsidy received</Label>
+                                <div className="relative">
+                                    <Select
+                                        options={subsidyOptions.map(option => ({
+                                            value: option.subsisdy_id,  // Changed from amount to id
+                                            label: formatAmount(option.amount)  // Keep formatted amount as display label
+                                        }))}
+                                        placeholder="Select Subsidy Amount"
+                                        onChange={(value) => handleSelectChange('subsisdy_id', value)}  // Changed to correct field name
+                                        className="dark:bg-dark-900"
+                                        defaultValue={formData.subsisdy_id || undefined}  // Changed to correct field name
                                     />
-                                    <ErrorMessage error={errors.childAge} />
+                                    <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                                        <ChevronDownIcon />
+                                    </span>
                                 </div>
+                            </div>
 
-                                <div className="flex flex-col gap-4">
-                                    <Label>පුහුණුව ලබාදීමට/ රැකියාගත කිරීමට අපේක්ෂිත දරුවාගේ  ස්ත්‍රී - පුරුෂ භාවය</Label>
-                                    <Radio
-                                        id="child-gender-female"
-                                        name="childGender"
-                                        value="Female"
-                                        checked={formData.childGender === "Female"}
-                                        onChange={() => handleRadioChange('childGender', "Female")}
-                                        label="Female"
+                            <div>
+                                <Label>Aswasuma category</Label>
+                                <div className="relative">
+                                    <Select
+                                        options={aswasumaCategories.map(category => ({
+                                            value: category.aswesuma_cat_id,  // Changed from nameEnglish to id
+                                            label: formatCategoryLabel(category)  // Keep formatted label for display
+                                        }))}
+                                        placeholder="Select Aswasuma Category"
+                                        onChange={(value) => handleSelectChange('aswesuma_cat_id', value)}  // Changed to correct API field name
+                                        className="dark:bg-dark-900"
+                                        defaultValue={formData.aswesuma_cat_id || undefined}  // Changed to correct field name
                                     />
-                                    <Radio
-                                        id="child-gender-male"
-                                        name="childGender"
-                                        value="Male"
-                                        checked={formData.childGender === "Male"}
-                                        onChange={() => handleRadioChange('childGender', "Male")}
-                                        label="Male"
-                                    />
+                                    <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                                        <ChevronDownIcon />
+                                    </span>
                                 </div>
+                            </div>
 
-                                <div className="space-y-2">
-                                    <Label>Job Field</Label>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                                        {jobFields.map((jobField) => (
-                                            <Radio
-                                                key={jobField.job_field_id}
-                                                id={`job-field-${jobField.job_field_id}`}
-                                                name="job_field_id"
-                                                value={jobField.job_field_id}
-                                                checked={formData.job_field_id === jobField.job_field_id}
-                                                onChange={() => {
-                                                    console.log('Selected job_field_id:', jobField.job_field_id);
-                                                    handleRadioChange('job_field_id', jobField.job_field_id);
+                            <div className="space-y-2">
+                                <Label>What is Empowerment Dimension</Label>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                                    {empowermentDimensions.map((dimension) => (
+                                        <div key={dimension.empowerment_dimension_id} className="flex gap-3 items-start">
+                                            <Checkbox
+                                                checked={formData.empowerment_dimension_id.includes(dimension.empowerment_dimension_id)}
+                                                onChange={(checked) => {
+                                                    console.log('Selected empowerment_dimension_id:', dimension.empowerment_dimension_id);
+                                                    handleCheckboxChange('empowerment_dimension_id', dimension.empowerment_dimension_id, checked);
                                                 }}
-                                                label={
-                                                    <div className="flex flex-col text-sm sm:text-base">
-                                                        <span className="font-sinhala">{jobField.nameSinhala}</span>
-                                                        <span className="font-tamil">{jobField.nameTamil}</span>
-                                                        <span>{jobField.nameEnglish}</span>
-                                                    </div>
+                                            />
+                                            <div className="flex flex-col text-sm sm:text-base font-medium text-gray-700 dark:text-gray-400">
+                                                <span className="font-sinhala">{dimension.nameSinhala}</span>
+                                                <span className="font-tamil">{dimension.nameTamil}</span>
+                                                <span>{dimension.nameEnglish}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <ErrorMessage error={errors.empowerment_dimension_id} />
+                            </div>
+
+                            {(formData.empowerment_dimension_id.some(id => {
+                                const dimension = empowermentDimensions.find(dim => dim.empowerment_dimension_id === id);
+                                return dimension?.nameEnglish.includes("Business Opportunities") ||
+                                    dimension?.nameEnglish.includes("Self-Employment");
+                            }) || (showAllFieldsForExistingBeneficiary && formData.project_type_id)) && (
+                                    <div className="space-y-2">
+                                        <Label>Types of Projects</Label>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                                            {projectTypes.map((project) => (
+                                                <Radio
+                                                    key={project.project_type_id}
+                                                    id={`project-${project.project_type_id}`}
+                                                    name="project_type_id"
+                                                    value={project.project_type_id}
+                                                    checked={formData.project_type_id === project.project_type_id}
+                                                    onChange={() => {
+                                                        console.log('Selected project_type_id:', project.project_type_id);
+                                                        handleRadioChange('project_type_id', project.project_type_id);
+                                                    }}
+                                                    label={
+                                                        <div className="flex flex-col text-sm sm:text-base">
+                                                            <span className="font-sinhala">{project.nameSinhala}</span>
+                                                            <span className="font-tamil">{project.nameTamil}</span>
+                                                            <span>{project.nameEnglish}</span>
+                                                        </div>
+                                                    }
+                                                />
+                                            ))}
+                                        </div>
+                                        <ErrorMessage error={errors.project_type_id} />
+                                    </div>
+                                )}
+
+                            <div>
+                                <Label>Specify other projects</Label>
+                                <Input
+                                    type="text"
+                                    name="otherProject"
+                                    defaultValue={formData.otherProject || undefined}
+                                    onChange={handleInputChange}
+                                />
+                            </div>
+
+                            {(formData.empowerment_dimension_id.some(id => {
+                                const dimension = empowermentDimensions.find(dim => dim.empowerment_dimension_id === id);
+                                return dimension?.nameEnglish.includes("Employment Facilitation");
+                            }) || (showAllFieldsForExistingBeneficiary && (formData.childName || formData.job_field_id))) && (
+                                    <>
+                                        <div>
+                                            <Label>පුහුණුව ලබාදීමට/ රැකියාගත කිරීමට අපේක්ෂිත දරුවාගේ නම</Label>
+                                            <Input
+                                                type="text"
+                                                name="childName"
+                                                value={formData.childName || undefined}
+                                                onChange={handleInputChange}
+                                                className={errors.childName ? 'border-red-500' : ''}
+                                            />
+                                            <ErrorMessage error={errors.childName} />
+                                        </div>
+
+                                        <div>
+                                            <Label>පුහුණුව ලබාදීමට/ රැකියාගත කිරීමට අපේක්ෂිත දරුවාගේ වයස</Label>
+                                            <Input
+                                                type="number"
+                                                name="childAge"
+                                                value={formData.childAge}
+                                                onChange={handleInputChange}
+                                                className={errors.childAge ? 'border-red-500' : ''}
+                                            />
+                                            <ErrorMessage error={errors.childAge} />
+                                        </div>
+
+                                        <div className="flex flex-col gap-4">
+                                            <Label>පුහුණුව ලබාදීමට/ රැකියාගත කිරීමට අපේක්ෂිත දරුවාගේ  ස්ත්‍රී - පුරුෂ භාවය</Label>
+                                            <Radio
+                                                id="child-gender-female"
+                                                name="childGender"
+                                                value="Female"
+                                                checked={formData.childGender === "Female"}
+                                                onChange={() => handleRadioChange('childGender', "Female")}
+                                                label="Female"
+                                            />
+                                            <Radio
+                                                id="child-gender-male"
+                                                name="childGender"
+                                                value="Male"
+                                                checked={formData.childGender === "Male"}
+                                                onChange={() => handleRadioChange('childGender', "Male")}
+                                                label="Male"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label>Job Field</Label>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                                                {jobFields.map((jobField) => (
+                                                    <Radio
+                                                        key={jobField.job_field_id}
+                                                        id={`job-field-${jobField.job_field_id}`}
+                                                        name="job_field_id"
+                                                        value={jobField.job_field_id}
+                                                        checked={formData.job_field_id === jobField.job_field_id}
+                                                        onChange={() => {
+                                                            console.log('Selected job_field_id:', jobField.job_field_id);
+                                                            handleRadioChange('job_field_id', jobField.job_field_id);
+                                                        }}
+                                                        label={
+                                                            <div className="flex flex-col text-sm sm:text-base">
+                                                                <span className="font-sinhala">{jobField.nameSinhala}</span>
+                                                                <span className="font-tamil">{jobField.nameTamil}</span>
+                                                                <span>{jobField.nameEnglish}</span>
+                                                            </div>
+                                                        }
+                                                    />
+                                                ))}
+                                            </div>
+                                            <ErrorMessage error={errors.job_field_id} />
+                                        </div>
+
+                                        <div>
+                                            <Label>Please specify Other employment fields</Label>
+                                            <Input
+                                                type="text"
+                                                name="otherJobField"
+                                                value={formData.otherJobField || undefined}
+                                                onChange={handleInputChange}
+                                            />
+                                        </div>
+                                    </>
+                                )}
+
+                            <div className="space-y-2">
+                                <Label>Resources Needed</Label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {resourcesNeeded.map((resource) => (
+                                        <div key={resource.resource_id} className="flex gap-3 items-start">
+                                            <Checkbox
+                                                checked={formData.resource_id.includes(resource.resource_id)}
+                                                onChange={(checked) => {
+                                                    console.log('Resource selection changed:', resource.resource_id, checked);
+                                                    handleCheckboxChange('resource_id', resource.resource_id, checked);
+                                                }}
+                                            />
+                                            <span className="block text-gray-700 dark:text-gray-400 text-sm sm:text-base">
+                                                {resource.nameEnglish} - {resource.nameSinhala} - {resource.nameTamil}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <ErrorMessage error={errors.resource_id} />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>Health/Nutrition/Education</Label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {healthIndicators.map((indicator) => (
+                                        <div key={indicator.health_indicator_id} className="flex gap-3 items-start">
+                                            <Checkbox
+                                                checked={formData.health_indicator_id.includes(indicator.health_indicator_id)}
+                                                onChange={(checked) => {
+                                                    console.log('Health indicator selection changed:',
+                                                        indicator.health_indicator_id, checked);
+                                                    handleCheckboxChange(
+                                                        'health_indicator_id',
+                                                        indicator.health_indicator_id,
+                                                        checked
+                                                    );
+                                                }}
+                                            />
+                                            <span className="flex flex-col text-gray-700 dark:text-gray-400 text-sm sm:text-base">
+                                                <span className="font-sinhala">{indicator.nameSinhala}</span>
+                                                <span className="font-tamil">{indicator.nameTamil}</span>
+                                                <span>{indicator.nameEnglish}</span>
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <ErrorMessage error={errors.health_indicator_id} />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>Domestic Dynamics</Label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {domesticDynamics.map((dynamic) => (
+                                        <div key={dynamic.domestic_dynamic_id} className="flex gap-3 items-start">
+                                            <Checkbox
+                                                checked={formData.domestic_dynamic_id.includes(dynamic.domestic_dynamic_id)}
+                                                onChange={(checked) => {
+                                                    console.log('Domestic dynamic selection changed:',
+                                                        dynamic.domestic_dynamic_id, checked);
+                                                    handleCheckboxChange(
+                                                        'domestic_dynamic_id',
+                                                        dynamic.domestic_dynamic_id,
+                                                        checked
+                                                    );
+                                                }}
+                                            />
+                                            <div className="flex flex-col text-gray-700 dark:text-gray-400 text-sm sm:text-base">
+                                                <span className="font-sinhala">{dynamic.nameSinhala}</span>
+                                                <span className="font-tamil">{dynamic.nameTamil}</span>
+                                                <span>{dynamic.nameEnglish}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <ErrorMessage error={errors.domestic_dynamic_id} />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>Community Participation</Label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {communityParticipationOptions.map((item) => (
+                                        <div key={item.community_participation_id} className="flex gap-3 items-start">
+                                            <Checkbox
+                                                checked={formData.community_participation_id.includes(item.community_participation_id)}
+                                                onChange={(checked) =>
+                                                    handleCheckboxChange('community_participation_id', item.community_participation_id, checked)
                                                 }
                                             />
-                                        ))}
-                                    </div>
-                                    <ErrorMessage error={errors.job_field_id} />
+                                            <span className="block text-gray-700 dark:text-gray-400 text-sm sm:text-base">
+                                                {formatCommunityLabel(item)}
+                                            </span>
+                                        </div>
+                                    ))}
                                 </div>
+                                <ErrorMessage error={errors.community_participation_id} />
+                            </div>
 
-                                <div>
-                                    <Label>Please specify Other employment fields</Label>
-                                    <Input
-                                        type="text"
-                                        name="otherJobField"
-                                        value={formData.otherJobField || undefined}
-                                        onChange={handleInputChange}
-                                    />
+                            <div className="space-y-2">
+                                <Label>Housing Services</Label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {housingServices.map((service) => (
+                                        <div key={service.housing_service_id} className="flex gap-3 items-start">
+                                            <Checkbox
+                                                checked={formData.housing_service_id.includes(service.housing_service_id)}
+                                                onChange={(checked) =>
+                                                    handleCheckboxChange('housing_service_id', service.housing_service_id, checked)
+                                                }
+                                            />
+                                            <div className="flex flex-col text-gray-700 dark:text-gray-400 text-sm sm:text-base">
+                                                <span className="font-sinhala">{service.nameSinhala}</span>
+                                                <span className="font-tamil">{service.nameTamil}</span>
+                                                <span>{service.nameEnglish}</span>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                            </>
-                        )}
+                                <ErrorMessage error={errors.housing_service_id} />
+                            </div>
 
-                    <div className="space-y-2">
-                        <Label>Resources Needed</Label>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {resourcesNeeded.map((resource) => (
-                                <div key={resource.resource_id} className="flex gap-3 items-start">
-                                    <Checkbox
-                                        checked={formData.resource_id.includes(resource.resource_id)}
-                                        onChange={(checked) => {
-                                            console.log('Resource selection changed:', resource.resource_id, checked);
-                                            handleCheckboxChange('resource_id', resource.resource_id, checked);
-                                        }}
-                                    />
-                                    <span className="block text-gray-700 dark:text-gray-400 text-sm sm:text-base">
-                                        {resource.nameEnglish} - {resource.nameSinhala} - {resource.nameTamil}
-                                    </span>
-                                </div>
-                            ))}
+                            <div className="flex items-center gap-5">
+                                <Button
+                                    size="sm"
+                                    variant="primary"
+                                    type="submit"
+                                    disabled={isSubmitting || isFormResetting}
+                                    className="flex items-center gap-2"
+                                >
+                                    {(isSubmitting || isFormResetting) && <LoadingSpinner size="sm" color="white" />}
+                                    {isSubmitting
+                                        ? (isExistingBeneficiary ? 'Updating...' : 'Submitting...')
+                                        : isFormResetting
+                                            ? 'Processing...'
+                                            : (isExistingBeneficiary ? 'Update' : 'Submit')
+                                    }
+                                </Button>
+                                <Button
+                                    size="md"
+                                    variant="danger"
+                                    type="button"  // Explicitly set type to button to prevent form submission
+                                    onClick={(e) => {
+                                        e.preventDefault(); // Prevent any default behavior
+                                        // Reset form
+                                        setFormData({
+                                            district: { id: formData.district.id, name: formData.district.name },
+                                            dsDivision: { id: formData.dsDivision.id, name: formData.dsDivision.name },
+                                            zone: { id: formData.zone.id, name: formData.zone.name },
+                                            gnd: { id: formData.gnd.id, name: formData.gnd.name },
+                                            beneficiary_type_id: null,
+                                            aswasumaHouseholdNo: null,
+                                            nic: null,
+                                            beneficiaryName: null,
+                                            gender: null,
+                                            address: null,
+                                            phone: null,
+                                            projectOwnerAge: 0,
+                                            male18To60: 0,
+                                            female18To60: 0,
+                                            employment_id: null,
+                                            otherOccupation: null,
+                                            subsisdy_id: null,
+                                            aswesuma_cat_id: null,
+                                            empowerment_dimension_id: [],
+                                            project_type_id: null,
+                                            otherProject: null,
+                                            childName: null,
+                                            childAge: 0,
+                                            childGender: null,
+                                            job_field_id: null,
+                                            otherJobField: null,
+                                            resource_id: [],
+                                            monthlySaving: false,
+                                            savingAmount: 0,
+                                            health_indicator_id: [],
+                                            domestic_dynamic_id: [],
+                                            community_participation_id: [],
+                                            housing_service_id: []
+                                        });
+                                        setIsExistingBeneficiary(false);
+                                        setErrors({}); // Clear validation errors
+                                        setIsAswasumaHouseholdDisabled(false); // Reset any disabled states
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+                            </div>
                         </div>
-                        <ErrorMessage error={errors.resource_id} />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label>Health/Nutrition/Education</Label>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {healthIndicators.map((indicator) => (
-                                <div key={indicator.health_indicator_id} className="flex gap-3 items-start">
-                                    <Checkbox
-                                        checked={formData.health_indicator_id.includes(indicator.health_indicator_id)}
-                                        onChange={(checked) => {
-                                            console.log('Health indicator selection changed:',
-                                                indicator.health_indicator_id, checked);
-                                            handleCheckboxChange(
-                                                'health_indicator_id',
-                                                indicator.health_indicator_id,
-                                                checked
-                                            );
-                                        }}
-                                    />
-                                    <span className="flex flex-col text-gray-700 dark:text-gray-400 text-sm sm:text-base">
-                                        <span className="font-sinhala">{indicator.nameSinhala}</span>
-                                        <span className="font-tamil">{indicator.nameTamil}</span>
-                                        <span>{indicator.nameEnglish}</span>
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                        <ErrorMessage error={errors.health_indicator_id} />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label>Domestic Dynamics</Label>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {domesticDynamics.map((dynamic) => (
-                                <div key={dynamic.domestic_dynamic_id} className="flex gap-3 items-start">
-                                    <Checkbox
-                                        checked={formData.domestic_dynamic_id.includes(dynamic.domestic_dynamic_id)}
-                                        onChange={(checked) => {
-                                            console.log('Domestic dynamic selection changed:',
-                                                dynamic.domestic_dynamic_id, checked);
-                                            handleCheckboxChange(
-                                                'domestic_dynamic_id',
-                                                dynamic.domestic_dynamic_id,
-                                                checked
-                                            );
-                                        }}
-                                    />
-                                    <div className="flex flex-col text-gray-700 dark:text-gray-400 text-sm sm:text-base">
-                                        <span className="font-sinhala">{dynamic.nameSinhala}</span>
-                                        <span className="font-tamil">{dynamic.nameTamil}</span>
-                                        <span>{dynamic.nameEnglish}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        <ErrorMessage error={errors.domestic_dynamic_id} />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label>Community Participation</Label>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {communityParticipationOptions.map((item) => (
-                                <div key={item.community_participation_id} className="flex gap-3 items-start">
-                                    <Checkbox
-                                        checked={formData.community_participation_id.includes(item.community_participation_id)}
-                                        onChange={(checked) =>
-                                            handleCheckboxChange('community_participation_id', item.community_participation_id, checked)
-                                        }
-                                    />
-                                    <span className="block text-gray-700 dark:text-gray-400 text-sm sm:text-base">
-                                        {formatCommunityLabel(item)}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                        <ErrorMessage error={errors.community_participation_id} />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label>Housing Services</Label>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {housingServices.map((service) => (
-                                <div key={service.housing_service_id} className="flex gap-3 items-start">
-                                    <Checkbox
-                                        checked={formData.housing_service_id.includes(service.housing_service_id)}
-                                        onChange={(checked) =>
-                                            handleCheckboxChange('housing_service_id', service.housing_service_id, checked)
-                                        }
-                                    />
-                                    <div className="flex flex-col text-gray-700 dark:text-gray-400 text-sm sm:text-base">
-                                        <span className="font-sinhala">{service.nameSinhala}</span>
-                                        <span className="font-tamil">{service.nameTamil}</span>
-                                        <span>{service.nameEnglish}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        <ErrorMessage error={errors.housing_service_id} />
-                    </div>
-
-                    <div className="flex items-center gap-5">
-                        <Button
-                            size="sm"
-                            variant="primary"
-                            type="submit"
-                            disabled={isSubmitting || isFormResetting}
-                        >
-                            {isSubmitting
-                                ? (isExistingBeneficiary ? 'Updating...' : 'Submitting...')
-                                : isFormResetting
-                                    ? 'Processing...'
-                                    : (isExistingBeneficiary ? 'Update' : 'Submit')
-                            }
-                        </Button>
-                        <Button
-                            size="md"
-                            variant="danger"
-                            type="button"  // Explicitly set type to button to prevent form submission
-                            onClick={(e) => {
-                                e.preventDefault(); // Prevent any default behavior
-                                // Reset form
-                                setFormData({
-                                    district: { id: formData.district.id, name: formData.district.name },
-                                    dsDivision: { id: formData.dsDivision.id, name: formData.dsDivision.name },
-                                    zone: { id: formData.zone.id, name: formData.zone.name },
-                                    gnd: { id: formData.gnd.id, name: formData.gnd.name },
-                                    beneficiary_type_id: null,
-                                    aswasumaHouseholdNo: null,
-                                    nic: null,
-                                    beneficiaryName: null,
-                                    gender: null,
-                                    address: null,
-                                    phone: null,
-                                    projectOwnerAge: 0,
-                                    male18To60: 0,
-                                    female18To60: 0,
-                                    employment_id: null,
-                                    otherOccupation: null,
-                                    subsisdy_id: null,
-                                    aswesuma_cat_id: null,
-                                    empowerment_dimension_id: [],
-                                    project_type_id: null,
-                                    otherProject: null,
-                                    childName: null,
-                                    childAge: 0,
-                                    childGender: null,
-                                    job_field_id: null,
-                                    otherJobField: null,
-                                    resource_id: [],
-                                    monthlySaving: false,
-                                    savingAmount: 0,
-                                    health_indicator_id: [],
-                                    domestic_dynamic_id: [],
-                                    community_participation_id: [],
-                                    housing_service_id: []
-                                });
-                                setIsExistingBeneficiary(false);
-                                setErrors({}); // Clear validation errors
-                                setIsAswasumaHouseholdDisabled(false); // Reset any disabled states
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                    </div>
-                </div>
-            </form>
-            <Toaster
-                position="top-right"
-                toastOptions={{
-                    duration: 4000,
-                    style: {
-                        maxWidth: '500px',
-                    },
-                    success: {
-                        duration: 5000, // Longer duration for success messages
-                        style: {
-                            background: '#10B981',
-                            color: 'white',
-                            fontSize: '14px',
-                            fontWeight: '500',
-                            border: '1px solid #059669',
-                            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.15)',
-                        },
-                        iconTheme: {
-                            primary: 'white',
-                            secondary: '#10B981',
-                        },
-                    },
-                    error: {
-                        style: {
-                            background: '#EF4444',
-                            color: 'white',
-                            fontSize: '14px',
-                            fontWeight: '500',
-                            border: '1px solid #DC2626',
-                            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.15)',
-                        },
-                    },
-                }}
-                containerStyle={{
-                    top: '100px',
-                    right: 20,
-                }}
-            />
+                    </form>
+                    <Toaster
+                        position="top-right"
+                        toastOptions={{
+                            duration: 4000,
+                            style: {
+                                maxWidth: '500px',
+                            },
+                            success: {
+                                duration: 5000, // Longer duration for success messages
+                                style: {
+                                    background: '#10B981',
+                                    color: 'white',
+                                    fontSize: '14px',
+                                    fontWeight: '500',
+                                    border: '1px solid #059669',
+                                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.15)',
+                                },
+                                iconTheme: {
+                                    primary: 'white',
+                                    secondary: '#10B981',
+                                },
+                            },
+                            error: {
+                                style: {
+                                    background: '#EF4444',
+                                    color: 'white',
+                                    fontSize: '14px',
+                                    fontWeight: '500',
+                                    border: '1px solid #DC2626',
+                                    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.15)',
+                                },
+                            },
+                        }}
+                        containerStyle={{
+                            top: '100px',
+                            right: 20,
+                        }}
+                    />
+                </LoadingOverlay>
+            )}
         </ComponentCard>
     )
 }
