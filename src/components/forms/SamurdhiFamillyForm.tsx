@@ -1370,8 +1370,8 @@ const SamurdhiFamillyForm = () => {
                             // Only show if NOT pure Aswasuma beneficiary
                             if (!isAswasumaBeneficiary) {
                                 return (
-                                    <div className="flex gap-2 items-end">
-                                        <div className="flex-1">
+                                    <div className="flex flex-col md:flex-row gap-2 md:items-end">
+                                        <div className="md:flex-1">
                                             <Label>
                                                 National Identity Card Number
                                                 {(() => {
@@ -1393,7 +1393,7 @@ const SamurdhiFamillyForm = () => {
                                             variant="secondary"
                                             onClick={handleNicLookup}
                                             disabled={isFetching}
-                                            className="h-11"
+                                            className="h-11 w-full md:w-auto"
                                         >
                                             {isFetching ? 'Fetching...' : 'Get Details'}
                                         </Button>
@@ -1855,10 +1855,10 @@ const SamurdhiFamillyForm = () => {
                                 e.preventDefault(); // Prevent any default behavior
                                 // Reset form
                                 setFormData({
-                                    district: { id: '', name: '' },
-                                    dsDivision: { id: '', name: '' },
-                                    zone: { id: '', name: '' },
-                                    gnd: { id: '', name: '' },
+                                    district: { id: formData.district.id, name: formData.district.name },
+                                    dsDivision: { id: formData.dsDivision.id, name: formData.dsDivision.name },
+                                    zone: { id: formData.zone.id, name: formData.zone.name },
+                                    gnd: { id: formData.gnd.id, name: formData.gnd.name },
                                     beneficiary_type_id: null,
                                     aswasumaHouseholdNo: null,
                                     nic: null,
