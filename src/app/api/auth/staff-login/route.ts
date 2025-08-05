@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       Buffer.from(staffToken.split(".")[1], "base64").toString()
     );
 
-    const role = decoded?.role?.title || "staff";
+    const roleName = decoded?.roleName || "staff";
 
     (await cookies()).set("staffAccessToken", staffToken, {
       httpOnly: true,
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      role,
+      roleName,
       type: "staff",
       locationDetails
     });

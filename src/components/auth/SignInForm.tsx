@@ -22,16 +22,7 @@ export default function SignInForm() {
     try {
       const result = await loginUser({ username, password });
 
-      console.log("result: ", result);
-
-      if (result.type === "admin") {
-        console.log("Admin login success");
-        router.push("/dashboard/admin");
-        return;
-      }
-
       if (result.type === "staff") {
-        console.log("Staff login success, decoding staffAccessToken...");
         console.log("Location details:", result.locationDetails);
 
         if (result.locationDetails) {
@@ -49,9 +40,7 @@ export default function SignInForm() {
           atob(payloadBase64)
         );
 
-        console.log("Decoded staff token payload:", decodedPayload);
-
-        const roleName: string = decodedPayload?.role?.name;
+        const roleName: string = decodedPayload?.roleName;
 
         if (!roleName) {
           console.warn("No role name in token, redirecting to /dashboard/staff");
@@ -59,29 +48,24 @@ export default function SignInForm() {
           return;
         }
 
-        // Format role name (e.g., "HR Executive" → "hr-executive")
-        const formattedRole = roleName.toLowerCase().replace(/\s+/g, "-");
-
-        console.log(`Redirecting based on role: ${roleName} -> ${formattedRole}`);
+        // Format role name (e.g., "Bank/Zone Level User" → "bank-zone-level-user")
+        const formattedRole = roleName.toLowerCase().replace(/\s+/g, '-').replace(/\//g, '-');
 
         switch (formattedRole) {
-          case "department-manager":
-            router.push("/dashboard/department-manager");
+          case 'national-level-user':
+            router.push("/dashboard/national-level");
             break;
-          case "hr-executive":
-            router.push("/dashboard/hr-executive");
+          case 'district-level-user':
+            router.push("/dashboard/district-level");
             break;
-          case "finance-officer":
-            router.push("/dashboard/finance-officer");
+          case 'divisional-level-user':
+            router.push("/dashboard/divisional-level");
             break;
-          case "it-support":
-            router.push("/dashboard/it-support");
+          case 'bank-zone-level-user':
+            router.push("/dashboard/bank-zone-level");
             break;
-          case "operations-supervisor":
-            router.push("/dashboard/operations-supervisor");
-            break;
-          case "gnd-user":
-            router.push("/dashboard/gnd-user");
+          case 'gn-level-user':
+            router.push("/dashboard/gn-level");
             break;
           default:
             router.push("/dashboard/staff");
@@ -92,8 +76,6 @@ export default function SignInForm() {
       alert(error.message || "Login failed");
     }
   };
-
-
 
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full">

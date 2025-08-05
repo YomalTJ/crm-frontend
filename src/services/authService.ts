@@ -6,30 +6,18 @@ interface LoginPayload {
 
 export const loginUser = async ({ username, password }: LoginPayload) => {
   try {
-    // First try admin login
-    let res = await fetch("/api/auth/login", {
+    const res = await fetch("/api/auth/staff-login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
     });
 
-    let data = await res.json();
-
-    if (res.ok) return { type: "admin", ...data };
-
-    // If admin login fails, try staff login
-    res = await fetch("/api/auth/staff-login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
-
-    data = await res.json();
+    const data = await res.json();
 
     if (res.ok) return {
       type: "staff",
       success: data.success,
-      role: data.role,
+      roleName: data.roleName,
       locationDetails: data.locationDetails
     };
 
