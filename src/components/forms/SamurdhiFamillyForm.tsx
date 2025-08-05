@@ -27,246 +27,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import FormSkeleton from '../loading/FormSkeleton';
 import LoadingOverlay from '../loading/LoadingOverlay';
 import LoadingSpinner from '../loading/LoadingSpinner';
-
-interface BeneficiaryStatus {
-    beneficiary_type_id: string;
-    nameEnglish: string;
-    nameSinhala: string;
-    nameTamil: string;
-    createdAt: string;
-    createdBy: {
-        name: string;
-        username: string;
-        language: string;
-        role: {
-            name: string;
-            canAdd: boolean;
-            canUpdate: boolean;
-            canDelete: boolean;
-        };
-    };
-}
-
-interface EmpowermentDimension {
-    empowerment_dimension_id: string;
-    nameEnglish: string;
-    nameSinhala: string;
-    nameTamil: string;
-    createdAt: string;
-    createdBy: {
-        name: string;
-        username: string;
-        language: string;
-        role: {
-            name: string;
-            canAdd: boolean;
-            canUpdate: boolean;
-            canDelete: boolean;
-        };
-    };
-}
-
-interface ProjectType {
-    project_type_id: string;
-    nameEnglish: string;
-    nameSinhala: string;
-    nameTamil: string;
-    createdAt: string;
-    createdBy: {
-        id: string;
-        name: string;
-        username: string;
-        language: string;
-        addedBy: null | string;
-        role: {
-            id: string;
-            name: string;
-            canAdd: boolean;
-            canUpdate: boolean;
-            canDelete: boolean;
-        };
-    };
-}
-
-interface JobField {
-    job_field_id: string;
-    nameEnglish: string;
-    nameSinhala: string;
-    nameTamil: string;
-    createdAt: string;
-    createdBy: {
-        id: string;
-        name: string;
-        username: string;
-        language: string;
-        addedBy: null | string;
-        role: {
-            id: string;
-            name: string;
-            canAdd: boolean;
-            canUpdate: boolean;
-            canDelete: boolean;
-        };
-    };
-}
-
-interface DomesticDynamic {
-    domestic_dynamic_id: string;
-    nameEnglish: string;
-    nameSinhala: string;
-    nameTamil: string;
-    createdAt: string;
-    createdBy: {
-        id: string;
-        name: string;
-        username: string;
-        language: string;
-        addedBy: null | string;
-        role: {
-            id: string;
-            name: string;
-            canAdd: boolean;
-            canUpdate: boolean;
-            canDelete: boolean;
-        };
-    };
-}
-
-interface HousingService {
-    housing_service_id: string;
-    nameEnglish: string;
-    nameSinhala: string;
-    nameTamil: string;
-    createdAt: string;
-    createdBy: {
-        id: string;
-        name: string;
-        username: string;
-        language: string;
-        addedBy: null | string;
-        role: {
-            id: string;
-            name: string;
-            canAdd: boolean;
-            canUpdate: boolean;
-            canDelete: boolean;
-        };
-    };
-}
-
-interface FormData {
-    district: {
-        id: string;
-        name: string;
-    };
-    dsDivision: {
-        id: string;
-        name: string;
-    };
-    zone: {
-        id: string;
-        name: string;
-    };
-    gnd: {
-        id: string;
-        name: string;
-    };
-    beneficiary_type_id: string | null;
-    aswasumaHouseholdNo: string | null;
-    nic: string | null;
-    beneficiaryName: string | null;
-    gender: string | null;
-    address: string | null;
-    phone: string | null;
-    projectOwnerAge: number;
-    male18To60: number;
-    female18To60: number;
-    employment_id: string | null;
-    otherOccupation: string | null;
-    subsisdy_id: string | null;
-    aswesuma_cat_id: string | null;
-    empowerment_dimension_id: string[];
-    project_type_id: string | null;
-    otherProject: string | null;
-    childName?: string | null;
-    childAge?: number;
-    childGender?: string | null;
-    job_field_id: string | null;
-    otherJobField?: string | null;
-    resource_id: string[];
-    monthlySaving: boolean;
-    savingAmount: number;
-    health_indicator_id: string[];
-    domestic_dynamic_id: string[];
-    community_participation_id: string[];
-    housing_service_id: string[];
-}
-
-interface Resource {
-    resource_id: string;
-    nameEnglish: string;
-    nameSinhala: string;
-    nameTamil: string;
-    createdAt: string;
-    createdBy: {
-        id: string;
-        name: string;
-        username: string;
-        language: string;
-        addedBy: null | string;
-        role: {
-            id: string;
-            name: string;
-            canAdd: boolean;
-            canUpdate: boolean;
-            canDelete: boolean;
-        };
-    };
-}
-
-interface CommunityParticipation {
-    community_participation_id: string;
-    nameEnglish: string;
-    nameSinhala: string;
-    nameTamil: string;
-    createdAt: string;
-    createdBy: {
-        id: string;
-        name: string;
-        username: string;
-        language: string;
-        addedBy: null | string;
-        role: {
-            id: string;
-            name: string;
-            canAdd: boolean;
-            canUpdate: boolean;
-            canDelete: boolean;
-        };
-    };
-}
-
-interface HealthIndicator {
-    health_indicator_id: string;
-    nameEnglish: string;
-    nameSinhala: string;
-    nameTamil: string;
-    createdAt: string;
-    createdBy: {
-        id: string;
-        name: string;
-        username: string;
-        language: string;
-        addedBy: null | string;
-        role: {
-            id: string;
-            name: string;
-            canAdd: boolean;
-            canUpdate: boolean;
-            canDelete: boolean;
-        };
-    };
-}
+import { BeneficiaryStatus, CommunityParticipation, DomesticDynamic, EmpowermentDimension, FormData, HealthIndicator, HousingService, JobField, ProjectType, Resource } from '@/interfaces/samurdhi-form/benficiaryFormInterfaces';
 
 const ErrorMessage = ({ error }: { error?: string }) => {
     if (!error) return null;
@@ -277,6 +38,12 @@ const ErrorMessage = ({ error }: { error?: string }) => {
     );
 
 }
+
+const MAIN_PROGRAM_OPTIONS = [
+    { value: 'NP', label: 'National Program' },
+    { value: 'ADB', label: 'ADB Program' },
+    { value: 'WB', label: 'World Bank Program' }
+];
 
 const SamurdhiFamillyForm = () => {
 
@@ -564,8 +331,11 @@ const SamurdhiFamillyForm = () => {
                 setShowAllFieldsForExistingBeneficiary(true);
             }
 
+            // Clear the household number when fetching from NIC (since it's Samurdhi beneficiary)
             setFormData(prev => ({
                 ...prev,
+                mainProgram: null,
+                aswasumaHouseholdNo: null, // Clear household number for Samurdhi beneficiaries
                 beneficiaryName: data.name || '',
                 gender: data.gender || 'Male',
                 address: data.address || '',
@@ -573,7 +343,6 @@ const SamurdhiFamillyForm = () => {
                 projectOwnerAge: data.age || 0,
                 male18To60: data.members18To60?.male || 0,
                 female18To60: data.members18To60?.female || 0,
-                aswasumaHouseholdNo: data.householdNumber || '',
                 beneficiary_type_id: data.beneficiary_type_id || '',
                 employment_id: data.employment_id || '',
                 otherOccupation: data.otherOccupation || '',
@@ -598,6 +367,40 @@ const SamurdhiFamillyForm = () => {
         } catch {
             setIsExistingBeneficiary(false);
             setShowAllFieldsForExistingBeneficiary(false);
+
+            // Clear auto-filled data when NIC lookup fails
+            setFormData(prev => ({
+                ...prev,
+                mainProgram: null,
+                aswasumaHouseholdNo: null,
+                beneficiaryName: null,
+                gender: null,
+                address: null,
+                phone: null,
+                projectOwnerAge: 0,
+                male18To60: 0,
+                female18To60: 0,
+                aswesuma_cat_id: null,
+                employment_id: null,
+                otherOccupation: null,
+                subsisdy_id: null,
+                empowerment_dimension_id: [],
+                project_type_id: null,
+                otherProject: null,
+                childName: null,
+                childAge: 0,
+                childGender: null,
+                job_field_id: null,
+                otherJobField: null,
+                resource_id: [],
+                monthlySaving: false,
+                savingAmount: 0,
+                health_indicator_id: [],
+                domestic_dynamic_id: [],
+                community_participation_id: [],
+                housing_service_id: []
+            }));
+
             toast.error('Failed to fetch beneficiary details');
         } finally {
             setIsFetching(false);
@@ -614,6 +417,10 @@ const SamurdhiFamillyForm = () => {
     const validateForm = (): boolean => {
         const newErrors: { [key: string]: string } = {};
 
+        if (!formData.mainProgram || formData.mainProgram.trim() === '') {
+            newErrors.mainProgram = 'Please select main program';
+        }
+
         // Basic required fields - check for null or empty
         if (!formData.beneficiary_type_id) {
             newErrors.beneficiary_type_id = 'Please select beneficiary type';
@@ -629,6 +436,10 @@ const SamurdhiFamillyForm = () => {
             !selectedBeneficiaryType?.nameEnglish.includes("low income");
         const isSamurdhiOrLowIncome = selectedBeneficiaryType?.nameEnglish.includes("Samurdhi") ||
             selectedBeneficiaryType?.nameEnglish.includes("low income");
+
+        if (formData.hasConsentedToEmpowerment && !formData.consentGivenAt) {
+            newErrors.consentGivenAt = 'Please select a consent date';
+        }
 
         // Conditional NIC validation - only for non-pure Aswasuma beneficiaries
         if (!isAswasumaBeneficiary && isSamurdhiBeneficiary) {
@@ -741,6 +552,9 @@ const SamurdhiFamillyForm = () => {
         dsDivision: { id: '', name: '' },
         zone: { id: '', name: '' },
         gnd: { id: '', name: '' },
+        mainProgram: null,
+        hasConsentedToEmpowerment: false,
+        consentGivenAt: null,
         beneficiary_type_id: null, // Change from null to empty string
         aswasumaHouseholdNo: null,
         nic: null,
@@ -795,9 +609,18 @@ const SamurdhiFamillyForm = () => {
 
     const handleSelectChange = (name: string, value: string) => {
         clearError(name);
+
+        // Handle different cases for null/empty values
+        let processedValue: string | null;
+        if (!value || value === '' || value === 'null' || value === 'undefined') {
+            processedValue = null;
+        } else {
+            processedValue = value;
+        }
+
         setFormData(prev => ({
             ...prev,
-            [name]: value
+            [name]: processedValue
         }));
     };
 
@@ -824,6 +647,18 @@ const SamurdhiFamillyForm = () => {
 
     const handleHouseholdSelection = async (selectedHhNumber: string) => {
         if (!selectedHhNumber) {
+            // Clear auto-filled data when no household is selected
+            setFormData(prev => ({
+                ...prev,
+                aswasumaHouseholdNo: null,
+                beneficiaryName: null,
+                gender: null,
+                address: null,
+                projectOwnerAge: 0,
+                male18To60: 0,
+                female18To60: 0,
+                aswesuma_cat_id: null
+            }));
             return;
         }
 
@@ -838,9 +673,10 @@ const SamurdhiFamillyForm = () => {
             const primaryCitizen = householdData.citizens?.[0];
 
             if (householdData.household && primaryCitizen) {
-                // Auto-fill form fields with household data
+                // Clear NIC when household is selected (since it's Aswasuma beneficiary)
                 setFormData(prev => ({
                     ...prev,
+                    nic: null, // Clear NIC for Aswasuma beneficiaries
                     aswasumaHouseholdNo: selectedHhNumber,
                     beneficiaryName: householdData.household.applicantName || primaryCitizen.name || '',
                     address: [
@@ -856,7 +692,28 @@ const SamurdhiFamillyForm = () => {
                     gender: primaryCitizen.gender === 'male' ? 'Male' : 'Female',
 
                     // Set Aswasuma category based on level
-                    aswesuma_cat_id: getAswasumaIdByLevel(householdData.household.level)
+                    aswesuma_cat_id: getAswasumaIdByLevel(householdData.household.level),
+
+                    // Clear other auto-filled fields that might conflict
+                    phone: null,
+                    employment_id: null,
+                    otherOccupation: null,
+                    subsisdy_id: null,
+                    empowerment_dimension_id: [],
+                    project_type_id: null,
+                    otherProject: null,
+                    childName: null,
+                    childAge: 0,
+                    childGender: null,
+                    job_field_id: null,
+                    otherJobField: null,
+                    resource_id: [],
+                    monthlySaving: false,
+                    savingAmount: 0,
+                    health_indicator_id: [],
+                    domestic_dynamic_id: [],
+                    community_participation_id: [],
+                    housing_service_id: []
                 }));
 
                 // Calculate household members aged 18-60
@@ -884,7 +741,21 @@ const SamurdhiFamillyForm = () => {
             }
         } catch (error: any) {
             console.error('Error fetching household details:', error);
-            toast.error('message')
+
+            // Clear auto-filled data on error
+            setFormData(prev => ({
+                ...prev,
+                aswasumaHouseholdNo: null,
+                beneficiaryName: null,
+                gender: null,
+                address: null,
+                projectOwnerAge: 0,
+                male18To60: 0,
+                female18To60: 0,
+                aswesuma_cat_id: null
+            }));
+
+            toast.error('Failed to fetch household details. Please try again.');
         } finally {
             setIsLoadingHouseholdNumbers(false);
         }
@@ -932,6 +803,11 @@ const SamurdhiFamillyForm = () => {
                 zone_id: formData.zone.id || "1",
                 gnd_id: formData.gnd.id || "1",
                 beneficiary_type_id: formData.beneficiary_type_id as string,
+                mainProgram: formData.mainProgram ?? "", // Ensure string, never null
+                hasConsentedToEmpowerment: formData.hasConsentedToEmpowerment,
+                consentGivenAt: formData.consentGivenAt
+                    ? new Date(formData.consentGivenAt).toISOString()
+                    : null,
                 aswasumaHouseholdNo: convertEmptyToNull(formData.aswasumaHouseholdNo),
                 nic: convertEmptyToNull(formData.nic),
                 beneficiaryName: convertEmptyToNull(formData.beneficiaryName),
@@ -1055,7 +931,10 @@ const SamurdhiFamillyForm = () => {
 
                     setFormData({
                         ...locationData,
-                        beneficiary_type_id: '',
+                        mainProgram: null,
+                        beneficiary_type_id: null,
+                        hasConsentedToEmpowerment: false,
+                        consentGivenAt: null,
                         aswasumaHouseholdNo: null,
                         nic: null,
                         beneficiaryName: null,
@@ -1216,6 +1095,87 @@ const SamurdhiFamillyForm = () => {
                                 <input type="hidden" name="gnd_id" value={formData.gnd.id} />
                             </div>
 
+                            <div>
+                                <Label>Main Program <span className="text-red-500">*</span></Label>
+                                <div className="relative">
+                                    <Select
+                                        options={MAIN_PROGRAM_OPTIONS}
+                                        placeholder="Select Main Program"
+                                        onChange={(value) => {
+                                            console.log('Selected main program:', value); // Debug log
+                                            // Clear error immediately when user selects
+                                            clearError('mainProgram');
+                                            // Ensure we handle empty/null values properly
+                                            const selectedValue = value && value !== '' && value !== 'null' ? value : null;
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                mainProgram: selectedValue
+                                            }));
+                                        }}
+                                        className={`dark:bg-dark-900 ${errors.mainProgram ? 'border-red-500' : ''}`}
+                                        value={formData.mainProgram || ''}  // Keep this as is
+                                    />
+                                    <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                                        <ChevronDownIcon />
+                                    </span>
+                                </div>
+                                <ErrorMessage error={errors.mainProgram} />
+                            </div>
+
+                            <div className="space-y-4">
+                                <Label>Empowerment Program Consent</Label>
+
+                                <div className="flex flex-col gap-4">
+                                    <div className="flex items-center gap-4">
+                                        <Checkbox
+                                            checked={formData.hasConsentedToEmpowerment}
+                                            onChange={(checked) => {
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    hasConsentedToEmpowerment: checked,
+                                                    consentGivenAt: checked ? new Date().toISOString() : null
+                                                }));
+                                            }}
+                                        />
+                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            Consent to participate in the empowerment program
+                                        </span>
+                                    </div>
+
+                                    {formData.hasConsentedToEmpowerment && (
+                                        <div className="flex flex-col gap-2">
+                                            <Label>Consent Given Date</Label>
+                                            <div className="relative max-w-xs">
+                                                <Input
+                                                    type="date"
+                                                    name="consentGivenAt"
+                                                    value={formData.consentGivenAt ? formData.consentGivenAt.split('T')[0] : ''}
+                                                    onChange={(e) => {
+                                                        const dateValue = e.target.value;
+                                                        setFormData(prev => ({
+                                                            ...prev,
+                                                            consentGivenAt: dateValue ? new Date(dateValue).toISOString() : null
+                                                        }));
+                                                    }}
+                                                    className="pr-10"
+                                                    // Add these props to ensure the calendar picker works
+                                                    onFocus={(e) => e.target.showPicker()}
+                                                    onClick={(e) => (e.target as HTMLInputElement).showPicker()}
+                                                />
+                                                <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                                    </svg>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
                             <div className="flex flex-col gap-4">
                                 <Label>Are you a Samurdhi beneficiary?/ Aswasuma beneficiary?/low-income earner?</Label>
                                 <div className='flex flex-col md:flex-row gap-5 md:gap-20'>
@@ -1228,7 +1188,6 @@ const SamurdhiFamillyForm = () => {
                                             checked={formData.beneficiary_type_id === status.beneficiary_type_id}
                                             onChange={() => {
                                                 console.log('Selected beneficiary_type_id:', status.beneficiary_type_id);
-                                                handleRadioChange('beneficiary_type_id', status.beneficiary_type_id);
 
                                                 // Check if it's Aswasuma beneficiary (hide NIC field)
                                                 const isAswasumaBeneficiary = status.nameEnglish.includes("Aswasuma beneficiary") &&
@@ -1239,22 +1198,58 @@ const SamurdhiFamillyForm = () => {
                                                 const isSamurdhiOrLowIncome = status.nameEnglish.includes("Samurdhi") ||
                                                     status.nameEnglish.includes("low income");
 
+                                                // Clear auto-filled data when switching beneficiary types
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    beneficiary_type_id: status.beneficiary_type_id,
+
+                                                    // Clear auto-filled fields
+                                                    beneficiaryName: null,
+                                                    gender: null,
+                                                    address: null,
+                                                    phone: null,
+                                                    projectOwnerAge: 0,
+                                                    male18To60: 0,
+                                                    female18To60: 0,
+                                                    aswesuma_cat_id: null,
+
+                                                    // Clear NIC when switching to Aswasuma beneficiary
+                                                    nic: isAswasumaBeneficiary ? null : prev.nic,
+
+                                                    // Clear household number when switching to Samurdhi/low income
+                                                    aswasumaHouseholdNo: isSamurdhiOrLowIncome ? null : prev.aswasumaHouseholdNo,
+
+                                                    // Clear employment and other optional fields
+                                                    employment_id: null,
+                                                    otherOccupation: null,
+                                                    subsisdy_id: null,
+                                                    empowerment_dimension_id: [],
+                                                    project_type_id: null,
+                                                    otherProject: null,
+                                                    childName: null,
+                                                    childAge: 0,
+                                                    childGender: null,
+                                                    job_field_id: null,
+                                                    otherJobField: null,
+                                                    resource_id: [],
+                                                    monthlySaving: false,
+                                                    savingAmount: 0,
+                                                    health_indicator_id: [],
+                                                    domestic_dynamic_id: [],
+                                                    community_participation_id: [],
+                                                    housing_service_id: []
+                                                }));
+
+                                                // Reset states
+                                                setIsExistingBeneficiary(false);
+                                                setShowAllFieldsForExistingBeneficiary(false);
                                                 setIsAswasumaHouseholdDisabled(isSamurdhiOrLowIncome);
 
-                                                // Clear the hidden fields when switching types
-                                                if (isAswasumaBeneficiary) {
-                                                    setFormData(prev => ({
-                                                        ...prev,
-                                                        nic: null
-                                                    }));
-                                                }
+                                                // Clear any validation errors
+                                                setErrors({});
 
-                                                if (isSamurdhiOrLowIncome) {
-                                                    setFormData(prev => ({
-                                                        ...prev,
-                                                        aswasumaHouseholdNo: null
-                                                    }));
-                                                }
+                                                // Clear error for beneficiary_type_id specifically
+                                                clearError('beneficiary_type_id');
                                             }}
                                             label={
                                                 <div className="flex flex-col">
@@ -1832,6 +1827,9 @@ const SamurdhiFamillyForm = () => {
                                             dsDivision: { id: formData.dsDivision.id, name: formData.dsDivision.name },
                                             zone: { id: formData.zone.id, name: formData.zone.name },
                                             gnd: { id: formData.gnd.id, name: formData.gnd.name },
+                                            mainProgram: null,
+                                            hasConsentedToEmpowerment: false,
+                                            consentGivenAt: null,
                                             beneficiary_type_id: null,
                                             aswasumaHouseholdNo: null,
                                             nic: null,

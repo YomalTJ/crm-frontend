@@ -12,6 +12,7 @@ interface ApiEndpoint {
     lastChecked: Date | null
     statusCode: number | null
     testPayload?: unknown
+    queryParams?: Record<string, string | number>
     requiresAuth?: boolean
     authToken?: string | null
 }
@@ -19,23 +20,6 @@ interface ApiEndpoint {
 const ApiStatus = () => {
     const { theme } = useTheme()
     const [endpoints, setEndpoints] = useState<ApiEndpoint[]>([
-        {
-            name: 'User Registration',
-            url: 'https://api.wbb.gov.lk/api/samurthi/AuthSamurthi/register',
-            method: 'POST',
-            status: 'checking',
-            responseTime: null,
-            lastChecked: null,
-            statusCode: null,
-            testPayload: {
-                officerName: "KODITHUWAKKU ARACHCHIGE VAJIRA THARANGA PERERA",
-                nic: "822820700V",
-                phone: "0758913001",
-                password: "TestPass123",
-                gn_code: ["1-1-9-3-265"],
-                role: "Samurthi"
-            }
-        },
         {
             name: 'User Login',
             url: 'https://api.wbb.gov.lk/api/samurthi/AuthSamurthi/login',
@@ -59,7 +43,7 @@ const ApiStatus = () => {
             statusCode: null,
             requiresAuth: true,
             authToken: null,
-            testPayload: {
+            queryParams: {
                 gn_code: "1-1-09-03-175",
                 level: 2
             }
@@ -123,6 +107,7 @@ const ApiStatus = () => {
                     url: endpoint.url,
                     method: endpoint.method,
                     payload: endpoint.testPayload,
+                    queryParams: endpoint.queryParams,
                     requiresAuth: endpoint.requiresAuth,
                     authToken: endpoint.requiresAuth ? authToken : undefined
                 })
@@ -278,43 +263,66 @@ const ApiStatus = () => {
         checkAllApis()
     }, [])
 
-    const overallStatus = endpoints.every(ep => ep.status === 'online') ? 'All Systems Operational' :
-        endpoints.some(ep => ep.status === 'online') ? 'Partial Outage' : 'Major Outage'
-
-    const overallStatusColor = endpoints.every(ep => ep.status === 'online') ? 'text-green-600' :
-        endpoints.some(ep => ep.status === 'online') ? 'text-yellow-600' : 'text-red-600'
-
     return (
         <div>
-            <h1 className={`text-3xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
+            <h1 className={`text-2xl sm:text-3xl lg:text-4xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
                 API Status Monitor
             </h1>
 
-            <div className="space-y-6 mt-10">
+            <div className="space-y-4 sm:space-y-6 mt-6 sm:mt-10">
                 {/* Overall Status */}
-                <div className={`p-6 rounded-lg border ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm`}>
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <h2 className={`text-xl font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                <div className={`p-4 sm:p-6 rounded-lg border ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm`}>
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                        <div className="flex-1">
+                            <h2 className={`text-lg sm:text-xl font-medium mb-3 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                                 System Status
                             </h2>
-                            <p className={`text-lg font-semibold ${overallStatusColor}`}>
-                                {overallStatus}
-                            </p>
-                            <p className={`text-sm mt-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                                External APIs monitored via proxy to handle CORS restrictions
-                            </p>
-                            {authToken && (
-                                <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>
-                                    Auth Token: Active
-                                </p>
-                            )}
+
+                            {/* Status Message */}
+                            <div className={`p-3 sm:p-4 rounded-lg lg:w-1/3 ${endpoints.filter(ep => ep.status === 'online').length === endpoints.length
+                                ? theme === 'dark'
+                                    ? 'bg-green-900/30 border border-green-700'
+                                    : 'bg-green-50 border border-green-200'
+                                : theme === 'dark'
+                                    ? 'bg-red-900/30 border border-red-700'
+                                    : 'bg-red-50 border border-red-200'
+                                }`}>
+                                {endpoints.filter(ep => ep.status === 'online').length === endpoints.length ? (
+                                    <>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                            <span className={`font-semibold text-sm sm:text-base ${theme === 'dark' ? 'text-green-400' : 'text-green-700'
+                                                }`}>
+                                                All Systems Working Fine
+                                            </span>
+                                        </div>
+                                        <p className={`text-xs sm:text-sm ${theme === 'dark' ? 'text-green-300' : 'text-green-600'
+                                            }`}>
+                                            All services are running normally and ready to use
+                                        </p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                                            <span className={`font-semibold text-sm sm:text-base ${theme === 'dark' ? 'text-red-400' : 'text-red-700'
+                                                }`}>
+                                                Some Services Not Working
+                                            </span>
+                                        </div>
+                                        <p className={`text-xs sm:text-sm ${theme === 'dark' ? 'text-red-300' : 'text-red-600'
+                                            }`}>
+                                            Please contact the relevant department to fix the issues
+                                        </p>
+                                    </>
+                                )}
+                            </div>
                         </div>
-                        <div className="flex gap-3">
+                        <div className="flex gap-3 mt-4 sm:mt-0">
                             <button
                                 onClick={checkAllApis}
                                 disabled={isChecking}
-                                className={`px-4 py-2 rounded-md font-medium transition-colors ${isChecking
+                                className={`px-3 sm:px-4 py-2 rounded-md font-medium transition-colors text-sm sm:text-base ${isChecking
                                     ? 'bg-gray-400 cursor-not-allowed'
                                     : 'bg-blue-600 hover:bg-blue-700'
                                     } text-white`}
@@ -326,8 +334,8 @@ const ApiStatus = () => {
                 </div>
 
                 {/* Auto Refresh Controls */}
-                <div className={`p-4 rounded-lg border ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm`}>
-                    <div className="flex items-center gap-4">
+                <div className={`p-3 sm:p-4 rounded-lg border ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm`}>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                         <label className="flex items-center gap-2">
                             <input
                                 type="checkbox"
@@ -335,7 +343,7 @@ const ApiStatus = () => {
                                 onChange={(e) => setAutoRefresh(e.target.checked)}
                                 className="w-4 h-4"
                             />
-                            <span className={theme === 'dark' ? 'text-white' : 'text-gray-900'}>
+                            <span className={`text-sm sm:text-base ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                                 Auto Refresh
                             </span>
                         </label>
@@ -343,7 +351,7 @@ const ApiStatus = () => {
                             value={refreshInterval}
                             onChange={(e) => setRefreshInterval(Number(e.target.value))}
                             disabled={!autoRefresh}
-                            className={`px-3 py-1 rounded border ${theme === 'dark'
+                            className={`px-3 py-1 rounded border text-sm sm:text-base ${theme === 'dark'
                                 ? 'bg-gray-700 border-gray-600 text-white'
                                 : 'bg-white border-gray-300 text-gray-900'
                                 } ${!autoRefresh ? 'opacity-50' : ''}`}
@@ -357,17 +365,17 @@ const ApiStatus = () => {
                 </div>
 
                 {/* API Endpoints Status */}
-                <div className="grid gap-4">
+                <div className="grid gap-3 sm:gap-4">
                     {endpoints.map((endpoint, index) => (
                         <div
                             key={index}
-                            className={`p-6 rounded-lg border ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm`}
+                            className={`p-4 sm:p-6 rounded-lg border ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm`}
                         >
-                            <div className="flex justify-between items-start">
+                            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
                                 <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-2">
+                                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
                                         <div className={`w-3 h-3 rounded-full ${getStatusColor(endpoint.status)}`}></div>
-                                        <h3 className={`text-lg font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                        <h3 className={`text-base sm:text-lg font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                                             {endpoint.name}
                                         </h3>
                                         <span className={`px-2 py-1 text-xs rounded-full font-medium ${endpoint.method === 'GET'
@@ -382,10 +390,10 @@ const ApiStatus = () => {
                                             </span>
                                         )}
                                     </div>
-                                    <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} mb-3`}>
+                                    <p className={`text-xs sm:text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} mb-3 break-all`}>
                                         {endpoint.url}
                                     </p>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-xs sm:text-sm">
                                         <div>
                                             <span className={`block font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                                                 Status
@@ -437,7 +445,7 @@ const ApiStatus = () => {
                                             ))
                                         })
                                     }}
-                                    className={`px-3 py-1 text-sm rounded-md transition-colors ${theme === 'dark'
+                                    className={`px-3 py-1 text-xs sm:text-sm rounded-md transition-colors whitespace-nowrap ${theme === 'dark'
                                         ? 'bg-gray-700 hover:bg-gray-600 text-white'
                                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                                         }`}
@@ -449,34 +457,37 @@ const ApiStatus = () => {
                     ))}
                 </div>
 
-                {/* Summary Statistics */}
-                <div className={`p-6 rounded-lg border ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm`}>
+                {/* Updated Summary Statistics with Status Message - from previous artifact */}
+                <div className={`p-4 sm:p-6 rounded-lg border ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm`}>
                     <h3 className={`text-lg font-medium mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                         Summary
                     </h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        <div className="text-center">
-                            <div className="text-2xl font-bold text-green-600">
-                                {endpoints.filter(ep => ep.status === 'online').length}
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                        {/* Statistics */}
+                        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 gap-4 text-sm flex-1">
+                            <div className="text-center">
+                                <div className="text-xl sm:text-2xl font-bold text-green-600">
+                                    {endpoints.filter(ep => ep.status === 'online').length}
+                                </div>
+                                <div className={`text-xs sm:text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                    Online
+                                </div>
                             </div>
-                            <div className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
-                                Online
+                            <div className="text-center">
+                                <div className="text-xl sm:text-2xl font-bold text-red-600">
+                                    {endpoints.filter(ep => ep.status === 'offline').length}
+                                </div>
+                                <div className={`text-xs sm:text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                    Offline
+                                </div>
                             </div>
-                        </div>
-                        <div className="text-center">
-                            <div className="text-2xl font-bold text-red-600">
-                                {endpoints.filter(ep => ep.status === 'offline').length}
-                            </div>
-                            <div className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
-                                Offline
-                            </div>
-                        </div>
-                        <div className="text-center">
-                            <div className="text-2xl font-bold text-yellow-600">
-                                {endpoints.filter(ep => ep.status === 'error').length}
-                            </div>
-                            <div className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
-                                Errors
+                            <div className="text-center">
+                                <div className="text-xl sm:text-2xl font-bold text-yellow-600">
+                                    {endpoints.filter(ep => ep.status === 'error').length}
+                                </div>
+                                <div className={`text-xs sm:text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                    Errors
+                                </div>
                             </div>
                         </div>
                     </div>

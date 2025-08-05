@@ -9,7 +9,10 @@ export interface SamurdhiFamilyPayload {
   ds_id: string;
   zone_id: string;
   gnd_id: string;
+  mainProgram: string;
   beneficiary_type_id: string;
+  hasConsentedToEmpowerment?: boolean;
+  consentGivenAt?: string | null;
   aswasumaHouseholdNo: string | null;
   nic: string | null;
   beneficiaryName: string | null;

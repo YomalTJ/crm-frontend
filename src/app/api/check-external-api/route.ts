@@ -5,7 +5,17 @@ import { cookies } from 'next/headers'
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { url, method, payload, requiresAuth, authToken } = body
+        const { url, method, payload, queryParams, requiresAuth, authToken } = body
+
+        // Build URL with query parameters if provided
+        let finalUrl = url
+        if (queryParams && Object.keys(queryParams).length > 0) {
+            const searchParams = new URLSearchParams()
+            Object.entries(queryParams).forEach(([key, value]) => {
+                searchParams.append(key, String(value))
+            })
+            finalUrl = `${url}?${searchParams.toString()}`
+        }
 
         // Set up headers
         const headers: HeadersInit = {
@@ -49,7 +59,7 @@ export async function POST(request: NextRequest) {
                     }
 
                     const loginData = await loginResponse.json()
-                    // The token is nested: data.token.accessToken
+                    // The token is nested: token.accessToken (not data.token.accessToken)
                     token = loginData?.token?.accessToken
 
                     if (token) {
@@ -85,17 +95,17 @@ export async function POST(request: NextRequest) {
             signal: AbortSignal.timeout(30000) // 30 second timeout
         }
 
-        // Add body for POST requests
+        // Add body for POST requests (only if we have payload, not query params)
         if (method === 'POST' && payload) {
             options.body = JSON.stringify(payload)
         }
 
-        // Make the external API call
+        // Make the external API call using the final URL with query parameters
         const startTime = Date.now()
         let response: Response
 
         try {
-            response = await fetch(url, options)
+            response = await fetch(finalUrl, options)
         } catch (fetchError) {
             if (fetchError instanceof DOMException && fetchError.name === 'TimeoutError') {
                 return NextResponse.json({
