@@ -56,6 +56,7 @@ const ViewBeneficiaries = () => {
     setFilters(prev => ({
       ...prev,
       page: 1,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       mainProgram: mainProgramFilter as any || undefined,
       fromDate: fromDate || undefined,
       toDate: toDate || undefined
@@ -82,7 +83,7 @@ const ViewBeneficiaries = () => {
       try {
         await deleteBeneficiary(id)
         fetchBeneficiaries() // Refresh the list
-      } catch (err) {
+      } catch {
         alert('Failed to delete beneficiary')
       }
     }
@@ -121,7 +122,7 @@ const ViewBeneficiaries = () => {
     const pages = []
     const maxVisiblePages = 5
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2))
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1)
+    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1)
     
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1)
