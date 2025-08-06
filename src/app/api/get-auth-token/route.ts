@@ -1,9 +1,18 @@
-// app/api/get-auth-token/route.ts
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 
-export async function POST() {
+export async function POST(request: NextRequest) {
     try {
+        // Get user credentials from request body
+        const body = await request.json()
+        const { username, password } = body
+
+        // Use provided credentials or fallback to default
+        const loginCredentials = {
+            username: username || "12345678",
+            password: password || "@7@7sdsss"
+        }
+
         // First check if we have a valid token in cookies
         const cookieStore = await cookies()
         const existingToken = cookieStore.get('wbbAuthToken')?.value
@@ -36,16 +45,13 @@ export async function POST() {
             }
         }
 
-        // If no token or token is invalid, get a new one
+        // If no token or token is invalid, get a new one using provided credentials
         const loginResponse = await fetch('https://api.wbb.gov.lk/api/samurthi/AuthSamurthi/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                username: "12345678",
-                password: "@7@7sdsss"
-            })
+            body: JSON.stringify(loginCredentials)
         })
 
         if (!loginResponse.ok) {
@@ -59,7 +65,6 @@ export async function POST() {
         const loginData = await loginResponse.json()
         console.log("loginData: ", loginData);
         
-        // The token is nested in the response: data.token.accessToken
         const newToken = loginData?.token?.accessToken
         console.log("newToken: ", newToken);
 

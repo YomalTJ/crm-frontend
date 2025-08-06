@@ -1,11 +1,10 @@
-// app/api/check-external-api/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { url, method, payload, queryParams, requiresAuth, authToken } = body
+        const { url, method, payload, queryParams, requiresAuth, authToken, userCredentials } = body
 
         // Build URL with query parameters if provided
         let finalUrl = url
@@ -35,17 +34,19 @@ export async function POST(request: NextRequest) {
             }
 
             if (!token) {
-                // If no token, try to login first
+                // If no token, try to login first using provided credentials
+                const loginCredentials = userCredentials || {
+                    username: "12345678",
+                    password: "@7@7sdsss"
+                }
+
                 try {
                     const loginResponse = await fetch('https://api.wbb.gov.lk/api/samurthi/AuthSamurthi/login', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({
-                            username: "12345678",
-                            password: "@7@7sdsss"
-                        })
+                        body: JSON.stringify(loginCredentials)
                     })
 
                     if (!loginResponse.ok) {
@@ -59,7 +60,6 @@ export async function POST(request: NextRequest) {
                     }
 
                     const loginData = await loginResponse.json()
-                    // The token is nested: token.accessToken (not data.token.accessToken)
                     token = loginData?.token?.accessToken
 
                     if (token) {

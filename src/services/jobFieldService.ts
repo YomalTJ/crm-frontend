@@ -5,7 +5,7 @@ import { cookies } from 'next/headers';
 
 export const getJobFields = async () => {
   try {
-    const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
+    const token = (await cookies()).get('staffAccessToken')?.value;
     
     if (!token) {
       throw new Error('No authentication token found');

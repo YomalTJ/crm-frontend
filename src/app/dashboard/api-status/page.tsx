@@ -28,10 +28,7 @@ const ApiStatus = () => {
             responseTime: null,
             lastChecked: null,
             statusCode: null,
-            testPayload: {
-                username: "12345678",
-                password: "@7@7sdsss"
-            }
+            testPayload: null // Will be set dynamically
         },
         {
             name: 'Get Household Details',
@@ -43,10 +40,7 @@ const ApiStatus = () => {
             statusCode: null,
             requiresAuth: true,
             authToken: null,
-            queryParams: {
-                gn_code: "1-1-09-03-175",
-                level: 2
-            }
+            queryParams: undefined // Will be set dynamically
         }
     ])
 
@@ -54,6 +48,66 @@ const ApiStatus = () => {
     const [autoRefresh, setAutoRefresh] = useState(false)
     const [refreshInterval, setRefreshInterval] = useState(30) // seconds
     const [authToken, setAuthToken] = useState<string | null>(null)
+    const [userCredentials, setUserCredentials] = useState<{username: string, password: string} | null>(null)
+    const [locationCode, setLocationCode] = useState<string | null>(null)
+
+    // Get user credentials from login form (stored in sessionStorage or passed as props)
+    useEffect(() => {
+        const getStoredCredentials = () => {
+            try {
+                const stored = sessionStorage.getItem('loginCredentials')
+                if (stored) {
+                    const creds = JSON.parse(stored)
+                    setUserCredentials(creds)
+                    
+                    // Update the login endpoint payload
+                    setEndpoints(prev => prev.map(ep => 
+                        ep.name === 'User Login' 
+                            ? { ...ep, testPayload: { username: creds.username, password: creds.password } }
+                            : ep
+                    ))
+                }
+            } catch (error) {
+                console.error('Failed to get stored credentials:', error)
+            }
+        }
+
+        getStoredCredentials()
+    }, [])
+
+    // Get location code from staff token
+    useEffect(() => {
+        const getLocationCode = async () => {
+            try {
+                const response = await fetch('/api/get-location-from-staff-token')
+                if (response.ok) {
+                    const result = await response.json()
+                    if (result.success) {
+                        setLocationCode(result.locationCode)
+                        
+                        // Update the GetByGn endpoint with location code
+                        setEndpoints(prev => prev.map(ep => 
+                            ep.name === 'Get Household Details'
+                                ? { 
+                                    ...ep, 
+                                    queryParams: { 
+                                        gn_code: result.locationCode, 
+                                        level: 2 
+                                    } 
+                                }
+                                : ep
+                        ))
+                    } else {
+                        console.warn('Failed to get location code:', result.error)
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch location code:', error)
+            }
+        }
+
+        getLocationCode()
+    }, [])
 
     // Function to get auth token from login endpoint
     const getAuthToken = async (): Promise<string | null> => {
@@ -63,6 +117,7 @@ const ApiStatus = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                body: JSON.stringify(userCredentials || {})
             })
 
             if (response.ok) {
@@ -109,7 +164,8 @@ const ApiStatus = () => {
                     payload: endpoint.testPayload,
                     queryParams: endpoint.queryParams,
                     requiresAuth: endpoint.requiresAuth,
-                    authToken: endpoint.requiresAuth ? authToken : undefined
+                    authToken: endpoint.requiresAuth ? authToken : undefined,
+                    userCredentials: userCredentials // Pass user credentials
                 })
             })
 
@@ -119,8 +175,8 @@ const ApiStatus = () => {
                 const result = await response.json()
 
                 // If this is the login endpoint and it was successful, store the token
-                if (endpoint.name === 'User Login' && result.success && result.data?.data?.token?.accessToken) {
-                    setAuthToken(result.data.data.token.accessToken)
+                if (endpoint.name === 'User Login' && result.success && result.data?.token?.accessToken) {
+                    setAuthToken(result.data.token.accessToken)
                 }
 
                 return {
@@ -129,7 +185,7 @@ const ApiStatus = () => {
                     responseTime,
                     lastChecked: new Date(),
                     statusCode: result.statusCode,
-                    authToken: result.data?.data?.token?.accessToken || endpoint.authToken
+                    authToken: result.data?.token?.accessToken || endpoint.authToken
                 }
             } else {
                 throw new Error('Proxy failed')
@@ -258,10 +314,12 @@ const ApiStatus = () => {
         }
     }, [autoRefresh, refreshInterval])
 
-    // Initial check on component mount
+    // Initial check on component mount (only after credentials and location are loaded)
     useEffect(() => {
-        checkAllApis()
-    }, [])
+        if (userCredentials || locationCode) {
+            checkAllApis()
+        }
+    }, [userCredentials, locationCode])
 
     return (
         <div>
@@ -270,6 +328,31 @@ const ApiStatus = () => {
             </h1>
 
             <div className="space-y-4 sm:space-y-6 mt-6 sm:mt-10">
+                {/* Configuration Status */}
+                <div className={`p-4 sm:p-6 rounded-lg border ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm`}>
+                    <h3 className={`text-lg font-medium mb-3 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                        Configuration Status
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span className={`block font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                                User Credentials
+                            </span>
+                            <span className={`${userCredentials ? 'text-green-600' : 'text-red-600'}`}>
+                                {userCredentials ? `✓ Loaded (${userCredentials.username})` : '✗ Not Found'}
+                            </span>
+                        </div>
+                        <div>
+                            <span className={`block font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                                Location Code
+                            </span>
+                            <span className={`${locationCode ? 'text-green-600' : 'text-red-600'}`}>
+                                {locationCode ? `✓ ${locationCode}` : '✗ Not Found'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Overall Status */}
                 <div className={`p-4 sm:p-6 rounded-lg border ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm`}>
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
@@ -393,6 +476,19 @@ const ApiStatus = () => {
                                     <p className={`text-xs sm:text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} mb-3 break-all`}>
                                         {endpoint.url}
                                     </p>
+                                    
+                                    {/* Show current payload/query params */}
+                                    {(endpoint.testPayload || endpoint.queryParams) && (
+                                        <div className={`mb-3 p-2 rounded text-xs ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                                            <span className={`font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                                                {endpoint.testPayload ? 'Payload:' : 'Query Params:'}
+                                            </span>
+                                            <pre className={`mt-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                                {JSON.stringify(endpoint.testPayload || endpoint.queryParams, null, 2)}
+                                            </pre>
+                                        </div>
+                                    )}
+                                    
                                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-xs sm:text-sm">
                                         <div>
                                             <span className={`block font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -457,13 +553,12 @@ const ApiStatus = () => {
                     ))}
                 </div>
 
-                {/* Updated Summary Statistics with Status Message - from previous artifact */}
+                {/* Summary Statistics */}
                 <div className={`p-4 sm:p-6 rounded-lg border ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm`}>
                     <h3 className={`text-lg font-medium mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                         Summary
                     </h3>
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                        {/* Statistics */}
                         <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 gap-4 text-sm flex-1">
                             <div className="text-center">
                                 <div className="text-xl sm:text-2xl font-bold text-green-600">

@@ -29,6 +29,12 @@ export default function SignInForm() {
           localStorage.setItem('staffLocation', JSON.stringify(result.locationDetails));
         }
 
+        // Store login credentials for API testing (in sessionStorage for security)
+        sessionStorage.setItem('loginCredentials', JSON.stringify({
+          username,
+          password
+        }));
+
         // Get token from cookie
         const res = await fetch("/api/auth/get-staff-token");
         const { token } = await res.json();
@@ -65,7 +71,7 @@ export default function SignInForm() {
             router.push("/dashboard/bank-zone-level");
             break;
           case 'gn-level-user':
-            router.push("/dashboard/gn-level");
+            router.push("/dashboard/api-status");
             break;
           default:
             router.push("/dashboard/staff");

@@ -1375,7 +1375,7 @@ const SamurdhiFamillyForm = () => {
                                 <Input
                                     type="text"
                                     name="beneficiaryName"
-                                    value={formData.beneficiaryName || undefined}
+                                    value={formData.beneficiaryName || ""}
                                     onChange={handleInputChange}
                                     className={errors.beneficiaryName ? 'border-red-500' : ''}
                                 />
@@ -1407,7 +1407,7 @@ const SamurdhiFamillyForm = () => {
                                 <Input
                                     type="text"
                                     name="address"
-                                    value={formData.address || undefined}
+                                    value={formData.address || ""}
                                     onChange={handleInputChange}
                                     className={errors.address ? 'border-red-500' : ''}
                                 />
@@ -1419,7 +1419,7 @@ const SamurdhiFamillyForm = () => {
                                 <Input
                                     type="text"
                                     name="phone"
-                                    value={formData.phone || undefined}
+                                    value={formData.phone || ""}
                                     onChange={handleInputChange}
                                     className={errors.phone ? 'border-red-500' : ''}
                                 />
@@ -1444,14 +1444,14 @@ const SamurdhiFamillyForm = () => {
                                 <Input
                                     type="number"
                                     name="female18To60"
-                                    defaultValue={formData.female18To60}
+                                    defaultValue={formData.female18To60 || 0}
                                     onChange={handleInputChange}
                                 />
                                 <Label>Male</Label>
                                 <Input
                                     type="number"
                                     name="male18To60"
-                                    defaultValue={formData.male18To60}
+                                    defaultValue={formData.male18To60 || 0}
                                     onChange={handleInputChange}
                                 />
                             </div>
@@ -1499,7 +1499,7 @@ const SamurdhiFamillyForm = () => {
                                         placeholder="Select Subsidy Amount"
                                         onChange={(value) => handleSelectChange('subsisdy_id', value)}  // Changed to correct field name
                                         className="dark:bg-dark-900"
-                                        defaultValue={formData.subsisdy_id || undefined}  // Changed to correct field name
+                                        defaultValue={formData.subsisdy_id || ""}  // Changed to correct field name
                                     />
                                     <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
                                         <ChevronDownIcon />
@@ -1518,7 +1518,7 @@ const SamurdhiFamillyForm = () => {
                                         placeholder="Select Aswasuma Category"
                                         onChange={(value) => handleSelectChange('aswesuma_cat_id', value)}  // Changed to correct API field name
                                         className="dark:bg-dark-900"
-                                        defaultValue={formData.aswesuma_cat_id || undefined}  // Changed to correct field name
+                                        defaultValue={formData.aswesuma_cat_id || ""}  // Changed to correct field name
                                     />
                                     <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
                                         <ChevronDownIcon />
@@ -1602,7 +1602,7 @@ const SamurdhiFamillyForm = () => {
                                             <Input
                                                 type="text"
                                                 name="childName"
-                                                value={formData.childName || undefined}
+                                                value={formData.childName || ""}
                                                 onChange={handleInputChange}
                                                 className={errors.childName ? 'border-red-500' : ''}
                                             />
