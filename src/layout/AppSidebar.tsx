@@ -55,13 +55,13 @@ const getUserRole = () => {
 const navItems: NavItem[] = [
   {
     icon: <CalenderIcon />,
-    name: "API Status",
+    name: "Check API Status",
     path: "/dashboard/api-status",
     allowedRoles: ['GN Level User']
   },
   {
     icon: <CalenderIcon />,
-    name: "Household Details",
+    name: "Fetch Household Details",
     path: "/dashboard/household-details",
     allowedRoles: ['GN Level User']
   },
@@ -69,7 +69,7 @@ const navItems: NavItem[] = [
     icon: <CalenderIcon />,
     name: "Beneficiary Management",
     allowedRoles: ['GN Level User'],
-    subItems: [{ name: "View Benificiaries", path: "/dashboard/gn-level/view-benficiaries" }, { name: "Benificiaries Form", path: "/dashboard/gn-level/form" }]
+    subItems: [{ name: "Add Benificiaries", path: "/dashboard/gn-level/form" }, { name: "View Benificiary Details", path: "/dashboard/gn-level/view-benficiaries" }]
   },
   {
     icon: <CalenderIcon />,
@@ -182,26 +182,46 @@ const AppSidebar: React.FC = () => {
     }
   }, [pathname, isActive]);
 
+  // Calculate subSubMenu heights
   useEffect(() => {
-    if (openSubmenu !== null && subMenuRefs.current[openSubmenu]) {
-      setSubMenuHeight((prevHeights) => ({
-        ...prevHeights,
-        [openSubmenu]: subMenuRefs.current[openSubmenu]?.scrollHeight || 0,
-      }));
-    }
-  }, [openSubmenu, openSubSubMenu]);
-
-  useEffect(() => {
-    if (openSubSubMenu) {
-      const key = `${openSubSubMenu.parentIndex}-${openSubSubMenu.subIndex}`;
+    // Recalculate all subSubMenu heights when they change
+    Object.keys(subSubMenuRefs.current).forEach(key => {
       if (subSubMenuRefs.current[key]) {
         setSubSubMenuHeight((prevHeights) => ({
           ...prevHeights,
           [key]: subSubMenuRefs.current[key]?.scrollHeight || 0,
         }));
       }
-    }
+    });
   }, [openSubSubMenu]);
+
+  // Calculate subMenu heights (updated to account for nested content)
+  useEffect(() => {
+    if (openSubmenu !== null && subMenuRefs.current[openSubmenu]) {
+      // Use setTimeout to ensure DOM is fully updated
+      setTimeout(() => {
+        setSubMenuHeight((prevHeights) => ({
+          ...prevHeights,
+          [openSubmenu]: subMenuRefs.current[openSubmenu]?.scrollHeight || 0,
+        }));
+      }, 0);
+    }
+  }, [openSubmenu, openSubSubMenu, subSubMenuHeight]);
+
+  // Initial height calculation after render
+  useEffect(() => {
+    // Initial height calculation for all visible submenus
+    if (openSubmenu !== null) {
+      requestAnimationFrame(() => {
+        if (subMenuRefs.current[openSubmenu]) {
+          setSubMenuHeight((prevHeights) => ({
+            ...prevHeights,
+            [openSubmenu]: subMenuRefs.current[openSubmenu]?.scrollHeight || 0,
+          }));
+        }
+      });
+    }
+  }, [openSubmenu, navItems, userRole]);
 
   const handleSubmenuToggle = (index: number) => {
     if (openSubmenu === index) {
@@ -220,6 +240,16 @@ const AppSidebar: React.FC = () => {
     } else {
       setOpenSubSubMenu({ parentIndex, subIndex });
     }
+
+    // Recalculate parent submenu height after sub-submenu state changes
+    setTimeout(() => {
+      if (subMenuRefs.current[parentIndex]) {
+        setSubMenuHeight((prevHeights) => ({
+          ...prevHeights,
+          [parentIndex]: subMenuRefs.current[parentIndex]?.scrollHeight || 0,
+        }));
+      }
+    }, 300); // Wait for animation to complete
   };
 
   const renderMenuItems = (navItems: NavItem[]) => (
@@ -365,33 +395,31 @@ const AppSidebar: React.FC = () => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className={`py-8 flex ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"}`}>
-        <Link href="/">
-          {isExpanded || isHovered || isMobileOpen ? (
-            <>
-              <Image
-                className="dark:hidden"
-                src="/images/logo/samurdi_logo.jpg"
-                alt="Logo"
-                width={150}
-                height={40}
-              />
-              <Image
-                className="hidden dark:block"
-                src="/images/logo/samurdi_logo.jpg"
-                alt="Logo"
-                width={150}
-                height={40}
-              />
-            </>
-          ) : (
+        {isExpanded || isHovered || isMobileOpen ? (
+          <>
             <Image
+              className="dark:hidden"
               src="/images/logo/samurdi_logo.jpg"
               alt="Logo"
-              width={32}
-              height={32}
+              width={150}
+              height={40}
             />
-          )}
-        </Link>
+            <Image
+              className="hidden dark:block"
+              src="/images/logo/samurdi_logo.jpg"
+              alt="Logo"
+              width={150}
+              height={40}
+            />
+          </>
+        ) : (
+          <Image
+            src="/images/logo/samurdi_logo.jpg"
+            alt="Logo"
+            width={32}
+            height={32}
+          />
+        )}
       </div>
       <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
         <nav className="mb-6">

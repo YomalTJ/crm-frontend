@@ -14,6 +14,7 @@ export interface BeneficiaryFilters {
 }
 
 export interface Beneficiary {
+    aswasumaHouseholdNo: string | null;
     id: string;
     beneficiaryName: string;
     nic: string | null;

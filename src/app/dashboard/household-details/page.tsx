@@ -151,7 +151,7 @@ const HouseholdDetails = () => {
   return (
     <div>
       <h1 className={`text-3xl font-semibold mb-6 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
-        Get Household Details
+        Get Household Details From WBB
       </h1>
 
       {/* Staff Location Info */}
@@ -220,18 +220,17 @@ const HouseholdDetails = () => {
                 : 'bg-white border-gray-300 text-gray-900'
                 } focus:outline-none focus:ring-2 focus:ring-blue-500`}
             >
-              <option value={1}>Level 1</option>
-              <option value={2}>Level 2</option>
-              <option value={3}>Level 3</option>
-              <option value={4}>Level 4</option>
-              <option value={5}>Level 5</option>
+              <option value={1}>Poor</option>
+              <option value={2}>Severely Poor</option>
+              <option value={3}>Transient</option>
+              <option value={4}>Vulnerable</option>
             </select>
             <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
               Enter level to get data
             </p>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-4 mt-1">
             <button
               onClick={fetchHouseholdData}
               disabled={loading || !gnCode}

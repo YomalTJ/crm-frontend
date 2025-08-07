@@ -324,7 +324,7 @@ const ApiStatus = () => {
     return (
         <div>
             <h1 className={`text-2xl sm:text-3xl lg:text-4xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
-                API Status Monitor
+                API Status Monitor of WBB
             </h1>
 
             <div className="space-y-4 sm:space-y-6 mt-6 sm:mt-10">
