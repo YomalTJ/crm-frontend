@@ -821,7 +821,9 @@ const SamurdhiFamillyForm = () => {
                 otherOccupation: convertEmptyToNull(formData.otherOccupation),
                 subsisdy_id: convertEmptyToNull(formData.subsisdy_id),
                 aswesuma_cat_id: convertEmptyToNull(formData.aswesuma_cat_id),
-                empowerment_dimension_id: formData.empowerment_dimension_id.length > 0 ? formData.empowerment_dimension_id[0] : null,
+                empowerment_dimension_id: formData.empowerment_dimension_id.length > 0
+                    ? formData.empowerment_dimension_id
+                    : null,
                 project_type_id: convertEmptyToNull(formData.project_type_id),
                 otherProject: convertEmptyToNull(formData.otherProject),
                 childName: convertEmptyToNull(formData.childName),
