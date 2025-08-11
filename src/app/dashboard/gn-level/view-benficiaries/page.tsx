@@ -2,8 +2,9 @@
 
 import { useTheme } from '@/context/ThemeContext'
 import React, { useState, useEffect } from 'react'
-import { Search, Plus, Edit, Trash2, Filter, ChevronLeft, ChevronRight } from 'lucide-react'
-import { Beneficiary, BeneficiaryFilters, deleteBeneficiary, getBeneficiaries } from '@/services/benficiaryService'
+import { Search, Plus, Edit, Filter, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Beneficiary, BeneficiaryFilters, getBeneficiaries } from '@/services/benficiaryService'
+import { useRouter } from 'next/navigation'
 
 const ViewBeneficiaries = () => {
   const { theme } = useTheme()
@@ -13,6 +14,7 @@ const ViewBeneficiaries = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalRecords, setTotalRecords] = useState(0)
+  const router = useRouter()
   
   // Filter states
   const [filters, setFilters] = useState<BeneficiaryFilters>({
@@ -78,22 +80,15 @@ const ViewBeneficiaries = () => {
     setCurrentPage(page)
   }
 
-  const handleDelete = async (id: string, name: string) => {
-    if (window.confirm(`Are you sure you want to delete beneficiary "${name}"?`)) {
-      try {
-        await deleteBeneficiary(id)
-        fetchBeneficiaries() // Refresh the list
-      } catch {
-        alert('Failed to delete beneficiary')
-      }
-    }
-  }
-
   const handleEdit = (beneficiary: Beneficiary) => {
-    // TODO: Implement edit functionality
-    console.log('Edit beneficiary:', beneficiary)
-    // You can add your edit logic here
+  const identifier = beneficiary.nic || beneficiary.aswasumaHouseholdNo
+  
+  if (identifier) {
+    router.push(`/dashboard/gn-level/view-benficiaries/edit-data/${encodeURIComponent(identifier)}`)
+  } else {
+    // toast.error('No valid identifier found for this beneficiary')
   }
+}
 
   const handleAddNew = () => {
     // TODO: Implement add new functionality
@@ -428,17 +423,6 @@ const ViewBeneficiaries = () => {
                               title="Edit beneficiary"
                             >
                               <Edit size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(beneficiary.id, beneficiary.beneficiaryName)}
-                              className={`p-2 rounded-md transition-colors ${
-                                theme === 'dark' 
-                                  ? 'text-red-400 hover:bg-gray-600' 
-                                  : 'text-red-600 hover:bg-red-50'
-                              }`}
-                              title="Delete beneficiary"
-                            >
-                              <Trash2 size={16} />
                             </button>
                           </div>
                         </td>

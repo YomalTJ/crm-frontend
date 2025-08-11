@@ -26,7 +26,7 @@ export interface SamurdhiFamilyPayload {
   otherOccupation: string | null;
   subsisdy_id: string | null;
   aswesuma_cat_id: string | null;
-  empowerment_dimension_id: string | null;
+  empowerment_dimension_id: string[] | null;
   project_type_id: string | null;
   otherProject: string | null;
   childName?: string | null;
@@ -55,7 +55,7 @@ export interface BeneficiaryDetailsResponse {
     male: number;
     female: number;
   };
-  hasConsentedToEmpowerment: boolean;
+  hasConsentedToEmpowerment: boolean | null;
   consentGivenAt: string | null;
   beneficiary_type_id: string;
   employment_id: string;
@@ -77,6 +77,92 @@ export interface BeneficiaryDetailsResponse {
   domestic_dynamic_id: string[];
   community_participation_id: string[];
   housing_service_id: string[];
+  // Add location data
+  location: {
+    district: {
+      id: number;
+      name: string;
+    };
+    divisionalSecretariat: {
+      id: number;
+      name: string;
+    };
+    samurdhiBank: {
+      id: number;
+      name: string;
+    };
+    gramaNiladhariDivision: {
+      id: string;
+      name: string;
+    };
+  };
+  // Add beneficiary type details
+  beneficiaryType: {
+    id: string;
+    nameEnglish: string;
+    nameSinhala: string;
+    nameTamil: string;
+  };
+  currentEmployment: {
+    id: string;
+    nameEnglish: string;
+    nameSinhala: string;
+    nameTamil: string;
+  };
+  samurdhiSubsidy: {
+    id: string;
+    amount: string;
+  };
+  aswasumaCategory: {
+    id: string;
+    nameEnglish: string;
+    nameSinhala: string;
+    nameTamil: string;
+  };
+  empowermentDimension: {
+    id: string;
+    nameEnglish: string;
+    nameSinhala: string;
+    nameTamil: string;
+  };
+  projectType: {
+    id: string;
+    nameEnglish: string;
+    nameSinhala: string;
+    nameTamil: string;
+  };
+  jobField: {
+    id: string;
+    nameEnglish: string;
+    nameSinhala: string;
+    nameTamil: string;
+  };
+  resources: Array<{
+    id: string;
+    nameEnglish: string;
+    nameSinhala: string;
+    nameTamil: string;
+  }>;
+  healthIndicators: Array<{
+    nameEnglish: string;
+    nameSinhala: string;
+    nameTamil: string;
+  }>;
+  domesticDynamics: Array<{
+    nameEnglish: string;
+    nameSinhala: string;
+    nameTamil: string;
+  }>;
+  communityParticipations: Array<{
+    nameEnglish: string;
+    nameSinhala: string;
+    nameTamil: string;
+  }>;
+  housingServices: Array<{
+    nameEnglish: string;
+    nameSinhala: string;
+    nameTamil: string;
+  }>;
 }
 
 export const createSamurdhiFamily = async (payload: SamurdhiFamilyPayload) => {
@@ -99,6 +185,7 @@ export const createSamurdhiFamily = async (payload: SamurdhiFamilyPayload) => {
   }
 };
 
+// DEPRECATED: Remove this method and use getBeneficiaryByIdentifier instead
 export const getBeneficiaryByNIC = async (nic: string) => {
   try {
     const token = (await cookies()).get('accessToken')?.value ||
@@ -119,6 +206,7 @@ export const getBeneficiaryByNIC = async (nic: string) => {
   }
 };
 
+// Updated method to handle both NIC and household numbers
 export const getBeneficiaryByIdentifier = async (identifier: string): Promise<BeneficiaryDetailsResponse> => {
   try {
     const token = (await cookies()).get('accessToken')?.value ||
@@ -139,6 +227,7 @@ export const getBeneficiaryByIdentifier = async (identifier: string): Promise<Be
   }
 };
 
+// DEPRECATED: Remove this method and use updateSamurdhiFamilyByIdentifier instead
 export const updateSamurdhiFamily = async (nic: string, payload: SamurdhiFamilyPayload) => {
   try {
     const token = (await cookies()).get('accessToken')?.value ||
@@ -159,6 +248,7 @@ export const updateSamurdhiFamily = async (nic: string, payload: SamurdhiFamilyP
   }
 };
 
+// Updated method to handle both NIC and household numbers for updates
 export const updateSamurdhiFamilyByIdentifier = async (identifier: string, payload: SamurdhiFamilyPayload) => {
   try {
     const token = (await cookies()).get('accessToken')?.value ||
@@ -168,7 +258,7 @@ export const updateSamurdhiFamilyByIdentifier = async (identifier: string, paylo
       throw new Error('No authentication token found');
     }
 
-    const response = await axiosInstance.put(`/samurdhi-family/${identifier}`, payload, {
+    const response = await axiosInstance.put(`/samurdhi-family/${encodeURIComponent(identifier)}`, payload, {
       headers: {
         Authorization: `Bearer ${token}`
       }
