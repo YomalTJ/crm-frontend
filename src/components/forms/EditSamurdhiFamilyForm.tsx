@@ -45,46 +45,6 @@ const MAIN_PROGRAM_OPTIONS = [
   { value: 'WB', label: 'World Bank Program' }
 ];
 
-// Define the update payload interface
-// interface UpdateSamurdhiFamilyDto {
-//   beneficiaryName: string;
-//   gender: string;
-//   address: string;
-//   phone: string;
-//   projectOwnerAge: number;
-//   male18To60: number;
-//   female18To60: number;
-//   employment_id: string;
-//   otherOccupation: string;
-//   monthlySaving: boolean;
-//   savingAmount: number;
-//   childName: string;
-//   childAge: number;
-//   childGender: string;
-//   aswasumaHouseholdNo: string;
-//   nic: string;
-//   district_id: string;
-//   ds_id: string;
-//   gnd_id: string;
-//   zone_id: string;
-//   beneficiary_type_id: string;
-//   subsisdy_id: string;
-//   aswesuma_cat_id: string;
-//   empowerment_dimension_id: string;
-//   project_type_id: string;
-//   job_field_id: string;
-//   resource_id: string[];
-//   health_indicator_id: string[];
-//   domestic_dynamic_id: string[];
-//   community_participation_id: string[];
-//   housing_service_id: string[];
-//   mainProgram: string;
-//   hasConsentedToEmpowerment: boolean;
-//   consentGivenAt: string;
-//   otherProject: string;
-//   otherJobField: string;
-// }
-
 const EditSamurdhiFamilyForm = () => {
   const params = useParams()
   const router = useRouter()
@@ -148,7 +108,7 @@ const EditSamurdhiFamilyForm = () => {
     otherOccupation: null,
     subsisdy_id: null,
     aswesuma_cat_id: null,
-    empowerment_dimension_id: [],
+    empowerment_dimension_id: null,
     project_type_id: null,
     otherProject: null,
     childName: null,
@@ -238,6 +198,13 @@ const EditSamurdhiFamilyForm = () => {
         const data = await getBeneficiaryByIdentifier(decodedIdentifier);
         setBeneficiaryData(data);
 
+        let mainProgramValue = null;
+        if (data.mainProgram) {
+          if (data.mainProgram.includes('NP')) mainProgramValue = 'NP';
+          else if (data.mainProgram.includes('ADB')) mainProgramValue = 'ADB';
+          else if (data.mainProgram.includes('WB')) mainProgramValue = 'WB';
+        }
+
         // Map the API response to form data
         setFormData({
           district: {
@@ -256,7 +223,7 @@ const EditSamurdhiFamilyForm = () => {
             id: data.location.gramaNiladhariDivision.id.toString(),
             name: data.location.gramaNiladhariDivision.name
           },
-          mainProgram: null, // This needs to be determined from the data
+          mainProgram: mainProgramValue, // This needs to be determined from the data
           hasConsentedToEmpowerment: data.hasConsentedToEmpowerment || false,
           consentGivenAt: data.consentGivenAt,
           beneficiary_type_id: data.beneficiaryType.id,
@@ -273,7 +240,7 @@ const EditSamurdhiFamilyForm = () => {
           otherOccupation: data.otherOccupation,
           subsisdy_id: data.samurdhiSubsidy.id,
           aswesuma_cat_id: data.aswasumaCategory.id,
-          empowerment_dimension_id: data.empowermentDimension ? [data.empowermentDimension.id] : [],
+          empowerment_dimension_id: data.empowermentDimension ? data.empowermentDimension.id : null,
           project_type_id: data.projectType ? data.projectType.id : null,
           otherProject: data.otherProject,
           childName: data.childName,
@@ -284,14 +251,10 @@ const EditSamurdhiFamilyForm = () => {
           resource_id: data.resources ? data.resources.map(r => r.id) : [],
           monthlySaving: data.monthlySaving,
           savingAmount: data.savingAmount,
-          health_indicator_id: data.healthIndicators ?
-            data.healthIndicators.map((indicator, index) => `health_${index}`) : [], // This needs proper mapping
-          domestic_dynamic_id: data.domesticDynamics ?
-            data.domesticDynamics.map((dynamic, index) => `domestic_${index}`) : [], // This needs proper mapping
-          community_participation_id: data.communityParticipations ?
-            data.communityParticipations.map((participation, index) => `community_${index}`) : [], // This needs proper mapping
-          housing_service_id: data.housingServices ?
-            data.housingServices.map((service, index) => `housing_${index}`) : [] // This needs proper mapping
+          health_indicator_id: data.healthIndicators ? data.healthIndicators.map(h => h.id): [], 
+          domestic_dynamic_id: data.domesticDynamics ? data.domesticDynamics.map(d => d.id): [],
+          community_participation_id: data.communityParticipations ? data.communityParticipations.map(c => c.id): [],
+          housing_service_id: data.housingServices ? data.housingServices.map(h => h.id): [],
         });
 
       } catch (error: any) {
@@ -307,14 +270,6 @@ const EditSamurdhiFamilyForm = () => {
       loadBeneficiaryData();
     }
   }, [identifier, router, isInitialLoading]);
-
-  // Helper functions
-  // const convertEmptyToNull = (value: string | null | undefined): string | null => {
-  //   if (value === undefined || value === null || value === '' || (typeof value === 'string' && value.trim() === '')) {
-  //     return null;
-  //   }
-  //   return value;
-  // };
 
   const clearError = (fieldName: string) => {
     if (errors[fieldName]) {
@@ -401,7 +356,7 @@ const EditSamurdhiFamilyForm = () => {
       otherOccupation: formData.otherOccupation || '',
       subsisdy_id: formData.subsisdy_id || '',
       aswesuma_cat_id: formData.aswesuma_cat_id || '',
-      empowerment_dimension_id: formData.empowerment_dimension_id,
+      empowerment_dimension_id: formData.empowerment_dimension_id || null,
       project_type_id: formData.project_type_id || '',
       otherProject: formData.otherProject || '',
       childName: formData.childName || '',
@@ -871,29 +826,35 @@ const EditSamurdhiFamilyForm = () => {
               <Label>What is Empowerment Dimension</Label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 {empowermentDimensions.map((dimension) => (
-                  <div key={dimension.empowerment_dimension_id} className="flex gap-3 items-start">
-                    <Checkbox
-                      checked={formData.empowerment_dimension_id.includes(dimension.empowerment_dimension_id)}
-                      onChange={(checked) => {
-                        handleCheckboxChange('empowerment_dimension_id', dimension.empowerment_dimension_id, checked);
-                      }}
-                    />
-                    <div className="flex flex-col text-sm sm:text-base font-medium text-gray-700 dark:text-gray-400">
-                      <span className="font-sinhala">{dimension.nameSinhala}</span>
-                      <span className="font-tamil">{dimension.nameTamil}</span>
-                      <span>{dimension.nameEnglish}</span>
-                    </div>
-                  </div>
+                  <Radio
+                    key={dimension.empowerment_dimension_id}
+                    id={`empowerment-${dimension.empowerment_dimension_id}`}
+                    name="empowerment_dimension_id"
+                    value={dimension.empowerment_dimension_id}
+                    checked={formData.empowerment_dimension_id === dimension.empowerment_dimension_id}
+                    onChange={() => {
+                      console.log('Selected empowerment_dimension_id:', dimension.empowerment_dimension_id);
+                      handleRadioChange('empowerment_dimension_id', dimension.empowerment_dimension_id);
+                    }}
+                    label={
+                      <div className="flex flex-col text-sm sm:text-base">
+                        <span className="font-sinhala">{dimension.nameSinhala}</span>
+                        <span className="font-tamil">{dimension.nameTamil}</span>
+                        <span>{dimension.nameEnglish}</span>
+                      </div>
+                    }
+                  />
                 ))}
               </div>
+              <ErrorMessage error={errors.empowerment_dimension_id} />
             </div>
 
             {/* Conditional Project Types */}
-            {formData.empowerment_dimension_id.some(id => {
-              const dimension = empowermentDimensions.find(dim => dim.empowerment_dimension_id === id);
+            {(formData.empowerment_dimension_id && (() => {
+              const dimension = empowermentDimensions.find(dim => dim.empowerment_dimension_id === formData.empowerment_dimension_id);
               return dimension?.nameEnglish.includes("Business Opportunities") ||
                 dimension?.nameEnglish.includes("Self-Employment");
-            }) && (
+            })()) && (
                 <div className="space-y-2">
                   <Label>Types of Projects</Label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
@@ -929,10 +890,10 @@ const EditSamurdhiFamilyForm = () => {
             </div>
 
             {/* Conditional Employment Facilitation fields */}
-            {formData.empowerment_dimension_id.some(id => {
-              const dimension = empowermentDimensions.find(dim => dim.empowerment_dimension_id === id);
+            {(formData.empowerment_dimension_id && (() => {
+              const dimension = empowermentDimensions.find(dim => dim.empowerment_dimension_id === formData.empowerment_dimension_id);
               return dimension?.nameEnglish.includes("Employment Facilitation");
-            }) && (
+            })()) && (
                 <>
                   <div>
                     <Label>පුහුණුව ලබාදීමට/ රැකියාගත කිරීමට අපේක්ෂිත දරුවාගේ නම</Label>
@@ -1008,39 +969,6 @@ const EditSamurdhiFamilyForm = () => {
                   </div>
                 </>
               )}
-
-            {/* Monthly Saving */}
-            <div className="space-y-4">
-              <Label>Monthly Saving</Label>
-              <div className="flex items-center gap-4">
-                <Checkbox
-                  checked={formData.monthlySaving}
-                  onChange={(checked) => {
-                    setFormData(prev => ({
-                      ...prev,
-                      monthlySaving: checked,
-                      savingAmount: checked ? prev.savingAmount : 0
-                    }));
-                  }}
-                />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Monthly Saving
-                </span>
-              </div>
-
-              {formData.monthlySaving && (
-                <div>
-                  <Label>Saving Amount (Rs.)</Label>
-                  <Input
-                    type="number"
-                    name="savingAmount"
-                    value={formData.savingAmount || 0}
-                    onChange={handleInputChange}
-                    placeholder="Enter saving amount"
-                  />
-                </div>
-              )}
-            </div>
 
             {/* Resources Needed */}
             <div className="space-y-2">

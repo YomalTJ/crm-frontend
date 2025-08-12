@@ -316,7 +316,7 @@ const SamurdhiFamillyForm = () => {
 
             // Check if the fetched data has values for fields that might be hidden
             const hasHiddenFieldValues = data.aswasumaHouseholdNo ||
-                data.empowerment_dimension_id?.length > 0 ||
+                data.empowerment_dimension_id ||
                 data.project_type_id ||
                 data.childName ||
                 data.job_field_id ||
@@ -348,7 +348,7 @@ const SamurdhiFamillyForm = () => {
                 otherOccupation: data.otherOccupation || '',
                 subsisdy_id: data.subsisdy_id || '',
                 aswesuma_cat_id: data.aswesuma_cat_id || '',
-                empowerment_dimension_id: data.empowerment_dimension_id ? [data.empowerment_dimension_id] : [],
+                empowerment_dimension_id: data.empowerment_dimension_id || null,
                 project_type_id: data.project_type_id || '',
                 otherProject: data.otherProject || '',
                 childName: data.childName || '',
@@ -384,7 +384,7 @@ const SamurdhiFamillyForm = () => {
                 employment_id: null,
                 otherOccupation: null,
                 subsisdy_id: null,
-                empowerment_dimension_id: [],
+                empowerment_dimension_id: null,
                 project_type_id: null,
                 otherProject: null,
                 childName: null,
@@ -480,17 +480,17 @@ const SamurdhiFamillyForm = () => {
         }
 
         // Check if Employment Facilitation is selected
-        const hasEmploymentFacilitation = formData.empowerment_dimension_id.some(id => {
-            const dimension = empowermentDimensions.find(dim => dim.empowerment_dimension_id === id);
+        const hasEmploymentFacilitation = formData.empowerment_dimension_id && (() => {
+            const dimension = empowermentDimensions.find(dim => dim.empowerment_dimension_id === formData.empowerment_dimension_id);
             return dimension?.nameEnglish.includes("Employment Facilitation");
-        });
+        })();
 
         // Check if Business Opportunities is selected
-        const hasBusinessOpportunities = formData.empowerment_dimension_id.some(id => {
-            const dimension = empowermentDimensions.find(dim => dim.empowerment_dimension_id === id);
+        const hasBusinessOpportunities = formData.empowerment_dimension_id && (() => {
+            const dimension = empowermentDimensions.find(dim => dim.empowerment_dimension_id === formData.empowerment_dimension_id);
             return dimension?.nameEnglish.includes("Business Opportunities") ||
                 dimension?.nameEnglish.includes("Self-Employment");
-        });
+        })();
 
         // Validate child details if Employment Facilitation is selected
         if (hasEmploymentFacilitation) {
@@ -555,7 +555,7 @@ const SamurdhiFamillyForm = () => {
         mainProgram: null,
         hasConsentedToEmpowerment: false,
         consentGivenAt: null,
-        beneficiary_type_id: null, // Change from null to empty string
+        beneficiary_type_id: null,
         aswasumaHouseholdNo: null,
         nic: null,
         beneficiaryName: null,
@@ -569,7 +569,7 @@ const SamurdhiFamillyForm = () => {
         otherOccupation: null,
         subsisdy_id: null,
         aswesuma_cat_id: null,
-        empowerment_dimension_id: [],
+        empowerment_dimension_id: null, // Changed from [] to null
         project_type_id: null,
         otherProject: null,
         childName: null,
@@ -699,7 +699,7 @@ const SamurdhiFamillyForm = () => {
                     employment_id: null,
                     otherOccupation: null,
                     subsisdy_id: null,
-                    empowerment_dimension_id: [],
+                    empowerment_dimension_id: null,
                     project_type_id: null,
                     otherProject: null,
                     childName: null,
@@ -821,9 +821,7 @@ const SamurdhiFamillyForm = () => {
                 otherOccupation: convertEmptyToNull(formData.otherOccupation),
                 subsisdy_id: convertEmptyToNull(formData.subsisdy_id),
                 aswesuma_cat_id: convertEmptyToNull(formData.aswesuma_cat_id),
-                empowerment_dimension_id: formData.empowerment_dimension_id.length > 0
-                    ? formData.empowerment_dimension_id
-                    : null,
+                empowerment_dimension_id: convertEmptyToNull(formData.empowerment_dimension_id),
                 project_type_id: convertEmptyToNull(formData.project_type_id),
                 otherProject: convertEmptyToNull(formData.otherProject),
                 childName: convertEmptyToNull(formData.childName),
@@ -950,7 +948,7 @@ const SamurdhiFamillyForm = () => {
                         otherOccupation: null,
                         subsisdy_id: null,
                         aswesuma_cat_id: null,
-                        empowerment_dimension_id: [],
+                        empowerment_dimension_id: null,
                         project_type_id: null,
                         otherProject: null,
                         childName: null,
@@ -1225,7 +1223,7 @@ const SamurdhiFamillyForm = () => {
                                                     employment_id: null,
                                                     otherOccupation: null,
                                                     subsisdy_id: null,
-                                                    empowerment_dimension_id: [],
+                                                    empowerment_dimension_id: null,
                                                     project_type_id: null,
                                                     otherProject: null,
                                                     childName: null,
@@ -1532,30 +1530,34 @@ const SamurdhiFamillyForm = () => {
                                 <Label>What is Empowerment Dimension</Label>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                                     {empowermentDimensions.map((dimension) => (
-                                        <div key={dimension.empowerment_dimension_id} className="flex gap-3 items-start">
-                                            <Checkbox
-                                                checked={formData.empowerment_dimension_id.includes(dimension.empowerment_dimension_id)}
-                                                onChange={(checked) => {
-                                                    console.log('Selected empowerment_dimension_id:', dimension.empowerment_dimension_id);
-                                                    handleCheckboxChange('empowerment_dimension_id', dimension.empowerment_dimension_id, checked);
-                                                }}
-                                            />
-                                            <div className="flex flex-col text-sm sm:text-base font-medium text-gray-700 dark:text-gray-400">
-                                                <span className="font-sinhala">{dimension.nameSinhala}</span>
-                                                <span className="font-tamil">{dimension.nameTamil}</span>
-                                                <span>{dimension.nameEnglish}</span>
-                                            </div>
-                                        </div>
+                                        <Radio
+                                            key={dimension.empowerment_dimension_id}
+                                            id={`empowerment-${dimension.empowerment_dimension_id}`}
+                                            name="empowerment_dimension_id"
+                                            value={dimension.empowerment_dimension_id}
+                                            checked={formData.empowerment_dimension_id === dimension.empowerment_dimension_id}
+                                            onChange={() => {
+                                                console.log('Selected empowerment_dimension_id:', dimension.empowerment_dimension_id);
+                                                handleRadioChange('empowerment_dimension_id', dimension.empowerment_dimension_id);
+                                            }}
+                                            label={
+                                                <div className="flex flex-col text-sm sm:text-base">
+                                                    <span className="font-sinhala">{dimension.nameSinhala}</span>
+                                                    <span className="font-tamil">{dimension.nameTamil}</span>
+                                                    <span>{dimension.nameEnglish}</span>
+                                                </div>
+                                            }
+                                        />
                                     ))}
                                 </div>
                                 <ErrorMessage error={errors.empowerment_dimension_id} />
                             </div>
 
-                            {(formData.empowerment_dimension_id.some(id => {
-                                const dimension = empowermentDimensions.find(dim => dim.empowerment_dimension_id === id);
+                            {(formData.empowerment_dimension_id && (() => {
+                                const dimension = empowermentDimensions.find(dim => dim.empowerment_dimension_id === formData.empowerment_dimension_id);
                                 return dimension?.nameEnglish.includes("Business Opportunities") ||
                                     dimension?.nameEnglish.includes("Self-Employment");
-                            }) || (showAllFieldsForExistingBeneficiary && formData.project_type_id)) && (
+                            })() || (showAllFieldsForExistingBeneficiary && formData.project_type_id)) && (
                                     <div className="space-y-2">
                                         <Label>Types of Projects</Label>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
@@ -1594,10 +1596,10 @@ const SamurdhiFamillyForm = () => {
                                 />
                             </div>
 
-                            {(formData.empowerment_dimension_id.some(id => {
-                                const dimension = empowermentDimensions.find(dim => dim.empowerment_dimension_id === id);
+                            {(formData.empowerment_dimension_id && (() => {
+                                const dimension = empowermentDimensions.find(dim => dim.empowerment_dimension_id === formData.empowerment_dimension_id);
                                 return dimension?.nameEnglish.includes("Employment Facilitation");
-                            }) || (showAllFieldsForExistingBeneficiary && (formData.childName || formData.job_field_id))) && (
+                            })() || (showAllFieldsForExistingBeneficiary && (formData.childName || formData.job_field_id))) && (
                                     <>
                                         <div>
                                             <Label>පුහුණුව ලබාදීමට/ රැකියාගත කිරීමට අපේක්ෂිත දරුවාගේ නම</Label>
@@ -1846,7 +1848,7 @@ const SamurdhiFamillyForm = () => {
                                             otherOccupation: null,
                                             subsisdy_id: null,
                                             aswesuma_cat_id: null,
-                                            empowerment_dimension_id: [],
+                                            empowerment_dimension_id: null,
                                             project_type_id: null,
                                             otherProject: null,
                                             childName: null,

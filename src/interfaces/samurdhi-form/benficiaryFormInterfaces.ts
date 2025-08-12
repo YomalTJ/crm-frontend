@@ -125,54 +125,42 @@ export interface HousingService {
 }
 
 export interface FormData {
-    district: {
-        id: string;
-        name: string;
-    };
-    dsDivision: {
-        id: string;
-        name: string;
-    };
-    zone: {
-        id: string;
-        name: string;
-    };
-    gnd: {
-        id: string;
-        name: string;
-    };
-    mainProgram: string | null;
-    hasConsentedToEmpowerment: boolean;
-    consentGivenAt: string | null;
-    beneficiary_type_id: string | null;
-    aswasumaHouseholdNo: string | null;
-    nic: string | null;
-    beneficiaryName: string | null;
-    gender: string | null;
-    address: string | null;
-    phone: string | null;
-    projectOwnerAge: number;
-    male18To60: number;
-    female18To60: number;
-    employment_id: string | null;
-    otherOccupation: string | null;
-    subsisdy_id: string | null;
-    aswesuma_cat_id: string | null;
-    empowerment_dimension_id: string[];
-    project_type_id: string | null;
-    otherProject: string | null;
-    childName?: string | null;
-    childAge?: number;
-    childGender?: string | null;
-    job_field_id: string | null;
-    otherJobField?: string | null;
-    resource_id: string[];
-    monthlySaving: boolean;
-    savingAmount: number;
-    health_indicator_id: string[];
-    domestic_dynamic_id: string[];
-    community_participation_id: string[];
-    housing_service_id: string[];
+  district: { id: string; name: string };
+  dsDivision: { id: string; name: string };
+  zone: { id: string; name: string };
+  gnd: { id: string; name: string };
+  mainProgram: string | null;
+  hasConsentedToEmpowerment: boolean;
+  consentGivenAt: string | null;
+  beneficiary_type_id: string | null;
+  aswasumaHouseholdNo: string | null;
+  nic: string | null;
+  beneficiaryName: string | null;
+  gender: string | null;
+  address: string | null;
+  phone: string | null;
+  projectOwnerAge: number;
+  male18To60: number;
+  female18To60: number;
+  employment_id: string | null;
+  otherOccupation: string | null;
+  subsisdy_id: string | null;
+  aswesuma_cat_id: string | null;
+  empowerment_dimension_id: string | null; // Changed from string[] to string | null
+  project_type_id: string | null;
+  otherProject: string | null;
+  childName: string | null;
+  childAge: number;
+  childGender: string | null;
+  job_field_id: string | null;
+  otherJobField: string | null;
+  resource_id: string[];
+  monthlySaving: boolean;
+  savingAmount: number;
+  health_indicator_id: string[];
+  domestic_dynamic_id: string[];
+  community_participation_id: string[];
+  housing_service_id: string[];
 }
 
 export interface Resource {

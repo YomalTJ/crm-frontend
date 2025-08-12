@@ -26,7 +26,7 @@ export interface SamurdhiFamilyPayload {
   otherOccupation: string | null;
   subsisdy_id: string | null;
   aswesuma_cat_id: string | null;
-  empowerment_dimension_id: string[] | null;
+  empowerment_dimension_id: string | null;
   project_type_id: string | null;
   otherProject: string | null;
   childName?: string | null;
@@ -55,6 +55,7 @@ export interface BeneficiaryDetailsResponse {
     male: number;
     female: number;
   };
+  mainProgram: string;
   hasConsentedToEmpowerment: boolean | null;
   consentGivenAt: string | null;
   beneficiary_type_id: string;
@@ -62,7 +63,7 @@ export interface BeneficiaryDetailsResponse {
   otherOccupation: string | null;
   subsisdy_id: string;
   aswesuma_cat_id: string;
-  empowerment_dimension_id: string;
+  empowerment_dimension_id: string | null;
   project_type_id: string;
   otherProject: string | null;
   childName: string | null;
@@ -144,21 +145,25 @@ export interface BeneficiaryDetailsResponse {
     nameTamil: string;
   }>;
   healthIndicators: Array<{
+    id: string;
     nameEnglish: string;
     nameSinhala: string;
     nameTamil: string;
   }>;
   domesticDynamics: Array<{
+    id: string;
     nameEnglish: string;
     nameSinhala: string;
     nameTamil: string;
   }>;
   communityParticipations: Array<{
+    id: string;
     nameEnglish: string;
     nameSinhala: string;
     nameTamil: string;
   }>;
   housingServices: Array<{
+    id: string;
     nameEnglish: string;
     nameSinhala: string;
     nameTamil: string;
