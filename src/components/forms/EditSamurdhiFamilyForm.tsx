@@ -29,6 +29,8 @@ import FormSkeleton from '../loading/FormSkeleton';
 import LoadingOverlay from '../loading/LoadingOverlay';
 import LoadingSpinner from '../loading/LoadingSpinner';
 import { BeneficiaryStatus, CommunityParticipation, DomesticDynamic, EmpowermentDimension, FormData, HealthIndicator, HousingService, JobField, ProjectType, Resource } from '@/interfaces/samurdhi-form/benficiaryFormInterfaces';
+import { getDisabilities } from '@/services/disabilitiesService';
+import { getEmpowermentRefusalReasons } from '@/services/empowermentRefusalReasonsService';
 
 const ErrorMessage = ({ error }: { error?: string }) => {
   if (!error) return null;
@@ -82,6 +84,20 @@ const EditSamurdhiFamilyForm = () => {
   const [isLoadingBeneficiary, setIsLoadingBeneficiary] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [refusalReasons, setRefusalReasons] = useState<Array<{
+    id: string;
+    reason_en: string;
+    reason_si: string;
+    reason_ta: string;
+  }>>([]);
+
+  const [disabilities, setDisabilities] = useState<Array<{
+    disabilityId: string;
+    nameEN: string;
+    nameSi: string;
+    nameTa: string;
+  }>>([]);
+
   // Form states
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [beneficiaryData, setBeneficiaryData] = useState<BeneficiaryDetailsResponse | null>(null);
@@ -93,6 +109,7 @@ const EditSamurdhiFamilyForm = () => {
     gnd: { id: '', name: '' },
     mainProgram: null,
     hasConsentedToEmpowerment: false,
+    hasObtainedConsentLetter: false, // Add this line
     consentGivenAt: null,
     beneficiary_type_id: null,
     aswasumaHouseholdNo: null,
@@ -101,7 +118,10 @@ const EditSamurdhiFamilyForm = () => {
     gender: null,
     address: null,
     phone: null,
+    projectOwnerName: null, // Add this line
     projectOwnerAge: 0,
+    projectOwnerGender: null, // Add this line
+    disability_id: null, // Add this line
     male18To60: 0,
     female18To60: 0,
     employment_id: null,
@@ -122,7 +142,18 @@ const EditSamurdhiFamilyForm = () => {
     health_indicator_id: [],
     domestic_dynamic_id: [],
     community_participation_id: [],
-    housing_service_id: []
+    housing_service_id: [],
+    areaClassification: null, // Add this line
+    refusal_reason_id: null, // Add this line
+    // Add banking details
+    commercialBankAccountName: null,
+    commercialBankAccountNumber: null,
+    commercialBankName: null,
+    commercialBankBranch: null,
+    samurdhiBankAccountName: null,
+    samurdhiBankAccountNumber: null,
+    samurdhiBankName: null,
+    samurdhiBankAccountType: null,
   });
 
   // Load all dropdown options
@@ -143,7 +174,9 @@ const EditSamurdhiFamilyForm = () => {
           communityParticipationData,
           housingServicesData,
           beneficiaryStatusesData,
-          empowermentDimensionsData
+          empowermentDimensionsData,
+          refusalReasonsData,
+          disabilitiesData
         ] = await Promise.all([
           getCurrentEmploymentOptions().catch(() => []),
           getSamurdhiSubsidyOptions().catch(() => []),
@@ -156,7 +189,9 @@ const EditSamurdhiFamilyForm = () => {
           getCommunityParticipation().catch(() => []),
           getHousingServices().catch(() => []),
           getBeneficiaryStatuses().catch(() => []),
-          getEmpowermentDimensions().catch(() => [])
+          getEmpowermentDimensions().catch(() => []),
+          getEmpowermentRefusalReasons().catch(() => []),
+          getDisabilities().catch(() => []),
         ]);
 
         setEmploymentOptions(employmentData);
@@ -171,6 +206,8 @@ const EditSamurdhiFamilyForm = () => {
         setHousingServices(housingServicesData);
         setBeneficiaryStatuses(beneficiaryStatusesData);
         setEmpowermentDimensions(empowermentDimensionsData);
+        setRefusalReasons(refusalReasonsData);
+        setDisabilities(disabilitiesData);
 
       } catch (error) {
         console.error('Error initializing form data:', error);
@@ -223,17 +260,20 @@ const EditSamurdhiFamilyForm = () => {
             id: data.location.gramaNiladhariDivision.id.toString(),
             name: data.location.gramaNiladhariDivision.name
           },
-          mainProgram: mainProgramValue, // This needs to be determined from the data
+          mainProgram: mainProgramValue,
           hasConsentedToEmpowerment: data.hasConsentedToEmpowerment || false,
+          hasObtainedConsentLetter: data.hasObtainedConsentLetter || false,
           consentGivenAt: data.consentGivenAt,
           beneficiary_type_id: data.beneficiaryType.id,
           aswasumaHouseholdNo: data.householdNumber,
           nic: decodedIdentifier.includes('HH-') ? null : decodedIdentifier,
-          beneficiaryName: data.name,
-          gender: data.gender,
+          beneficiaryName: data.beneficiaryDetails.name, // Changed from data.name
+          gender: data.beneficiaryDetails.gender, // Form still uses gender
           address: data.address,
           phone: data.phone,
-          projectOwnerAge: data.age,
+          projectOwnerName: data.projectOwnerDetails.name, // Added
+          projectOwnerAge: data.projectOwnerDetails.age, // Changed from data.age
+          projectOwnerGender: data.projectOwnerDetails.gender, // Added
           male18To60: data.members18To60.male,
           female18To60: data.members18To60.female,
           employment_id: data.currentEmployment.id,
@@ -251,10 +291,25 @@ const EditSamurdhiFamilyForm = () => {
           resource_id: data.resources ? data.resources.map(r => r.id) : [],
           monthlySaving: data.monthlySaving,
           savingAmount: data.savingAmount,
-          health_indicator_id: data.healthIndicators ? data.healthIndicators.map(h => h.id): [], 
-          domestic_dynamic_id: data.domesticDynamics ? data.domesticDynamics.map(d => d.id): [],
-          community_participation_id: data.communityParticipations ? data.communityParticipations.map(c => c.id): [],
-          housing_service_id: data.housingServices ? data.housingServices.map(h => h.id): [],
+          health_indicator_id: data.healthIndicators ? data.healthIndicators.map(h => h.id) : [],
+          domestic_dynamic_id: data.domesticDynamics ? data.domesticDynamics.map(d => d.id) : [],
+          community_participation_id: data.communityParticipations ? data.communityParticipations.map(c => c.id) : [],
+          housing_service_id: data.housingServices ? data.housingServices.map(h => h.id) : [],
+          areaClassification: (data.areaClassification === 'URBAN' || data.areaClassification === 'RURAL' || data.areaClassification === 'ESTATE')
+            ? data.areaClassification
+            : null,
+          disability_id: data.disability ? data.disability.id : null, // Added
+          refusal_reason_id: data.refusalReason ? data.refusalReason.id : null, // Added
+
+          // Banking details
+          commercialBankAccountName: data.location.commercialBankDetails?.accountName || null,
+          commercialBankAccountNumber: data.location.commercialBankDetails?.accountNumber || null,
+          commercialBankName: data.location.commercialBankDetails?.bankName || null,
+          commercialBankBranch: data.location.commercialBankDetails?.branch || null,
+          samurdhiBankAccountName: data.location.samurdhiBankDetails?.accountName || null,
+          samurdhiBankAccountNumber: data.location.samurdhiBankDetails?.accountNumber || null,
+          samurdhiBankName: data.location.samurdhiBankDetails?.bankName || null,
+          samurdhiBankAccountType: data.location.samurdhiBankDetails?.accountType || null,
         });
 
       } catch (error: any) {
@@ -341,15 +396,21 @@ const EditSamurdhiFamilyForm = () => {
       zone_id: formData.zone.id,
       mainProgram: formData.mainProgram || '',
       hasConsentedToEmpowerment: formData.hasConsentedToEmpowerment,
+      hasObtainedConsentLetter: formData.hasObtainedConsentLetter || false, // Added
       consentGivenAt: formData.consentGivenAt || '',
       beneficiary_type_id: formData.beneficiary_type_id || '',
       aswasumaHouseholdNo: formData.aswasumaHouseholdNo || '',
       nic: formData.nic || '',
       beneficiaryName: formData.beneficiaryName || '',
-      gender: formData.gender || '',
+      beneficiaryGender: formData.gender || '', // Changed from gender to beneficiaryGender
       address: formData.address || '',
       phone: formData.phone || '',
+      projectOwnerName: formData.projectOwnerName || '', // Added
       projectOwnerAge: formData.projectOwnerAge,
+      projectOwnerGender: formData.projectOwnerGender || '', // Added
+      areaClassification: formData.areaClassification, // Added
+      disability_id: formData.disability_id, // Added
+      refusal_reason_id: formData.refusal_reason_id, // Added
       male18To60: formData.male18To60,
       female18To60: formData.female18To60,
       employment_id: formData.employment_id || '',
@@ -370,7 +431,17 @@ const EditSamurdhiFamilyForm = () => {
       health_indicator_id: formData.health_indicator_id,
       domestic_dynamic_id: formData.domestic_dynamic_id,
       community_participation_id: formData.community_participation_id,
-      housing_service_id: formData.housing_service_id
+      housing_service_id: formData.housing_service_id,
+
+      // Banking details
+      commercialBankAccountName: formData.commercialBankAccountName,
+      commercialBankAccountNumber: formData.commercialBankAccountNumber,
+      commercialBankName: formData.commercialBankName,
+      commercialBankBranch: formData.commercialBankBranch,
+      samurdhiBankAccountName: formData.samurdhiBankAccountName,
+      samurdhiBankAccountNumber: formData.samurdhiBankAccountNumber,
+      samurdhiBankName: formData.samurdhiBankName,
+      samurdhiBankAccountType: formData.samurdhiBankAccountType,
     };
   };
 
@@ -513,7 +584,7 @@ const EditSamurdhiFamilyForm = () => {
             {/* Display identifier info */}
             <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
               <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                Editing beneficiary: {beneficiaryData?.name}
+                Editing beneficiary: {beneficiaryData?.beneficiaryDetails.name}
               </p>
               <p className="text-xs text-blue-600 dark:text-blue-300">
                 {beneficiaryData?.householdNumber ?
@@ -570,26 +641,47 @@ const EditSamurdhiFamilyForm = () => {
             </div>
 
             {/* Consent Section */}
+            {/* Consent Section */}
             <div className="space-y-4">
               <Label>Empowerment Program Consent</Label>
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-4">
-                  <Checkbox
-                    checked={formData.hasConsentedToEmpowerment}
-                    onChange={(checked) => {
+
+              {/* Consent to participate */}
+              <div className="space-y-2">
+                <Label>Consent to participate in the empowerment program</Label>
+                <div className="flex gap-4">
+                  <Radio
+                    id="consent-yes"
+                    name="hasConsentedToEmpowerment"
+                    value="true"
+                    checked={formData.hasConsentedToEmpowerment === true}
+                    onChange={() => {
                       setFormData(prev => ({
                         ...prev,
-                        hasConsentedToEmpowerment: checked,
-                        consentGivenAt: checked ? new Date().toISOString() : null
+                        hasConsentedToEmpowerment: true,
+                        refusal_reason_id: null, // Clear refusal reason if selecting yes
+                        consentGivenAt: new Date().toISOString() // Set current date as default
                       }));
                     }}
+                    label="Yes"
                   />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Consent to participate in the empowerment program
-                  </span>
+                  <Radio
+                    id="consent-no"
+                    name="hasConsentedToEmpowerment"
+                    value="false"
+                    checked={formData.hasConsentedToEmpowerment === false}
+                    onChange={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        hasConsentedToEmpowerment: false,
+                        consentGivenAt: null // Clear consent date if selecting no
+                      }));
+                    }}
+                    label="No"
+                  />
                 </div>
 
-                {formData.hasConsentedToEmpowerment && (
+                {/* Show date picker if consented */}
+                {formData.hasConsentedToEmpowerment === true && (
                   <div className="flex flex-col gap-2">
                     <Label>Consent Given Date</Label>
                     <div className="relative max-w-xs">
@@ -605,8 +697,6 @@ const EditSamurdhiFamilyForm = () => {
                           }));
                         }}
                         className="pr-10"
-                        onFocus={(e) => (e.target as HTMLInputElement).showPicker()}
-                        onClick={(e) => (e.target as HTMLInputElement).showPicker()}
                       />
                       <button
                         type="button"
@@ -637,6 +727,80 @@ const EditSamurdhiFamilyForm = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Show refusal reason if not consented */}
+                {formData.hasConsentedToEmpowerment === false && (
+                  <div className="flex flex-col gap-2">
+                    <Label>Refusal Reason</Label>
+                    <div className="relative">
+                      <Select
+                        options={[
+                          { value: '', label: 'Select Refusal Reason' },
+                          ...refusalReasons.map(reason => ({
+                            value: reason.id,
+                            label: `${reason.reason_si} - ${reason.reason_ta} - ${reason.reason_en}`
+                          }))
+                        ]}
+                        placeholder="Select Refusal Reason"
+                        onChange={(value) => {
+                          setFormData(prev => ({
+                            ...prev,
+                            refusal_reason_id: value || null
+                          }));
+                          clearError('refusal_reason_id');
+                        }}
+                        className={`dark:bg-dark-900 ${errors.refusal_reason_id ? 'border-red-500' : ''}`}
+                        value={formData.refusal_reason_id || ''}
+                      />
+                      <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                        <ChevronDownIcon />
+                      </span>
+                    </div>
+                    <ErrorMessage error={errors.refusal_reason_id} />
+                  </div>
+                )}
+              </div>
+
+              {/* Consent letter obtained */}
+              <div className="space-y-2">
+                <Label>Consent letter obtained</Label>
+                <div className="flex gap-4">
+                  <Radio
+                    id="letter-yes"
+                    name="hasObtainedConsentLetter"
+                    value="true"
+                    checked={formData.hasObtainedConsentLetter === true}
+                    onChange={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        hasObtainedConsentLetter: true
+                      }));
+                    }}
+                    label="Yes"
+                  />
+                  <Radio
+                    id="letter-no"
+                    name="hasObtainedConsentLetter"
+                    value="false"
+                    checked={formData.hasObtainedConsentLetter === false}
+                    onChange={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        hasObtainedConsentLetter: false
+                      }));
+                    }}
+                    label="No"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <Label>Area Classification</Label>
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  {formData.areaClassification || 'Not specified'}
+                </span>
               </div>
             </div>
 
@@ -696,6 +860,14 @@ const EditSamurdhiFamilyForm = () => {
                 onChange={() => handleRadioChange('gender', "Male")}
                 label="Male"
               />
+              <Radio
+                id="gender-other"
+                name="gender"
+                value="Other"
+                checked={formData.gender === "Other"}
+                onChange={() => handleRadioChange('gender', "Other")}
+                label="Other"
+              />
             </div>
 
             <div>
@@ -723,6 +895,44 @@ const EditSamurdhiFamilyForm = () => {
             </div>
 
             <div>
+              <Label>Project Owner Name</Label>
+              <Input
+                type="text"
+                name="projectOwnerName"
+                value={formData.projectOwnerName || ""}
+                onChange={handleInputChange}
+              />
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <Label>Project Owner Gender</Label>
+              <Radio
+                id="project-owner-gender-female"
+                name="projectOwnerGender"
+                value="Female"
+                checked={formData.projectOwnerGender === "Female"}
+                onChange={() => handleRadioChange('projectOwnerGender', "Female")}
+                label="Female"
+              />
+              <Radio
+                id="project-owner-gender-male"
+                name="projectOwnerGender"
+                value="Male"
+                checked={formData.projectOwnerGender === "Male"}
+                onChange={() => handleRadioChange('projectOwnerGender', "Male")}
+                label="Male"
+              />
+              <Radio
+                id="project-owner-gender-other"
+                name="projectOwnerGender"
+                value="Other"
+                checked={formData.projectOwnerGender === "Other"}
+                onChange={() => handleRadioChange('projectOwnerGender', "Other")}
+                label="Other"
+              />
+            </div>
+
+            <div>
               <Label>Age of Project Owner</Label>
               <Input
                 type="number"
@@ -732,6 +942,25 @@ const EditSamurdhiFamilyForm = () => {
                 className={errors.projectOwnerAge ? 'border-red-500' : ''}
               />
               <ErrorMessage error={errors.projectOwnerAge} />
+            </div>
+
+            <div>
+              <Label>Disability (if any)</Label>
+              <div className="relative">
+                <Select
+                  options={[
+                    { value: '', label: 'No disability' },
+                    ...disabilities.map(disability => ({
+                      value: disability.disabilityId,
+                      label: `${disability.nameSi} - ${disability.nameTa} - ${disability.nameEN}`
+                    }))
+                  ]}
+                  placeholder="Select disability status"
+                  onChange={(value) => handleSelectChange('disability_id', value)}
+                  className="dark:bg-dark-900"
+                  value={formData.disability_id || ''}
+                />
+              </div>
             </div>
 
             <div>
@@ -1073,6 +1302,88 @@ const EditSamurdhiFamilyForm = () => {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            <div className="space-y-4 border-t pt-6">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Banking Details</h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Commercial Bank Account Name</Label>
+                  <Input
+                    type="text"
+                    name="commercialBankAccountName"
+                    value={formData.commercialBankAccountName || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <Label>Commercial Bank Account Number</Label>
+                  <Input
+                    type="text"
+                    name="commercialBankAccountNumber"
+                    value={formData.commercialBankAccountNumber || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <Label>Commercial Bank Name</Label>
+                  <Input
+                    type="text"
+                    name="commercialBankName"
+                    value={formData.commercialBankName || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <Label>Commercial Bank Branch</Label>
+                  <Input
+                    type="text"
+                    name="commercialBankBranch"
+                    value={formData.commercialBankBranch || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Samurdhi Bank Account Name</Label>
+                  <Input
+                    type="text"
+                    name="samurdhiBankAccountName"
+                    value={formData.samurdhiBankAccountName || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <Label>Samurdhi Bank Account Number</Label>
+                  <Input
+                    type="text"
+                    name="samurdhiBankAccountNumber"
+                    value={formData.samurdhiBankAccountNumber || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <Label>Samurdhi Bank Name</Label>
+                  <Input
+                    type="text"
+                    name="samurdhiBankName"
+                    value={formData.samurdhiBankName || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <Label>Samurdhi Bank Account Type</Label>
+                  <Input
+                    type="text"
+                    name="samurdhiBankAccountType"
+                    value={formData.samurdhiBankAccountType || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
               </div>
             </div>
 

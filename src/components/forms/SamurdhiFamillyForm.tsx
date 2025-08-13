@@ -28,6 +28,8 @@ import FormSkeleton from '../loading/FormSkeleton';
 import LoadingOverlay from '../loading/LoadingOverlay';
 import LoadingSpinner from '../loading/LoadingSpinner';
 import { BeneficiaryStatus, CommunityParticipation, DomesticDynamic, EmpowermentDimension, FormData, HealthIndicator, HousingService, JobField, ProjectType, Resource } from '@/interfaces/samurdhi-form/benficiaryFormInterfaces';
+import { getEmpowermentRefusalReasons } from '@/services/empowermentRefusalReasonsService';
+import { getDisabilities } from '@/services/disabilitiesService';
 
 const ErrorMessage = ({ error }: { error?: string }) => {
     if (!error) return null;
@@ -64,6 +66,20 @@ const SamurdhiFamillyForm = () => {
         nameEnglish: string;
         nameSinhala: string;
         nameTamil: string;
+    }>>([]);
+
+    const [refusalReasons, setRefusalReasons] = useState<Array<{
+        id: string;
+        reason_en: string;
+        reason_si: string;
+        reason_ta: string;
+    }>>([]);
+
+    const [disabilities, setDisabilities] = useState<Array<{
+        disabilityId: string;
+        nameEN: string;
+        nameSi: string;
+        nameTa: string;
     }>>([]);
 
     const [jobFields, setJobFields] = useState<JobField[]>([]);
@@ -147,7 +163,9 @@ const SamurdhiFamillyForm = () => {
                     communityParticipationData,
                     housingServicesData,
                     beneficiaryStatusesData,
-                    empowermentDimensionsData
+                    empowermentDimensionsData,
+                    refusalReasonsData,
+                    disabilitiesData
                 ] = await Promise.all([
                     getCurrentEmploymentOptions().catch(err => {
                         console.error('Error fetching employment options:', err);
@@ -196,6 +214,14 @@ const SamurdhiFamillyForm = () => {
                     getEmpowermentDimensions().catch(err => {
                         console.error('Error fetching empowerment dimensions:', err);
                         return [];
+                    }),
+                    getEmpowermentRefusalReasons().catch(err => {
+                        console.error('Error fetching refusal reasons:', err);
+                        return [];
+                    }),
+                    getDisabilities().catch(err => {
+                        console.error('Error fetching disabilities:', err);
+                        return [];
                     })
                 ]);
 
@@ -212,6 +238,8 @@ const SamurdhiFamillyForm = () => {
                 setHousingServices(housingServicesData);
                 setBeneficiaryStatuses(beneficiaryStatusesData);
                 setEmpowermentDimensions(empowermentDimensionsData);
+                setRefusalReasons(refusalReasonsData);
+                setDisabilities(disabilitiesData);
 
             } catch (error) {
                 console.error('Error initializing form data:', error);
@@ -437,8 +465,23 @@ const SamurdhiFamillyForm = () => {
         const isSamurdhiOrLowIncome = selectedBeneficiaryType?.nameEnglish.includes("Samurdhi") ||
             selectedBeneficiaryType?.nameEnglish.includes("low income");
 
-        if (formData.hasConsentedToEmpowerment && !formData.consentGivenAt) {
+        // Validation for consent fields
+        if (formData.hasConsentedToEmpowerment === null || formData.hasConsentedToEmpowerment === undefined) {
+            newErrors.hasConsentedToEmpowerment = 'Please select consent to empowerment program';
+        }
+
+        if (formData.hasObtainedConsentLetter === null || formData.hasObtainedConsentLetter === undefined) {
+            newErrors.hasObtainedConsentLetter = 'Please select consent letter status';
+        }
+
+        // If user consented to empowerment, date is required
+        if (formData.hasConsentedToEmpowerment === true && !formData.consentGivenAt) {
             newErrors.consentGivenAt = 'Please select a consent date';
+        }
+
+        // If user refused empowerment, refusal reason is required
+        if (formData.hasConsentedToEmpowerment === false && !formData.refusal_reason_id) {
+            newErrors.refusal_reason_id = 'Please select a refusal reason';
         }
 
         // Conditional NIC validation - only for non-pure Aswasuma beneficiaries
@@ -553,7 +596,8 @@ const SamurdhiFamillyForm = () => {
         zone: { id: '', name: '' },
         gnd: { id: '', name: '' },
         mainProgram: null,
-        hasConsentedToEmpowerment: false,
+        hasConsentedToEmpowerment: null,
+        hasObtainedConsentLetter: null,
         consentGivenAt: null,
         beneficiary_type_id: null,
         aswasumaHouseholdNo: null,
@@ -583,7 +627,20 @@ const SamurdhiFamillyForm = () => {
         health_indicator_id: [],
         domestic_dynamic_id: [],
         community_participation_id: [],
-        housing_service_id: []
+        housing_service_id: [],
+        areaClassification: null,
+        refusal_reason_id: null,
+        disability_id: null,
+        projectOwnerName: null,
+        projectOwnerGender: null,
+        commercialBankAccountName: null,
+        commercialBankAccountNumber: null,
+        commercialBankName: null,
+        commercialBankBranch: null,
+        samurdhiBankAccountName: null,
+        samurdhiBankAccountNumber: null,
+        samurdhiBankName: null,
+        samurdhiBankAccountType: null,
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -803,42 +860,78 @@ const SamurdhiFamillyForm = () => {
                 zone_id: formData.zone.id || "1",
                 gnd_id: formData.gnd.id || "1",
                 beneficiary_type_id: formData.beneficiary_type_id as string,
-                mainProgram: formData.mainProgram ?? "", // Ensure string, never null
+                mainProgram: formData.mainProgram ?? "",
+
+                // Enhanced consent fields
                 hasConsentedToEmpowerment: formData.hasConsentedToEmpowerment,
+                hasObtainedConsentLetter: formData.hasObtainedConsentLetter,
+                refusal_reason_id: convertEmptyToNull(formData.refusal_reason_id),
                 consentGivenAt: formData.consentGivenAt
                     ? new Date(formData.consentGivenAt).toISOString()
                     : null,
+
+                // Area classification
+                areaClassification: formData.areaClassification,
+
+                // Basic info
                 aswasumaHouseholdNo: convertEmptyToNull(formData.aswasumaHouseholdNo),
                 nic: convertEmptyToNull(formData.nic),
                 beneficiaryName: convertEmptyToNull(formData.beneficiaryName),
-                gender: convertEmptyToNull(formData.gender),
+                beneficiaryGender: convertEmptyToNull(formData.gender), // Note: backend uses beneficiaryGender
                 address: convertEmptyToNull(formData.address),
                 phone: convertEmptyToNull(formData.phone),
+
+                // Project owner details
+                projectOwnerName: convertEmptyToNull(formData.projectOwnerName),
                 projectOwnerAge: formData.projectOwnerAge || 0,
+                projectOwnerGender: convertEmptyToNull(formData.projectOwnerGender),
+
+                // Disability
+                disability_id: convertEmptyToNull(formData.disability_id),
+
+                // Household members
                 male18To60: formData.male18To60 || 0,
                 female18To60: formData.female18To60 || 0,
+
+                // Employment
                 employment_id: convertEmptyToNull(formData.employment_id),
                 otherOccupation: convertEmptyToNull(formData.otherOccupation),
+
+                // Benefits
                 subsisdy_id: convertEmptyToNull(formData.subsisdy_id),
                 aswesuma_cat_id: convertEmptyToNull(formData.aswesuma_cat_id),
+
+                // Empowerment
                 empowerment_dimension_id: convertEmptyToNull(formData.empowerment_dimension_id),
                 project_type_id: convertEmptyToNull(formData.project_type_id),
                 otherProject: convertEmptyToNull(formData.otherProject),
+
+                // Child details
                 childName: convertEmptyToNull(formData.childName),
                 childAge: formData.childAge || 0,
                 childGender: convertEmptyToNull(formData.childGender) || "Male",
                 job_field_id: convertEmptyToNull(formData.job_field_id),
                 otherJobField: convertEmptyToNull(formData.otherJobField),
+
+                // Array fields
                 resource_id: formData.resource_id || [],
                 monthlySaving: formData.monthlySaving,
                 savingAmount: formData.savingAmount || 0,
                 health_indicator_id: formData.health_indicator_id || [],
                 domestic_dynamic_id: formData.domestic_dynamic_id || [],
                 community_participation_id: formData.community_participation_id || [],
-                housing_service_id: formData.housing_service_id || []
-            };
+                housing_service_id: formData.housing_service_id || [],
 
-            console.log('Prepared payload:', payload);
+                // Banking details
+                commercialBankAccountName: convertEmptyToNull(formData.commercialBankAccountName),
+                commercialBankAccountNumber: convertEmptyToNull(formData.commercialBankAccountNumber),
+                commercialBankName: convertEmptyToNull(formData.commercialBankName),
+                commercialBankBranch: convertEmptyToNull(formData.commercialBankBranch),
+                samurdhiBankAccountName: convertEmptyToNull(formData.samurdhiBankAccountName),
+                samurdhiBankAccountNumber: convertEmptyToNull(formData.samurdhiBankAccountNumber),
+                samurdhiBankName: convertEmptyToNull(formData.samurdhiBankName),
+                samurdhiBankAccountType: convertEmptyToNull(formData.samurdhiBankAccountType)
+            };
 
             let response;
             if (isExistingBeneficiary) {
@@ -932,8 +1025,11 @@ const SamurdhiFamillyForm = () => {
                     setFormData({
                         ...locationData,
                         mainProgram: null,
+                        areaClassification: null,
                         beneficiary_type_id: null,
-                        hasConsentedToEmpowerment: false,
+                        hasConsentedToEmpowerment: null,
+                        hasObtainedConsentLetter: null,
+                        refusal_reason_id: null,
                         consentGivenAt: null,
                         aswasumaHouseholdNo: null,
                         nic: null,
@@ -941,7 +1037,10 @@ const SamurdhiFamillyForm = () => {
                         gender: null,
                         address: null,
                         phone: null,
+                        projectOwnerName: null,
                         projectOwnerAge: 0,
+                        projectOwnerGender: null,
+                        disability_id: null,
                         male18To60: 0,
                         female18To60: 0,
                         employment_id: null,
@@ -962,7 +1061,16 @@ const SamurdhiFamillyForm = () => {
                         health_indicator_id: [],
                         domestic_dynamic_id: [],
                         community_participation_id: [],
-                        housing_service_id: []
+                        housing_service_id: [],
+                        // Banking details
+                        commercialBankAccountName: null,
+                        commercialBankAccountNumber: null,
+                        commercialBankName: null,
+                        commercialBankBranch: null,
+                        samurdhiBankAccountName: null,
+                        samurdhiBankAccountNumber: null,
+                        samurdhiBankName: null,
+                        samurdhiBankAccountType: null
                     });
 
                     setIsExistingBeneficiary(false);
@@ -1125,26 +1233,52 @@ const SamurdhiFamillyForm = () => {
                             <div className="space-y-4">
                                 <Label>Empowerment Program Consent</Label>
 
-                                <div className="flex flex-col gap-4">
-                                    <div className="flex items-center gap-4">
-                                        <Checkbox
-                                            checked={formData.hasConsentedToEmpowerment}
-                                            onChange={(checked) => {
-                                                setFormData(prev => ({
-                                                    ...prev,
-                                                    hasConsentedToEmpowerment: checked,
-                                                    consentGivenAt: checked ? new Date().toISOString() : null
-                                                }));
-                                            }}
-                                        />
-                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                <div className="flex flex-col gap-6">
+                                    {/* Consent to participate - Radio buttons */}
+                                    <div className="flex flex-col gap-4">
+                                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                             Consent to participate in the empowerment program
-                                        </span>
+                                        </Label>
+                                        <div className="flex flex-col gap-3">
+                                            <Radio
+                                                id="consent-yes"
+                                                name="hasConsentedToEmpowerment"
+                                                value="true"
+                                                checked={formData.hasConsentedToEmpowerment === true}
+                                                onChange={() => {
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        hasConsentedToEmpowerment: true,
+                                                        consentGivenAt: new Date().toISOString(),
+                                                        refusal_reason_id: null // Clear refusal reason when consenting
+                                                    }));
+                                                    clearError('consentGivenAt');
+                                                }}
+                                                label="Yes"
+                                            />
+                                            <Radio
+                                                id="consent-no"
+                                                name="hasConsentedToEmpowerment"
+                                                value="false"
+                                                checked={formData.hasConsentedToEmpowerment === false}
+                                                onChange={() => {
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        hasConsentedToEmpowerment: false,
+                                                        consentGivenAt: null, // Clear consent date when refusing
+                                                        refusal_reason_id: null
+                                                    }));
+                                                    clearError('refusal_reason_id');
+                                                }}
+                                                label="No"
+                                            />
+                                        </div>
                                     </div>
 
-                                    {formData.hasConsentedToEmpowerment && (
+                                    {/* Conditional Date Selection - Only show when consent is Yes */}
+                                    {formData.hasConsentedToEmpowerment === true && (
                                         <div className="flex flex-col gap-2">
-                                            <Label>Consent Given Date</Label>
+                                            <Label>Consent Given Date <span className="text-red-500">*</span></Label>
                                             <div className="relative max-w-xs">
                                                 <Input
                                                     type="date"
@@ -1156,9 +1290,9 @@ const SamurdhiFamillyForm = () => {
                                                             ...prev,
                                                             consentGivenAt: dateValue ? new Date(dateValue).toISOString() : null
                                                         }));
+                                                        clearError('consentGivenAt');
                                                     }}
-                                                    className="pr-10"
-                                                    // Add these props to ensure the calendar picker works
+                                                    className={`pr-10 ${errors.consentGivenAt ? 'border-red-500' : ''}`}
                                                     onFocus={(e) => e.target.showPicker()}
                                                     onClick={(e) => (e.target as HTMLInputElement).showPicker()}
                                                 />
@@ -1171,8 +1305,92 @@ const SamurdhiFamillyForm = () => {
                                                     </svg>
                                                 </span>
                                             </div>
+                                            <ErrorMessage error={errors.consentGivenAt} />
                                         </div>
                                     )}
+
+                                    {/* Conditional Refusal Reason - Only show when consent is No */}
+                                    {formData.hasConsentedToEmpowerment === false && (
+                                        <div>
+                                            <Label>Refusal Reason <span className="text-red-500">*</span></Label>
+                                            <div className="relative">
+                                                <Select
+                                                    options={refusalReasons.map(reason => ({
+                                                        value: reason.id,
+                                                        label: `${reason.reason_si} - ${reason.reason_ta} - ${reason.reason_en}`
+                                                    }))}
+                                                    placeholder="Select refusal reason"
+                                                    onChange={(value) => {
+                                                        handleSelectChange('refusal_reason_id', value);
+                                                        clearError('refusal_reason_id');
+                                                    }}
+                                                    className={`dark:bg-dark-900 ${errors.refusal_reason_id ? 'border-red-500' : ''}`}
+                                                    value={formData.refusal_reason_id || ''}
+                                                />
+                                                <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                                                    <ChevronDownIcon />
+                                                </span>
+                                            </div>
+                                            <ErrorMessage error={errors.refusal_reason_id} />
+                                        </div>
+                                    )}
+
+                                    {/* Consent letter obtained - Radio buttons */}
+                                    <div className="flex flex-col gap-4">
+                                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            Consent letter obtained
+                                        </Label>
+                                        <div className="flex flex-col gap-3">
+                                            <Radio
+                                                id="consent-letter-yes"
+                                                name="hasObtainedConsentLetter"
+                                                value="true"
+                                                checked={formData.hasObtainedConsentLetter === true}
+                                                onChange={() => {
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        hasObtainedConsentLetter: true
+                                                    }));
+                                                }}
+                                                label="Yes"
+                                            />
+                                            <Radio
+                                                id="consent-letter-no"
+                                                name="hasObtainedConsentLetter"
+                                                value="false"
+                                                checked={formData.hasObtainedConsentLetter === false}
+                                                onChange={() => {
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        hasObtainedConsentLetter: false
+                                                    }));
+                                                }}
+                                                label="No"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Area Classification */}
+                            <div>
+                                <Label>Area Classification</Label>
+                                <div className="flex flex-col gap-4">
+                                    {[
+                                        { value: 'නාගරික/ Urban/ நகர்ப்புற', label: 'නාගරික/ Urban/ நகர்ப்புற' },
+                                        { value: 'ග්‍රාමීය/ Rural/ கிராமப்புறம்', label: 'ග්‍රාමීය/ Rural/ கிராமப்புறம்' },
+                                        { value: 'වතු/ Estates / எஸ்டேட்ஸ்', label: 'වතු/ Estates / எஸ்டேட்ஸ்' }
+                                    ].map((option) => (
+                                        <Radio
+                                            key={option.value}
+                                            id={`area-${option.value}`}
+                                            name="areaClassification"
+                                            value={option.value}
+                                            checked={formData.areaClassification === option.value}
+                                            onChange={() => handleRadioChange('areaClassification', option.value)}
+                                            label={option.label}
+                                        />
+                                    ))}
                                 </div>
                             </div>
 
@@ -1400,6 +1618,14 @@ const SamurdhiFamillyForm = () => {
                                     onChange={() => handleRadioChange('gender', "Male")}
                                     label="Male"
                                 />
+                                <Radio
+                                    id="gender-other"
+                                    name="gender"
+                                    value="Other"
+                                    checked={formData.gender === "Other"}
+                                    onChange={() => handleRadioChange('gender', "Other")}
+                                    label="Other"
+                                />
                             </div>
 
                             <div>
@@ -1427,6 +1653,44 @@ const SamurdhiFamillyForm = () => {
                             </div>
 
                             <div>
+                                <Label>Project Owner Name</Label>
+                                <Input
+                                    type="text"
+                                    name="projectOwnerName"
+                                    value={formData.projectOwnerName || ""}
+                                    onChange={handleInputChange}
+                                />
+                            </div>
+
+                            <div className="flex flex-col gap-4">
+                                <Label>Project Owner Gender</Label>
+                                <Radio
+                                    id="project-owner-gender-female"
+                                    name="projectOwnerGender"
+                                    value="Female"
+                                    checked={formData.projectOwnerGender === "Female"}
+                                    onChange={() => handleRadioChange('projectOwnerGender', "Female")}
+                                    label="Female"
+                                />
+                                <Radio
+                                    id="project-owner-gender-male"
+                                    name="projectOwnerGender"
+                                    value="Male"
+                                    checked={formData.projectOwnerGender === "Male"}
+                                    onChange={() => handleRadioChange('projectOwnerGender', "Male")}
+                                    label="Male"
+                                />
+                                <Radio
+                                    id="project-owner-gender-other"
+                                    name="projectOwnerGender"
+                                    value="Other"
+                                    checked={formData.projectOwnerGender === "Other"}
+                                    onChange={() => handleRadioChange('projectOwnerGender', "Other")}
+                                    label="Other"
+                                />
+                            </div>
+
+                            <div>
                                 <Label>Age of Project Owner</Label>
                                 <Input
                                     type="number"
@@ -1436,6 +1700,25 @@ const SamurdhiFamillyForm = () => {
                                     className={errors.projectOwnerAge ? 'border-red-500' : ''}
                                 />
                                 <ErrorMessage error={errors.projectOwnerAge} />
+                            </div>
+
+                            <div>
+                                <Label>Disability (if any)</Label>
+                                <div className="relative">
+                                    <Select
+                                        options={[
+                                            { value: '', label: 'No disability' },
+                                            ...disabilities.map(disability => ({
+                                                value: disability.disabilityId,
+                                                label: `${disability.nameSi} - ${disability.nameTa} - ${disability.nameEN}`
+                                            }))
+                                        ]}
+                                        placeholder="Select disability status"
+                                        onChange={(value) => handleSelectChange('disability_id', value)}
+                                        className="dark:bg-dark-900"
+                                        value={formData.disability_id || ''}
+                                    />
+                                </div>
                             </div>
 
                             <div>
@@ -1803,6 +2086,110 @@ const SamurdhiFamillyForm = () => {
                                 <ErrorMessage error={errors.housing_service_id} />
                             </div>
 
+                            <div className="space-y-6 pt-6">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                    Banking Details
+                                </h3>
+
+                                {/* Commercial Bank Details */}
+                                <div className="space-y-4">
+                                    <h4 className="text-md font-medium text-gray-800 dark:text-gray-200">
+                                        Commercial Bank Details
+                                    </h4>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <Label>Account Name</Label>
+                                            <Input
+                                                type="text"
+                                                name="commercialBankAccountName"
+                                                value={formData.commercialBankAccountName || ""}
+                                                onChange={handleInputChange}
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <Label>Account Number</Label>
+                                            <Input
+                                                type="text"
+                                                name="commercialBankAccountNumber"
+                                                value={formData.commercialBankAccountNumber || ""}
+                                                onChange={handleInputChange}
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <Label>Bank Name</Label>
+                                            <Input
+                                                type="text"
+                                                name="commercialBankName"
+                                                value={formData.commercialBankName || ""}
+                                                onChange={handleInputChange}
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <Label>Branch</Label>
+                                            <Input
+                                                type="text"
+                                                name="commercialBankBranch"
+                                                value={formData.commercialBankBranch || ""}
+                                                onChange={handleInputChange}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Samurdhi Bank Details */}
+                                <div className="space-y-4">
+                                    <h4 className="text-md font-medium text-gray-800 dark:text-gray-200">
+                                        Samurdhi Bank Details
+                                    </h4>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <Label>Account Name</Label>
+                                            <Input
+                                                type="text"
+                                                name="samurdhiBankAccountName"
+                                                value={formData.samurdhiBankAccountName || ""}
+                                                onChange={handleInputChange}
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <Label>Account Number</Label>
+                                            <Input
+                                                type="text"
+                                                name="samurdhiBankAccountNumber"
+                                                value={formData.samurdhiBankAccountNumber || ""}
+                                                onChange={handleInputChange}
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <Label>Bank Name</Label>
+                                            <Input
+                                                type="text"
+                                                name="samurdhiBankName"
+                                                value={formData.samurdhiBankName || ""}
+                                                onChange={handleInputChange}
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <Label>Account Type</Label>
+                                            <Input
+                                                type="text"
+                                                name="samurdhiBankAccountType"
+                                                value={formData.samurdhiBankAccountType || ""}
+                                                onChange={handleInputChange}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div className="flex items-center gap-5">
                                 <Button
                                     size="sm"
@@ -1832,16 +2219,22 @@ const SamurdhiFamillyForm = () => {
                                             zone: { id: formData.zone.id, name: formData.zone.name },
                                             gnd: { id: formData.gnd.id, name: formData.gnd.name },
                                             mainProgram: null,
-                                            hasConsentedToEmpowerment: false,
-                                            consentGivenAt: null,
+                                            areaClassification: null,
                                             beneficiary_type_id: null,
+                                            hasConsentedToEmpowerment: null,
+                                            hasObtainedConsentLetter: null,
+                                            refusal_reason_id: null,
+                                            consentGivenAt: null,
                                             aswasumaHouseholdNo: null,
                                             nic: null,
                                             beneficiaryName: null,
                                             gender: null,
                                             address: null,
                                             phone: null,
+                                            projectOwnerName: null,
                                             projectOwnerAge: 0,
+                                            projectOwnerGender: null,
+                                            disability_id: null,
                                             male18To60: 0,
                                             female18To60: 0,
                                             employment_id: null,
@@ -1862,7 +2255,16 @@ const SamurdhiFamillyForm = () => {
                                             health_indicator_id: [],
                                             domestic_dynamic_id: [],
                                             community_participation_id: [],
-                                            housing_service_id: []
+                                            housing_service_id: [],
+                                            // Banking details
+                                            commercialBankAccountName: null,
+                                            commercialBankAccountNumber: null,
+                                            commercialBankName: null,
+                                            commercialBankBranch: null,
+                                            samurdhiBankAccountName: null,
+                                            samurdhiBankAccountNumber: null,
+                                            samurdhiBankName: null,
+                                            samurdhiBankAccountType: null
                                         });
                                         setIsExistingBeneficiary(false);
                                         setErrors({}); // Clear validation errors

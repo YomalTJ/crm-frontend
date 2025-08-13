@@ -11,30 +11,55 @@ export interface SamurdhiFamilyPayload {
   gnd_id: string;
   mainProgram: string;
   beneficiary_type_id: string;
-  hasConsentedToEmpowerment?: boolean;
+  areaClassification?: 'URBAN' | 'RURAL' | 'ESTATE' | null;
+
+  // Enhanced consent fields
+  hasConsentedToEmpowerment?: boolean | null;
+  hasObtainedConsentLetter?: boolean | null;
+  refusal_reason_id?: string | null;
   consentGivenAt?: string | null;
+
+  // Basic info
   aswasumaHouseholdNo: string | null;
   nic: string | null;
   beneficiaryName: string | null;
-  gender: string | null;
+  beneficiaryGender: string | null; // Note: backend uses beneficiaryGender not gender
   address: string | null;
   phone: string | null;
+
+  // Project owner details
+  projectOwnerName?: string | null;
   projectOwnerAge: number;
+  projectOwnerGender?: string | null;
+
+  // Disability
+  disability_id?: string | null;
+
+  // Household members
   male18To60: number;
   female18To60: number;
+
+  // Employment
   employment_id: string | null;
   otherOccupation: string | null;
+
+  // Benefits
   subsisdy_id: string | null;
   aswesuma_cat_id: string | null;
+
+  // Empowerment
   empowerment_dimension_id: string | null;
   project_type_id: string | null;
   otherProject: string | null;
+
+  // Child details
   childName?: string | null;
   childAge?: number;
   childGender?: string | null;
   job_field_id: string | null;
   otherJobField?: string | null;
-  // Updated to arrays
+
+  // Array fields
   resource_id: string[];
   monthlySaving: boolean;
   savingAmount: number;
@@ -42,74 +67,55 @@ export interface SamurdhiFamilyPayload {
   domestic_dynamic_id: string[];
   community_participation_id: string[];
   housing_service_id: string[];
+
+  // Banking details
+  commercialBankAccountName?: string | null;
+  commercialBankAccountNumber?: string | null;
+  commercialBankName?: string | null;
+  commercialBankBranch?: string | null;
+  samurdhiBankAccountName?: string | null;
+  samurdhiBankAccountNumber?: string | null;
+  samurdhiBankName?: string | null;
+  samurdhiBankAccountType?: string | null;
 }
 
 export interface BeneficiaryDetailsResponse {
-  name: string;
-  householdNumber: string | null;
-  gender: string;
+  beneficiaryDetails: {
+    name: string;
+    gender: string;
+  };
+  mainProgram: string;
+  householdNumber: string;
   address: string;
   phone: string;
-  age: number;
+  projectOwnerDetails: {
+    name: string;
+    age: number;
+    gender: string;
+  };
+  disability: any; // null or disability object
   members18To60: {
     male: number;
     female: number;
   };
-  mainProgram: string;
-  hasConsentedToEmpowerment: boolean | null;
+  hasConsentedToEmpowerment: boolean;
+  hasObtainedConsentLetter: boolean;
+  refusalReason: any;
   consentGivenAt: string | null;
-  beneficiary_type_id: string;
-  employment_id: string;
-  otherOccupation: string | null;
-  subsisdy_id: string;
-  aswesuma_cat_id: string;
-  empowerment_dimension_id: string | null;
-  project_type_id: string;
-  otherProject: string | null;
-  childName: string | null;
-  childAge: number | null;
-  childGender: string | null;
-  job_field_id: string;
-  otherJobField: string | null;
-  resource_id: string[];
-  monthlySaving: boolean;
-  savingAmount: number;
-  health_indicator_id: string[];
-  domestic_dynamic_id: string[];
-  community_participation_id: string[];
-  housing_service_id: string[];
-  // Add location data
-  location: {
-    district: {
-      id: number;
-      name: string;
-    };
-    divisionalSecretariat: {
-      id: number;
-      name: string;
-    };
-    samurdhiBank: {
-      id: number;
-      name: string;
-    };
-    gramaNiladhariDivision: {
-      id: string;
-      name: string;
-    };
-  };
-  // Add beneficiary type details
   beneficiaryType: {
     id: string;
     nameEnglish: string;
     nameSinhala: string;
     nameTamil: string;
   };
+  areaClassification: string;
   currentEmployment: {
     id: string;
     nameEnglish: string;
     nameSinhala: string;
     nameTamil: string;
   };
+  otherOccupation: string | null;
   samurdhiSubsidy: {
     id: string;
     amount: string;
@@ -132,18 +138,20 @@ export interface BeneficiaryDetailsResponse {
     nameSinhala: string;
     nameTamil: string;
   };
-  jobField: {
-    id: string;
-    nameEnglish: string;
-    nameSinhala: string;
-    nameTamil: string;
-  };
+  otherProject: string | null;
+  childName: string | null;
+  childAge: number;
+  childGender: string;
+  jobField: any; // null or job field object
+  otherJobField: string | null;
   resources: Array<{
     id: string;
     nameEnglish: string;
     nameSinhala: string;
     nameTamil: string;
   }>;
+  monthlySaving: boolean;
+  savingAmount: number;
   healthIndicators: Array<{
     id: string;
     nameEnglish: string;
@@ -168,6 +176,36 @@ export interface BeneficiaryDetailsResponse {
     nameSinhala: string;
     nameTamil: string;
   }>;
+  location: {
+    district: {
+      id: number;
+      name: string;
+    };
+    divisionalSecretariat: {
+      id: number;
+      name: string;
+    };
+    samurdhiBank: {
+      id: number;
+      name: string;
+    };
+    gramaNiladhariDivision: {
+      id: string;
+      name: string;
+    };
+    commercialBankDetails: {
+      accountName: string;
+      accountNumber: string;
+      bankName: string;
+      branch: string;
+    };
+    samurdhiBankDetails: {
+      accountName: string;
+      accountNumber: string;
+      bankName: string;
+      accountType: string;
+    };
+  };
 }
 
 export const createSamurdhiFamily = async (payload: SamurdhiFamilyPayload) => {
