@@ -2,6 +2,7 @@
 
 import axiosInstance from "@/lib/axios";
 import { cookies } from 'next/headers';
+import { AccessibleLocations } from "./projectDetailReportService";
 
 export interface SamurdhiFamilyCountParams {
     district_id?: string;
@@ -226,5 +227,67 @@ export const getGNDs = async (zoneId: string) => {
         return response.data;
     } catch {
         throw new Error('Failed to fetch GNDs');
+    }
+};
+
+export const getSamurdhiFamilyCountWithLocations = async (params: SamurdhiFamilyCountParams): Promise<{
+    accessibleLocations: AccessibleLocations;
+    countData: SamurdhiFamilyCountResponse;
+}> => {
+    try {
+        const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
+
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        const queryParams = new URLSearchParams();
+        Object.entries(params).forEach(([key, value]) => {
+            if (value) {
+                queryParams.append(key, value);
+            }
+        });
+
+        const response = await axiosInstance.get(`/samurdhi-family/count-report?${queryParams.toString()}`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error('Failed to fetch samurdhi family count with locations:', error);
+        throw new Error('Failed to fetch samurdhi family count with locations');
+    }
+};
+
+export const getEmpowermentDimensionCountWithLocations = async (params: EmpowermentDimensionCountParams): Promise<{
+    accessibleLocations: AccessibleLocations;
+    countData: EmpowermentDimensionCountResponse;
+}> => {
+    try {
+        const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
+
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        const queryParams = new URLSearchParams();
+        Object.entries(params).forEach(([key, value]) => {
+            if (value) {
+                queryParams.append(key, value);
+            }
+        });
+
+        const response = await axiosInstance.get(`/samurdhi-family/empowerment-count-report?${queryParams.toString()}`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error('Failed to fetch empowerment dimension count with locations:', error);
+        throw new Error('Failed to fetch empowerment dimension count with locations');
     }
 };

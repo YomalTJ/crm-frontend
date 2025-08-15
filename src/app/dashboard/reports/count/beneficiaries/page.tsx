@@ -2,27 +2,8 @@
 
 import { useTheme } from '@/context/ThemeContext'
 import React, { useState, useEffect } from 'react'
-import { getSamurdhiFamilyCount, SamurdhiFamilyCountResult, SamurdhiFamilyCountParams } from '@/services/reportsService'
-
-// Hardcoded data for now - will be replaced with API calls in future
-const DISTRICTS = [
-  { id: '1', name: 'Colombo' }
-]
-
-const DS_OPTIONS = [
-  { id: '1', name: 'Homagama/හෝමගම/ஹோமாகம', districtId: '1' },
-  { id: '9', name: 'Kaduwela/කඩුවෙල/கடுவெல', districtId: '1' }
-]
-
-const ZONE_OPTIONS = [
-  { id: '1', name: 'MEEGODA/මීගොඩ/MEEGODA', dsId: '1' },
-  { id: '3', name: 'Battaramulla/බත්තරමුල්ල/பத்தரமுல்ல', dsId: '9' }
-]
-
-const GND_OPTIONS = [
-  { id: '1', name: 'Kottawa', zoneId: '1' },
-  { id: '175', name: 'Udumulla/උඩුමුල්ල/உடுமுல்ல', zoneId: '3' }
-]
+import { getSamurdhiFamilyCountWithLocations, SamurdhiFamilyCountResult, SamurdhiFamilyCountParams } from '@/services/reportsService'
+import { getAccessibleLocations, AccessibleLocations } from '@/services/projectDetailReportService'
 
 const MAIN_PROGRAMS = [
   { value: 'NP', label: 'National Program' },
@@ -36,59 +17,44 @@ const BeneficiariesCountReports = () => {
   const [results, setResults] = useState<SamurdhiFamilyCountResult[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  const [accessibleLocations, setAccessibleLocations] = useState<AccessibleLocations | null>(null)
 
   // Filter states
-  const [filters, setFilters] = useState<SamurdhiFamilyCountParams>({
-    district_id: '1' // Default to Colombo
-  })
+  const [filters, setFilters] = useState<SamurdhiFamilyCountParams>({})
 
-  const [availableDS, setAvailableDS] = useState(DS_OPTIONS)
-  const [availableZones, setAvailableZones] = useState<typeof ZONE_OPTIONS>([])
-  const [availableGNDs, setAvailableGNDs] = useState<typeof GND_OPTIONS>([])
-
-  // Update dependent dropdowns when parent changes
+  // Load accessible locations on component mount
   useEffect(() => {
-    if (filters.district_id) {
-      setAvailableDS(DS_OPTIONS.filter(ds => ds.districtId === filters.district_id))
-      // Reset dependent filters
-      setFilters(prev => ({ ...prev, ds_id: '', zone_id: '', gnd_id: '' }))
-      setAvailableZones([])
-      setAvailableGNDs([])
+    const loadLocations = async () => {
+      try {
+        setLoading(true)
+        const locations = await getAccessibleLocations()
+        setAccessibleLocations(locations)
+      } catch (err) {
+        setError('Failed to load location data')
+        console.error('Error loading locations:', err)
+      } finally {
+        setLoading(false)
+      }
     }
-  }, [filters.district_id])
 
-  useEffect(() => {
-    if (filters.ds_id) {
-      setAvailableZones(ZONE_OPTIONS.filter(zone => zone.dsId === filters.ds_id))
-      // Reset dependent filters
-      setFilters(prev => ({ ...prev, zone_id: '', gnd_id: '' }))
-      setAvailableGNDs([])
-    }
-  }, [filters.ds_id])
-
-  useEffect(() => {
-    if (filters.zone_id) {
-      setAvailableGNDs(GND_OPTIONS.filter(gnd => gnd.zoneId === filters.zone_id))
-      // Reset dependent filter
-      setFilters(prev => ({ ...prev, gnd_id: '' }))
-    }
-  }, [filters.zone_id])
+    loadLocations()
+  }, [])
 
   // Fetch data when filters change
   useEffect(() => {
-    if (filters.district_id) {
+    if (accessibleLocations) {
       fetchData()
     }
-  }, [filters])
+  }, [filters, accessibleLocations])
 
   const fetchData = async () => {
     setLoading(true)
     setError(null)
 
     try {
-      const response = await getSamurdhiFamilyCount(filters)
-      setResults(response.results)
-      setTotalCount(response.totalCount)
+      const response = await getSamurdhiFamilyCountWithLocations(filters)
+      setResults(response.countData.results)
+      setTotalCount(response.countData.totalCount)
     } catch (err) {
       setError('Failed to fetch beneficiary count data')
       console.error('Error fetching data:', err)
@@ -105,7 +71,7 @@ const BeneficiariesCountReports = () => {
   }
 
   const clearFilters = () => {
-    setFilters({ district_id: '1' })
+    setFilters({})
   }
 
   const exportData = () => {
@@ -132,29 +98,68 @@ const BeneficiariesCountReports = () => {
   }
 
   const getTotalBeneficiariesText = () => {
-    const selectedDistrict = DISTRICTS.find(d => d.id === filters.district_id)
-    const selectedDS = availableDS.find(ds => ds.id === filters.ds_id)
-    const selectedZone = availableZones.find(z => z.id === filters.zone_id)
-    const selectedGND = availableGNDs.find(g => g.id === filters.gnd_id)
+    const selectedDistrict = accessibleLocations?.districts.find(d => d.district_id.toString() === filters.district_id)
+    const selectedDS = accessibleLocations?.dss.find(ds => ds.ds_id.toString() === filters.ds_id)
+    const selectedZone = accessibleLocations?.zones.find(z => z.zone_id.toString() === filters.zone_id)
+    const selectedGND = accessibleLocations?.gndDivisions.find(g => g.gnd_id === filters.gnd_id)
 
     if (filters.gnd_id && selectedGND && selectedZone && selectedDS && selectedDistrict) {
-      return `Total beneficiaries in ${selectedGND.name}, ${selectedZone.name}, ${selectedDS.name} of ${selectedDistrict.name} is`
+      return `Total beneficiaries in ${selectedGND.gnd_name}, ${selectedZone.zone_name}, ${selectedDS.ds_name} of ${selectedDistrict.district_name} is`
     }
 
     if (filters.zone_id && selectedZone && selectedDS && selectedDistrict) {
-      return `Total beneficiaries in ${selectedZone.name}, ${selectedDS.name} of ${selectedDistrict.name} is`
+      return `Total beneficiaries in ${selectedZone.zone_name}, ${selectedDS.ds_name} of ${selectedDistrict.district_name} is`
     }
 
     if (filters.ds_id && selectedDS && selectedDistrict) {
-      return `Total beneficiaries in ${selectedDS.name} of ${selectedDistrict.name} is`
+      return `Total beneficiaries in ${selectedDS.ds_name} of ${selectedDistrict.district_name} is`
     }
 
     if (filters.district_id && selectedDistrict) {
-      return `Total beneficiaries in ${selectedDistrict.name} is`
+      return `Total beneficiaries in ${selectedDistrict.district_name} is`
     }
 
     return 'Total beneficiaries is'
   }
+
+  // Get filtered locations based on selected filters
+  const getFilteredLocations = () => {
+    if (!accessibleLocations) return { districts: [], dss: [], zones: [], gnds: [] }
+
+    let availableDS = accessibleLocations.dss
+    let availableZones = accessibleLocations.zones
+    let availableGNDs = accessibleLocations.gndDivisions
+
+    // Filter DS divisions based on selected district
+    if (filters.district_id) {
+      availableDS = accessibleLocations.dss.filter(ds =>
+        ds.district_id?.toString() === filters.district_id
+      )
+    }
+
+    // Filter zones based on selected DS
+    if (filters.ds_id) {
+      availableZones = accessibleLocations.zones.filter(zone =>
+        zone.ds_id?.toString() === filters.ds_id
+      )
+    }
+
+    // Filter GNDs based on selected zone
+    if (filters.zone_id) {
+      availableGNDs = accessibleLocations.gndDivisions.filter(gnd =>
+        gnd.zone_id?.toString() === filters.zone_id
+      )
+    }
+
+    return {
+      districts: accessibleLocations.districts,
+      dss: availableDS,
+      zones: availableZones,
+      gnds: availableGNDs
+    }
+  }
+
+  const filteredLocations = getFilteredLocations()
 
   const isDark = theme === 'dark'
   const cardBg = isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
@@ -207,9 +212,9 @@ const BeneficiariesCountReports = () => {
                 className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${inputBg} ${textPrimary}`}
               >
                 <option value="">All Districts</option>
-                {DISTRICTS.map(district => (
-                  <option key={district.id} value={district.id}>
-                    {district.name}
+                {filteredLocations.districts.map(district => (
+                  <option key={district.district_id} value={district.district_id.toString()}>
+                    {district.district_name}
                   </option>
                 ))}
               </select>
@@ -227,9 +232,9 @@ const BeneficiariesCountReports = () => {
                 className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${inputBg} ${textPrimary} disabled:opacity-50`}
               >
                 <option value="">All DS</option>
-                {availableDS.map(ds => (
-                  <option key={ds.id} value={ds.id}>
-                    {ds.name}
+                {filteredLocations.dss.map(ds => (
+                  <option key={ds.ds_id} value={ds.ds_id.toString()}>
+                    {ds.ds_name}
                   </option>
                 ))}
               </select>
@@ -247,9 +252,9 @@ const BeneficiariesCountReports = () => {
                 className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${inputBg} ${textPrimary} disabled:opacity-50`}
               >
                 <option value="">All Zones</option>
-                {availableZones.map(zone => (
-                  <option key={zone.id} value={zone.id}>
-                    {zone.name}
+                {filteredLocations.zones.map(zone => (
+                  <option key={zone.zone_id} value={zone.zone_id.toString()}>
+                    {zone.zone_name}
                   </option>
                 ))}
               </select>
@@ -267,9 +272,9 @@ const BeneficiariesCountReports = () => {
                 className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${inputBg} ${textPrimary} disabled:opacity-50`}
               >
                 <option value="">All GNDs</option>
-                {availableGNDs.map(gnd => (
-                  <option key={gnd.id} value={gnd.id}>
-                    {gnd.name}
+                {filteredLocations.gnds.map(gnd => (
+                  <option key={gnd.gnd_id} value={gnd.gnd_id}>
+                    {gnd.gnd_name}
                   </option>
                 ))}
               </select>

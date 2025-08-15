@@ -4,15 +4,20 @@ import axiosInstance from "@/lib/axios";
 import { cookies } from 'next/headers';
 
 export interface ProjectDetailReportItem {
-    family_mainProgram: 'NP' | 'ADB' | 'WB';
+    family_id: string;
     family_beneficiaryName: string;
-    family_gender: string;
+    family_beneficiaryGender: string;
     family_address: string;
+    family_mainProgram: 'NP' | 'ADB' | 'WB';
     category: string;
-    districtName: string;
-    dsName: string;
-    zoneName: string;
-    gndName: string;
+    district_id: number;
+    district_name: string;
+    ds_id: number;
+    ds_name: string;
+    zone_id: number;
+    zone_name: string;
+    gnd_id: string;
+    gnd_name: string;
 }
 
 export interface ProjectDetailReportFilters {
@@ -21,6 +26,30 @@ export interface ProjectDetailReportFilters {
     zone_id?: string;
     gnd_id?: string;
     mainProgram?: 'NP' | 'ADB' | 'WB';
+}
+
+// Updated AccessibleLocations interface to match backend response
+export interface AccessibleLocations {
+    districts: {
+        district_id: number; // Changed from 'id' to 'district_id'
+        district_name: string;
+        province_id?: string;
+    }[];
+    dss: {
+        ds_id: number;
+        ds_name: string;
+        district_id?: string;
+    }[];
+    zones: {
+        zone_id: number;
+        zone_name: string;
+        ds_id?: string;
+    }[];
+    gndDivisions: {
+        gnd_id: string; // Changed from 'id' to 'gnd_id'
+        gnd_name: string;
+        zone_id?: string;
+    }[];
 }
 
 export interface UserLocationDetails {
@@ -61,8 +90,30 @@ export const getUserDetailsFromToken = async () => {
     return null;
 };
 
-// Get project detail report data
-export const getProjectDetailReport = async (filters?: ProjectDetailReportFilters): Promise<ProjectDetailReportItem[]> => {
+// Get accessible locations based on user role and location
+export const getAccessibleLocations = async (): Promise<AccessibleLocations> => {
+    try {
+        const token = (await cookies()).get('staffAccessToken')?.value;
+
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        const response = await axiosInstance.get('/samurdhi-family/accessible-locations', {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error('Failed to fetch accessible locations:', error);
+        throw new Error('Failed to fetch accessible locations');
+    }
+};
+
+// Get project detail report data with filters
+export const getProjectDetails = async (filters?: ProjectDetailReportFilters): Promise<ProjectDetailReportItem[]> => {
     try {
         const token = (await cookies()).get('staffAccessToken')?.value;
 
@@ -79,7 +130,7 @@ export const getProjectDetailReport = async (filters?: ProjectDetailReportFilter
         if (filters?.mainProgram) queryParams.append('mainProgram', filters.mainProgram);
 
         const queryString = queryParams.toString();
-        const url = `/samurdhi-family/project-detail-report${queryString ? `?${queryString}` : ''}`;
+        const url = `/samurdhi-family/project-details${queryString ? `?${queryString}` : ''}`;
 
         const response = await axiosInstance.get(url, {
             headers: {
@@ -89,7 +140,7 @@ export const getProjectDetailReport = async (filters?: ProjectDetailReportFilter
 
         return response.data;
     } catch (error) {
-        console.error('Failed to fetch project detail report:', error);
-        throw new Error('Failed to fetch project detail report');
+        console.error('Failed to fetch project details:', error);
+        throw new Error('Failed to fetch project details');
     }
 };
