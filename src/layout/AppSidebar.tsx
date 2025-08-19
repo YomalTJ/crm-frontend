@@ -91,6 +91,22 @@ const navItems: NavItem[] = [
       }
     ],
   },
+  {
+    icon: <CalenderIcon />,
+    name: "Grant Utilization",
+    path: "/dashboard/grant-utilization",
+    allowedRoles: ['National Level User', 'District Level User', 'Divisional Level User', 'Bank/Zone Level User', 'GN Level User'],
+    subItems: [
+      {
+        name: "View All Beneficiaries",
+        path: "/dashboard/grant-utilization"
+      },
+      {
+        name: "View All Grant Utilizations",
+        path: "/dashboard/grant-utilization/view-all"
+      }
+    ],
+  },
 ];
 
 const AppSidebar: React.FC = () => {

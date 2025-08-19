@@ -10,19 +10,19 @@ import {
     AccessibleLocations
 } from '@/services/projectDetailReportService';
 import { useTheme } from '@/context/ThemeContext';
-import ExportButton from '@/components/form-fields/ExportButton';
+import { useRouter } from 'next/navigation';
 import LocationDropdowns from '@/components/form-fields/LocationDropdowns';
 import ProjectDataTable from '@/components/form-fields/ProjectDataTable';
 import StatsCards from '@/components/form-fields/StatsCards';
 
-const ProjectDetailReport = () => {
+const GrantUtilization = () => {
     const { theme } = useTheme();
+    const router = useRouter();
 
     const [reportData, setReportData] = useState<ProjectDetailReportItem[]>([]);
     const [accessibleLocations, setAccessibleLocations] = useState<AccessibleLocations | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [isExporting, setIsExporting] = useState(false);
 
     interface UserDetails {
         username: string;
@@ -55,15 +55,15 @@ const ProjectDetailReport = () => {
 
                 // Get accessible locations based on user's role and location
                 const locations = await getAccessibleLocations();
-                console.log("locations: ", locations);
                 setAccessibleLocations(locations);
 
                 // Load initial project details without filters (will be filtered by user's role on backend)
                 const data = await getProjectDetails();
-                setReportData(data);
+                const filteredData = data.filter(item => item.hasConsentedToEmpowerment === 1);
+                setReportData(filteredData);
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Failed to load data');
-                console.error('Error loading project detail report:', err);
+                console.error('Error loading grant utilization data:', err);
             } finally {
                 setLoading(false);
             }
@@ -78,7 +78,8 @@ const ProjectDetailReport = () => {
             setLoading(true);
             setFilters(newFilters);
             const data = await getProjectDetails(newFilters);
-            setReportData(data);
+            const filteredData = data.filter(item => item.hasConsentedToEmpowerment === 1);
+            setReportData(filteredData);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to apply filters');
         } finally {
@@ -118,82 +119,24 @@ const ProjectDetailReport = () => {
     };
 
     // Filter data based on search term
-    const filteredData = reportData.filter(item =>
-        item.family_beneficiaryName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.family_address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.category.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredData = reportData
+        .filter(item => item.hasConsentedToEmpowerment === 1)
+        .filter(item =>
+            item.family_beneficiaryName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.family_address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.category.toLowerCase().includes(searchTerm.toLowerCase())
+        );
 
-    // Export data to CSV
-    const exportToCSV = () => {
-        setIsExporting(true);
-
-        try {
-            // Define CSV headers
-            const headers = [
-                'Family ID',
-                'Beneficiary Name',
-                'Gender',
-                'Category',
-                'Address',
-                'Main Program',
-                'District',
-                'DS Division',
-                'Zone',
-                'GND'
-            ];
-
-            // Convert data to CSV format
-            const csvContent = [
-                headers.join(','),
-                ...filteredData.map(item => [
-                    `"${item.family_id}"`,
-                    `"${item.family_beneficiaryName}"`,
-                    `"${item.family_beneficiaryGender}"`,
-                    `"${item.category}"`,
-                    `"${item.family_address.replace(/"/g, '""')}"`, // Escape quotes in address
-                    `"${item.family_mainProgram}"`,
-                    `"${item.district_name}"`,
-                    `"${item.ds_name}"`,
-                    `"${item.zone_name}"`,
-                    `"${item.gnd_name}"`
-                ].join(','))
-            ].join('\n');
-
-            // Create and download file
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-
-            if (link.download !== undefined) {
-                const url = URL.createObjectURL(blob);
-                link.setAttribute('href', url);
-
-                // Generate filename with timestamp
-                const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
-                const filterSuffix = Object.keys(filters).length > 0 || searchTerm ? '_filtered' : '_all';
-                link.setAttribute('download', `project_detail_report${filterSuffix}_${timestamp}.csv`);
-
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-
-                // Cleanup
-                URL.revokeObjectURL(url);
-            }
-        } catch (error) {
-            console.error('Error exporting data:', error);
-            setError('Failed to export data');
-        } finally {
-            setIsExporting(false);
-        }
+    // Handle create grant utilization button click
+    const handleCreateGrantUtilization = (familyId: string) => {
+        router.push(`/dashboard/grant-utilization/create/${familyId}`);
     };
 
     if (loading) {
         return (
             <div className={`flex items-center justify-center min-h-screen ${getBgColor()}`}>
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                <span className={`ml-3 text-lg ${getTextColor()}`}>Loading report data...</span>
+                <span className={`ml-3 text-lg ${getTextColor()}`}>Loading grant utilization data...</span>
             </div>
         );
     }
@@ -209,7 +152,7 @@ const ProjectDetailReport = () => {
                             </svg>
                         </div>
                         <div className="ml-3">
-                            <h3 className={`text-sm font-medium ${theme === 'dark' ? 'text-red-100' : 'text-red-800'}`}>Error Loading Report</h3>
+                            <h3 className={`text-sm font-medium ${theme === 'dark' ? 'text-red-100' : 'text-red-800'}`}>Error Loading Data</h3>
                             <p className={`text-sm mt-1 ${theme === 'dark' ? 'text-red-200' : 'text-red-700'}`}>{error}</p>
                         </div>
                     </div>
@@ -233,7 +176,7 @@ const ProjectDetailReport = () => {
             <div className={`rounded-lg shadow-sm p-6 mb-6 ${getCardBgColor()} ${getBorderColor()} border`}>
                 <div className="flex justify-between items-start mb-4">
                     <div className="flex-1">
-                        <h1 className={`text-2xl font-bold mb-2 ${getTextColor()}`}>Project Detail Report</h1>
+                        <h1 className={`text-2xl font-bold mb-2 ${getTextColor()}`}>View All Beneficiaries for Grant Utilization</h1>
 
                         {/* User Info */}
                         {userDetails && (
@@ -243,13 +186,6 @@ const ProjectDetailReport = () => {
                             </div>
                         )}
                     </div>
-
-                    <ExportButton
-                        onClick={exportToCSV}
-                        isExporting={isExporting}
-                        count={filteredData.length}
-                        disabled={isExporting || filteredData.length === 0}
-                    />
                 </div>
 
                 {/* Location Filter Cards */}
@@ -293,13 +229,27 @@ const ProjectDetailReport = () => {
                 wbCount={filteredData.filter(item => item.family_mainProgram === 'WB').length}
             />
 
-            {/* Data Table */}
+            {/* Data Table with Action Column */}
             <ProjectDataTable
-                data={filteredData}
+                data={filteredData.map(item => ({
+                    ...item,
+                    action: (
+                        <button
+                            onClick={() => handleCreateGrantUtilization(item.hh_number || item.nic)}
+                            className={`px-3 py-1 rounded-md text-sm transition-colors ${theme === 'dark'
+                                ? 'bg-blue-600 text-white hover:bg-blue-500'
+                                : 'bg-blue-500 text-white hover:bg-blue-600'
+                                }`}
+                        >
+                            Create
+                        </button>
+                    )
+                }))}
                 totalCount={reportData.length}
+                showActionColumn={true}
             />
         </div>
     );
 };
 
-export default ProjectDetailReport;
+export default GrantUtilization;

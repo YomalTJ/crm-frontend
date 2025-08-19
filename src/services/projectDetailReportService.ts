@@ -8,6 +8,9 @@ export interface ProjectDetailReportItem {
     family_beneficiaryName: string;
     family_beneficiaryGender: string;
     family_address: string;
+    hh_number: string;
+    nic: string;
+    hasConsentedToEmpowerment: number;
     family_mainProgram: 'NP' | 'ADB' | 'WB';
     category: string;
     district_id: number;
