@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
-import { FormData, FormErrors, FormOptions } from '@/types/samurdhi-form.types';
+import { FormData as SamurdhiFormData, FormErrors, FormOptions } from '@/types/samurdhi-form.types';
 import {
     getBeneficiaryByNIC,
     getHouseholdDetailsByReference,
@@ -12,25 +12,30 @@ import { validateSamurdhiForm, convertEmptyToNull, getAswasumaIdByLevel } from '
 import toast from 'react-hot-toast';
 
 interface UseFormHandlersProps {
-    formData: FormData;
-    setFormData: React.Dispatch<React.SetStateAction<FormData>>;
+    formData: SamurdhiFormData;
+    setFormData: React.Dispatch<React.SetStateAction<SamurdhiFormData>>;
     formOptions: FormOptions;
     resetForm: () => void;
+    isEditMode?: boolean;
+    editId?: string;
 }
 
 export const useSamurdhiFormHandlers = ({
     formData,
     setFormData,
     formOptions,
-    resetForm
+    resetForm,
+    isEditMode = false,
+    editId
 }: UseFormHandlersProps) => {
     const [errors, setErrors] = useState<FormErrors>({});
     const [isFetching, setIsFetching] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isFormResetting, setIsFormResetting] = useState(false);
-    const [isExistingBeneficiary, setIsExistingBeneficiary] = useState(false);
+    const [isExistingBeneficiary, setIsExistingBeneficiary] = useState(isEditMode);
     const [isAswasumaHouseholdDisabled, setIsAswasumaHouseholdDisabled] = useState(false);
-    const [showAllFieldsForExistingBeneficiary, setShowAllFieldsForExistingBeneficiary] = useState(false);
+    const [showAllFieldsForExistingBeneficiary, setShowAllFieldsForExistingBeneficiary] = useState(isEditMode);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     const clearError = (fieldName: string) => {
         if (errors[fieldName]) {
@@ -47,7 +52,12 @@ export const useSamurdhiFormHandlers = ({
 
         clearError(name);
 
-        if (name === 'nic') {
+        // Handle field name mapping
+        let fieldName = name;
+        if (name === 'phone') fieldName = 'mobilePhone';
+        if (name === 'gender') fieldName = 'beneficiaryGender';
+
+        if (fieldName === 'nic') {
             setFormData(prev => ({
                 ...prev,
                 nic: value.trim() === '' ? null : value.trim()
@@ -59,15 +69,20 @@ export const useSamurdhiFormHandlers = ({
         if (type === 'date') {
             setFormData(prev => ({
                 ...prev,
-                [name]: value ? value : null
+                [fieldName]: value ? value : null
             }));
             return;
         }
 
         setFormData(prev => ({
             ...prev,
-            [name]: type === 'number' ? parseInt(value) || 0 : value
+            [fieldName]: type === 'number' ? parseInt(value) || 0 : value
         }));
+    };
+
+    const handleFileChange = (file: File | null) => {
+        setSelectedFile(file);
+        clearError('consentLetter');
     };
 
     const handleSelectChange = (name: string, value: string) => {
@@ -108,6 +123,12 @@ export const useSamurdhiFormHandlers = ({
     };
 
     const handleNicLookup = async () => {
+        // In edit mode, don't allow NIC lookup as data is already loaded
+        if (isEditMode) {
+            toast.error('NIC lookup is not available in edit mode');
+            return;
+        }
+
         if (!formData.nic || formData.nic.trim() === '') {
             toast.error('Please enter NIC number');
             return;
@@ -145,12 +166,19 @@ export const useSamurdhiFormHandlers = ({
                 mainProgram: null,
                 aswasumaHouseholdNo: null,
                 beneficiaryName: data.name || '',
-                gender: data.gender || 'Male',
+                beneficiaryGender: data.gender || 'Male', // Updated field name
                 address: data.address || '',
-                phone: data.phone || '',
+                mobilePhone: data.phone || '', // Updated field name
+                telephone: data.telephone || null, // NEW field
                 projectOwnerAge: data.age || 0,
-                male18To60: data.members18To60?.male || 0,
-                female18To60: data.members18To60?.female || 0,
+                hasDisability: data.hasDisability || false, // NEW field
+                disability_id: data.disability_id || null,
+                male16To24: data.male16To24 || 0,
+                female16To24: data.female16To24 || 0,
+                male25To45: data.male25To45 || 0,
+                female25To45: data.female25To45 || 0,
+                male46To60: data.male46To60 || 0,
+                female46To60: data.female46To60 || 0,
                 beneficiary_type_id: data.beneficiary_type_id || '',
                 employment_id: data.employment_id || '',
                 otherOccupation: data.otherOccupation || '',
@@ -170,7 +198,15 @@ export const useSamurdhiFormHandlers = ({
                 health_indicator_id: Array.isArray(data.health_indicator_id) ? data.health_indicator_id : (data.health_indicator_id ? [data.health_indicator_id] : []),
                 domestic_dynamic_id: Array.isArray(data.domestic_dynamic_id) ? data.domestic_dynamic_id : (data.domestic_dynamic_id ? [data.domestic_dynamic_id] : []),
                 community_participation_id: Array.isArray(data.community_participation_id) ? data.community_participation_id : (data.community_participation_id ? [data.community_participation_id] : []),
-                housing_service_id: Array.isArray(data.housing_service_id) ? data.housing_service_id : (data.housing_service_id ? [data.housing_service_id] : [])
+                housing_service_id: Array.isArray(data.housing_service_id) ? data.housing_service_id : (data.housing_service_id ? [data.housing_service_id] : []),
+                wantsAswesumaBankTransfer: data.wantsAswesumaBankTransfer || false,
+                otherBankName: data.otherBankName || null,
+                otherBankBranch: data.otherBankBranch || null,
+                otherBankAccountHolder: data.otherBankAccountHolder || null,
+                otherBankAccountNumber: data.otherBankAccountNumber || null,
+                hasOtherGovernmentSubsidy: data.hasOtherGovernmentSubsidy || false,
+                otherGovernmentInstitution: data.otherGovernmentInstitution || null,
+                otherSubsidyAmount: data.otherSubsidyAmount || null
             }));
         } catch {
             setIsExistingBeneficiary(false);
@@ -182,12 +218,19 @@ export const useSamurdhiFormHandlers = ({
                 mainProgram: null,
                 aswasumaHouseholdNo: null,
                 beneficiaryName: null,
-                gender: null,
+                beneficiaryGender: null, // Updated
                 address: null,
-                phone: null,
+                mobilePhone: null, // Updated
+                telephone: null, // NEW
                 projectOwnerAge: 0,
-                male18To60: 0,
-                female18To60: 0,
+                hasDisability: false, // NEW
+                disability_id: null,
+                male16To24: 0, // NEW
+                female16To24: 0, // NEW
+                male25To45: 0, // NEW
+                female25To45: 0, // NEW
+                male46To60: 0, // NEW
+                female46To60: 0, // NEW
                 aswesuma_cat_id: null,
                 employment_id: null,
                 otherOccupation: null,
@@ -216,17 +259,27 @@ export const useSamurdhiFormHandlers = ({
     };
 
     const handleHouseholdSelection = async (selectedHhNumber: string) => {
+        // In edit mode, don't allow household selection changes if it affects core data
+        if (isEditMode) {
+            toast.error('Household selection is limited in edit mode');
+            return;
+        }
+
         if (!selectedHhNumber) {
             // Clear auto-filled data when no household is selected
             setFormData(prev => ({
                 ...prev,
                 aswasumaHouseholdNo: null,
                 beneficiaryName: null,
-                gender: null,
+                beneficiaryGender: null, // Updated
                 address: null,
                 projectOwnerAge: 0,
-                male18To60: 0,
-                female18To60: 0,
+                male16To24: 0, // NEW
+                female16To24: 0, // NEW
+                male25To45: 0, // NEW
+                female25To45: 0, // NEW
+                male46To60: 0, // NEW
+                female46To60: 0, // NEW
                 aswesuma_cat_id: null
             }));
             return;
@@ -248,9 +301,9 @@ export const useSamurdhiFormHandlers = ({
                         householdData.household.addressLine3
                     ].filter(line => line && line.trim()).join(', ') || '',
                     projectOwnerAge: primaryCitizen.age || 0,
-                    gender: primaryCitizen.gender === 'male' ? 'Male' : 'Female',
+                    beneficiaryGender: primaryCitizen.gender === 'male' ? 'Male' : 'Female',
                     aswesuma_cat_id: getAswasumaIdByLevel(householdData.household.level),
-                    phone: null,
+                    mobilePhone: null,
                     employment_id: null,
                     otherOccupation: null,
                     subsisdy_id: null,
@@ -273,38 +326,49 @@ export const useSamurdhiFormHandlers = ({
 
                 // Calculate household members aged 18-60
                 if (householdData.citizens && householdData.citizens.length > 0) {
-                    let male18To60 = 0;
-                    let female18To60 = 0;
+                    let male16To24 = 0, female16To24 = 0;
+                    let male25To45 = 0, female25To45 = 0;
+                    let male46To60 = 0, female46To60 = 0;
 
                     householdData.citizens.forEach((citizen: any) => {
                         const age = citizen.age;
-                        if (age >= 18 && age <= 60) {
-                            if (citizen.gender === 'male') {
-                                male18To60++;
-                            } else if (citizen.gender === 'female') {
-                                female18To60++;
-                            }
+                        const isMale = citizen.gender === 'male';
+
+                        if (age >= 16 && age <= 24) {
+                            if (isMale) male16To24++; else female16To24++;
+                        } else if (age >= 25 && age <= 45) {
+                            if (isMale) male25To45++; else female25To45++;
+                        } else if (age >= 46 && age <= 60) {
+                            if (isMale) male46To60++; else female46To60++;
                         }
                     });
 
                     setFormData(prev => ({
                         ...prev,
-                        male18To60,
-                        female18To60
+                        male16To24,
+                        female16To24,
+                        male25To45,
+                        female25To45,
+                        male46To60,
+                        female46To60
                     }));
                 }
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error fetching household details:', error);
             setFormData(prev => ({
                 ...prev,
                 aswasumaHouseholdNo: null,
                 beneficiaryName: null,
-                gender: null,
+                beneficiaryGender: null,
                 address: null,
                 projectOwnerAge: 0,
-                male18To60: 0,
-                female18To60: 0,
+                male16To24: 0,
+                female16To24: 0,
+                male25To45: 0,
+                female25To45: 0,
+                male46To60: 0,
+                female46To60: 0,
                 aswesuma_cat_id: null
             }));
             toast.error('Failed to fetch household details. Please try again.');
@@ -314,7 +378,7 @@ export const useSamurdhiFormHandlers = ({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const validation = validateSamurdhiForm(formData, formOptions);
+        const validation = validateSamurdhiForm(formData, formOptions, selectedFile);
         setErrors(validation.errors);
 
         if (!validation.isValid) {
@@ -330,6 +394,8 @@ export const useSamurdhiFormHandlers = ({
         setIsSubmitting(true);
 
         try {
+            const submitFormData = new FormData();
+
             const payload: SamurdhiFamilyPayload = {
                 district_id: formData.district.id || "1",
                 ds_id: formData.dsDivision.id || "1",
@@ -338,22 +404,28 @@ export const useSamurdhiFormHandlers = ({
                 beneficiary_type_id: formData.beneficiary_type_id as string,
                 mainProgram: formData.mainProgram ?? "",
                 hasConsentedToEmpowerment: formData.hasConsentedToEmpowerment,
-                hasObtainedConsentLetter: formData.hasObtainedConsentLetter,
+                consentLetterPath: null,
                 refusal_reason_id: convertEmptyToNull(formData.refusal_reason_id),
                 consentGivenAt: formData.consentGivenAt ? new Date(formData.consentGivenAt).toISOString() : null,
-                areaClassification: formData.areaClassification as any,
+                areaClassification: formData.areaClassification,
                 aswasumaHouseholdNo: convertEmptyToNull(formData.aswasumaHouseholdNo),
                 nic: convertEmptyToNull(formData.nic),
                 beneficiaryName: convertEmptyToNull(formData.beneficiaryName),
-                beneficiaryGender: convertEmptyToNull(formData.gender),
+                beneficiaryGender: convertEmptyToNull(formData.beneficiaryGender), // Updated
                 address: convertEmptyToNull(formData.address),
-                phone: convertEmptyToNull(formData.phone),
+                mobilePhone: convertEmptyToNull(formData.mobilePhone), // Updated
+                telephone: convertEmptyToNull(formData.telephone), // NEW
                 projectOwnerName: convertEmptyToNull(formData.projectOwnerName),
                 projectOwnerAge: formData.projectOwnerAge || 0,
                 projectOwnerGender: convertEmptyToNull(formData.projectOwnerGender),
+                hasDisability: formData.hasDisability, // NEW
                 disability_id: convertEmptyToNull(formData.disability_id),
-                male18To60: formData.male18To60 || 0,
-                female18To60: formData.female18To60 || 0,
+                male16To24: formData.male16To24 || 0,
+                female16To24: formData.female16To24 || 0,
+                male25To45: formData.male25To45 || 0,
+                female25To45: formData.female25To45 || 0,
+                male46To60: formData.male46To60 || 0,
+                female46To60: formData.female46To60 || 0,
                 employment_id: convertEmptyToNull(formData.employment_id),
                 otherOccupation: convertEmptyToNull(formData.otherOccupation),
                 subsisdy_id: convertEmptyToNull(formData.subsisdy_id),
@@ -380,23 +452,51 @@ export const useSamurdhiFormHandlers = ({
                 samurdhiBankAccountName: convertEmptyToNull(formData.samurdhiBankAccountName),
                 samurdhiBankAccountNumber: convertEmptyToNull(formData.samurdhiBankAccountNumber),
                 samurdhiBankName: convertEmptyToNull(formData.samurdhiBankName),
-                samurdhiBankAccountType: convertEmptyToNull(formData.samurdhiBankAccountType)
+                samurdhiBankAccountType: convertEmptyToNull(formData.samurdhiBankAccountType),
+                wantsAswesumaBankTransfer: formData.wantsAswesumaBankTransfer,
+                otherBankName: convertEmptyToNull(formData.otherBankName),
+                otherBankBranch: convertEmptyToNull(formData.otherBankBranch),
+                otherBankAccountHolder: convertEmptyToNull(formData.otherBankAccountHolder),
+                otherBankAccountNumber: convertEmptyToNull(formData.otherBankAccountNumber),
+                hasOtherGovernmentSubsidy: formData.hasOtherGovernmentSubsidy,
+                otherGovernmentInstitution: convertEmptyToNull(formData.otherGovernmentInstitution),
+                otherSubsidyAmount: formData.otherSubsidyAmount || null
             };
 
+            // Add JSON payload
+            Object.entries(payload).forEach(([key, value]) => {
+                if (Array.isArray(value)) {
+                    submitFormData.append(key, JSON.stringify(value));
+                } else {
+                    submitFormData.append(key, value?.toString() || '');
+                }
+            });
+
+            // Add file if selected
+            if (selectedFile) {
+                submitFormData.append('consentLetter', selectedFile);
+            }
+
             let response;
-            if (isExistingBeneficiary) {
+            if (isEditMode) {
+                // Use edit ID (NIC or household number) for update
+                if (!editId) {
+                    throw new Error("Edit ID is required for updating beneficiary");
+                }
+                response = await updateSamurdhiFamily(editId, payload, selectedFile || undefined);
+            } else if (isExistingBeneficiary) {
                 if (!formData.nic) {
                     throw new Error("NIC is required for updating existing beneficiary");
                 }
-                response = await updateSamurdhiFamily(formData.nic, payload);
+                response = await updateSamurdhiFamily(formData.nic, payload, selectedFile || undefined);
             } else {
-                response = await createSamurdhiFamily(payload);
+                response = await createSamurdhiFamily(payload, selectedFile || undefined);
             }
 
             if (response && response.id) {
                 setIsFormResetting(true);
 
-                const successMessage = isExistingBeneficiary
+                const successMessage = isEditMode || isExistingBeneficiary
                     ? 'Beneficiary updated successfully!'
                     : 'Beneficiary created successfully!';
 
@@ -422,43 +522,54 @@ export const useSamurdhiFormHandlers = ({
                     },
                 });
 
-                // Reset form after successful submission
-                setTimeout(() => {
-                    resetForm();
-                    setIsExistingBeneficiary(false);
-                    setErrors({});
-                    setIsAswasumaHouseholdDisabled(false);
-                    setShowAllFieldsForExistingBeneficiary(false);
+                // Handle post-submission logic based on mode
+                if (isEditMode) {
+                    // In edit mode, redirect back to the previous page
+                    setTimeout(() => {
+                        setIsFormResetting(false);
+                        window.history.back();
+                    }, 2000);
+                } else {
+                    // Reset form after successful submission in create mode
+                    setTimeout(() => {
+                        resetForm();
+                        setIsExistingBeneficiary(false);
+                        setErrors({});
+                        setIsAswasumaHouseholdDisabled(false);
+                        setShowAllFieldsForExistingBeneficiary(false);
+                        setSelectedFile(null);
 
-                    window.scrollTo({
-                        top: 0,
-                        behavior: 'smooth'
-                    });
+                        window.scrollTo({
+                            top: 0,
+                            behavior: 'smooth'
+                        });
 
-                    setIsFormResetting(false);
+                        setIsFormResetting(false);
 
-                    toast.success('Form is ready for next entry!', {
-                        duration: 3000,
-                        style: {
-                            background: '#8B5CF6',
-                            color: 'white',
-                            fontSize: '14px',
-                            fontWeight: '500',
-                            minHeight: '60px',
-                            padding: '16px 20px',
-                            display: 'flex',
-                            alignItems: 'center',
-                        },
-                    });
-                }, 5000);
+                        toast.success('Form is ready for next entry!', {
+                            duration: 3000,
+                            style: {
+                                background: '#8B5CF6',
+                                color: 'white',
+                                fontSize: '14px',
+                                fontWeight: '500',
+                                minHeight: '60px',
+                                padding: '16px 20px',
+                                display: 'flex',
+                                alignItems: 'center',
+                            },
+                        });
+                    }, 5000);
+                }
             } else {
                 throw new Error(response?.message || 'Unexpected response from server');
             }
-        } catch (error: any) {
+            setSelectedFile(null);
+        } catch (error: unknown) {
             console.error('Error submitting form:', error);
-            const errorMessage = error?.response?.data?.message ||
-                error?.message ||
-                'An error occurred while submitting the form';
+            const errorMessage = error instanceof Error
+                ? error.message
+                : 'An error occurred while submitting the form';
 
             toast.error(errorMessage, {
                 duration: 6000,
@@ -495,12 +606,15 @@ export const useSamurdhiFormHandlers = ({
         setIsAswasumaHouseholdDisabled,
         showAllFieldsForExistingBeneficiary,
         setShowAllFieldsForExistingBeneficiary,
+        selectedFile,
+        handleFileChange,
         handleInputChange,
         handleSelectChange,
         handleRadioChange,
         handleCheckboxChange,
         handleNicLookup,
         handleHouseholdSelection,
+        setSelectedFile,
         handleSubmit
     };
 };

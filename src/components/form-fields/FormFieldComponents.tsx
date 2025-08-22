@@ -29,6 +29,7 @@ interface FormFieldProps {
     isLoadingHouseholdNumbers: boolean;
     isFetching: boolean;
     showAllFieldsForExistingBeneficiary: boolean;
+    t: (key: string) => string;
     handlers: {
         handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
         handleSelectChange: (name: string, value: string) => void;
@@ -37,6 +38,16 @@ interface FormFieldProps {
         handleNicLookup: () => void;
         handleHouseholdSelection: (value: string) => void;
     };
+}
+
+interface FileUploadProps {
+    formData: FormData;
+    errors: FormErrors;
+    t: (key: string) => string;
+    handlers: {
+        handleFileChange: (file: File | null) => void;
+    };
+    selectedFile: File | null;
 }
 
 const ErrorMessage = ({ error }: { error?: string }) => {
@@ -48,45 +59,46 @@ const ErrorMessage = ({ error }: { error?: string }) => {
     );
 };
 
-export const LocationFields: React.FC<Pick<FormFieldProps, 'formData'>> = ({ formData }) => (
+export const LocationFields: React.FC<Pick<FormFieldProps, 'formData' | 't'>> = ({ formData, t }) => (
     <>
         <div>
-            <Label>District</Label>
+            <Label>{t('samurdhiForm.district')}</Label>
             <Input type="text" value={formData.district.name} readOnly />
             <input type="hidden" name="district_id" value={formData.district.id} />
         </div>
 
         <div>
-            <Label>Divisional Secretariat Division</Label>
+            <Label>{t('samurdhiForm.divisionalSecretariat')}</Label>
             <Input type="text" value={formData.dsDivision.name} readOnly />
             <input type="hidden" name="ds_id" value={formData.dsDivision.id} />
         </div>
 
         <div>
-            <Label>Samurdhi Bank</Label>
+            <Label>{t('samurdhiForm.samurdhiBank')}</Label>
             <Input type="text" value={formData.zone.name} readOnly />
             <input type="hidden" name="zone_id" value={formData.zone.id} />
         </div>
 
         <div>
-            <Label>Grama Nildhari Division</Label>
+            <Label>{t('samurdhiForm.gnDivision')}</Label>
             <Input type="text" value={formData.gnd.name} readOnly />
             <input type="hidden" name="gnd_id" value={formData.gnd.id} />
         </div>
     </>
 );
 
-export const MainProgramField: React.FC<Pick<FormFieldProps, 'formData' | 'errors' | 'handlers'>> = ({
+export const MainProgramField: React.FC<Pick<FormFieldProps, 'formData' | 'errors' | 'handlers' | 't'>> = ({
     formData,
     errors,
-    handlers
+    handlers,
+    t
 }) => (
     <div>
-        <Label>Main Program <span className="text-red-500">*</span></Label>
+        <Label>{t('samurdhiForm.mainProgram')} <span className="text-red-500">*</span></Label>
         <div className="relative">
             <Select
                 options={MAIN_PROGRAM_OPTIONS}
-                placeholder="Select Main Program"
+                placeholder={t('samurdhiForm.selectMainProgram')}
                 onChange={(value) => {
                     const selectedValue = value && value !== '' && value !== 'null' ? value : null;
                     handlers.handleSelectChange('mainProgram', selectedValue || '');
@@ -102,20 +114,54 @@ export const MainProgramField: React.FC<Pick<FormFieldProps, 'formData' | 'error
     </div>
 );
 
-export const ConsentFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'handlers'>> = ({
+// Update ImpactEvaluationField component
+export const ImpactEvaluationField: React.FC<Pick<FormFieldProps, 'formData' | 'handlers' | 't'>> = ({
+    formData,
+    handlers,
+    t
+}) => {
+    if (formData.mainProgram !== 'WB') return null;
+
+    return (
+        <div className="space-y-4">
+            <Label>{t('samurdhiForm.impactEvaluation')}</Label>
+            <div className="flex flex-col gap-3">
+                <Radio
+                    id="impact-evaluation-yes"
+                    name="isImpactEvaluation"
+                    value="true"
+                    checked={formData.isImpactEvaluation === true}
+                    onChange={() => handlers.handleRadioChange('isImpactEvaluation', 'true')}
+                    label={t('common.yes')}
+                />
+                <Radio
+                    id="impact-evaluation-no"
+                    name="isImpactEvaluation"
+                    value="false"
+                    checked={formData.isImpactEvaluation === false}
+                    onChange={() => handlers.handleRadioChange('isImpactEvaluation', 'false')}
+                    label={t('common.no')}
+                />
+            </div>
+        </div>
+    );
+};
+
+// Update ConsentFields component
+export const ConsentFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'handlers' | 't'>> = ({
     formData,
     formOptions,
     errors,
-    handlers
+    handlers,
+    t
 }) => (
     <div className="space-y-4">
-        <Label>Empowerment Program Consent</Label>
+        <Label>{t('samurdhiForm.empowermentConsent')}</Label>
 
         <div className="flex flex-col gap-6">
-            {/* Consent to participate */}
             <div className="flex flex-col gap-4">
                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Consent to participate in the empowerment program
+                    {t('samurdhiForm.consentToParticipate')}
                 </Label>
                 <div className="flex flex-col gap-3">
                     <Radio
@@ -125,10 +171,9 @@ export const ConsentFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOpti
                         checked={formData.hasConsentedToEmpowerment === true}
                         onChange={() => {
                             handlers.handleRadioChange('hasConsentedToEmpowerment', 'true');
-                            // Clear refusal reason when selecting Yes
                             handlers.handleSelectChange('refusal_reason_id', '');
                         }}
-                        label="Yes"
+                        label={t('common.yes')}
                     />
                     <Radio
                         id="consent-no"
@@ -137,21 +182,19 @@ export const ConsentFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOpti
                         checked={formData.hasConsentedToEmpowerment === false}
                         onChange={() => {
                             handlers.handleRadioChange('hasConsentedToEmpowerment', 'false');
-                            // Clear consent date when selecting No
                             handlers.handleInputChange({
                                 target: { name: 'consentGivenAt', value: '' }
                             } as React.ChangeEvent<HTMLInputElement>);
                         }}
-                        label="No"
+                        label={t('common.no')}
                     />
                 </div>
                 <ErrorMessage error={errors.hasConsentedToEmpowerment} />
             </div>
 
-            {/* Consent date - only show when consent is Yes */}
             {formData.hasConsentedToEmpowerment === true && (
                 <div className="flex flex-col gap-2">
-                    <Label>Consent Given Date <span className="text-red-500">*</span></Label>
+                    <Label>{t('samurdhiForm.consentGivenDate')} <span className="text-red-500">*</span></Label>
                     <div className="relative max-w-xs">
                         <Input
                             type="date"
@@ -199,17 +242,16 @@ export const ConsentFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOpti
                 </div>
             )}
 
-            {/* Refusal reason - only show when consent is No */}
             {formData.hasConsentedToEmpowerment === false && (
                 <div>
-                    <Label>Refusal Reason <span className="text-red-500">*</span></Label>
+                    <Label>{t('samurdhiForm.refusalReason')} <span className="text-red-500">*</span></Label>
                     <div className="relative">
                         <Select
                             options={formOptions.refusalReasons.map(reason => ({
                                 value: reason.id,
                                 label: `${reason.reason_si} - ${reason.reason_ta} - ${reason.reason_en}`
                             }))}
-                            placeholder="Select refusal reason"
+                            placeholder={t('samurdhiForm.selectRefusalReason')}
                             onChange={(value) => handlers.handleSelectChange('refusal_reason_id', value)}
                             className={`dark:bg-dark-900 ${errors.refusal_reason_id ? 'border-red-500' : ''}`}
                             value={formData.refusal_reason_id || ''}
@@ -221,47 +263,75 @@ export const ConsentFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOpti
                     <ErrorMessage error={errors.refusal_reason_id} />
                 </div>
             )}
-
-            {/* Consent letter obtained */}
-            <div className="flex flex-col gap-4">
-                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Consent letter obtained
-                </Label>
-                <div className="flex flex-col gap-3">
-                    <Radio
-                        id="consent-letter-yes"
-                        name="hasObtainedConsentLetter"
-                        value="true"
-                        checked={formData.hasObtainedConsentLetter === true}
-                        onChange={() => handlers.handleRadioChange('hasObtainedConsentLetter', 'true')}
-                        label="Yes"
-                    />
-                    <Radio
-                        id="consent-letter-no"
-                        name="hasObtainedConsentLetter"
-                        value="false"
-                        checked={formData.hasObtainedConsentLetter === false}
-                        onChange={() => handlers.handleRadioChange('hasObtainedConsentLetter', 'false')}
-                        label="No"
-                    />
-                </div>
-                <ErrorMessage error={errors.hasObtainedConsentLetter} />
-            </div>
         </div>
     </div>
 );
 
-export const AreaClassificationField: React.FC<Pick<FormFieldProps, 'formData' | 'handlers'>> = ({
+// Update ConsentLetterUpload component
+export const ConsentLetterUpload: React.FC<FileUploadProps & { t: (key: string) => string }> = ({
     formData,
-    handlers
+    errors,
+    handlers,
+    selectedFile,
+    t
+}) => {
+    if (formData.hasConsentedToEmpowerment !== false) {
+        return null;
+    }
+
+    const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0] || null;
+        handlers.handleFileChange(file);
+    };
+
+    return (
+        <div className="space-y-2">
+            <Label>{t('samurdhiForm.uploadRejectionLetter')} <span className="text-red-500">*</span></Label>
+            <div className="flex flex-col gap-2">
+                <input
+                    type="file"
+                    accept=".pdf"
+                    onChange={handleFileInput}
+                    className={`block w-full text-sm text-gray-500 dark:text-gray-400
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-md file:border-0
+                        file:text-sm file:font-medium
+                        file:bg-blue-50 file:text-blue-700
+                        hover:file:bg-blue-100
+                        dark:file:bg-blue-900 dark:file:text-blue-300
+                        dark:hover:file:bg-blue-800
+                        ${errors.consentLetter ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}
+                        border rounded-md p-2`}
+                />
+
+                {selectedFile && (
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                        {t('samurdhiForm.selectedFile')}: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                    </div>
+                )}
+
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {t('samurdhiForm.fileUploadNote')}
+                </p>
+            </div>
+            <ErrorMessage error={errors.consentLetter} />
+        </div>
+    );
+};
+
+// Update AreaClassificationField component
+export const AreaClassificationField: React.FC<Pick<FormFieldProps, 'formData' | 'handlers' | 't'>> = ({
+    formData,
+    handlers,
+    t
 }) => (
     <div>
-        <Label>Area Classification</Label>
+        <Label>{t('samurdhiForm.areaClassification')}</Label>
         <div className="flex flex-col gap-4">
             {[
-                { value: 'නැගරික/ Urban/ நகர்புற', label: 'නැගරික/ Urban/ நகர்புற' },
-                { value: 'ග්‍රාමීය/ Rural/ கிராமப்புற', label: 'ග්‍රාමීය/ Rural/ கிராமப்புற' },
-                { value: 'වතු/ Estates / எஸ்டேட்ஸ்', label: 'වතු/ Estates / எஸ்டேட்ஸ்' }
+                { value: 'නාගරික/ Urban/ நகர்ப்புற', label: `${t('samurdhiForm.urban')}` },
+                { value: 'ග්‍රාමීය/ Rural/ கிராமப்புறம்', label: `${t('samurdhiForm.rural')}` },
+                { value: 'වතු/ Estates / எஸ்டேட்ஸ்', label: `${t('samurdhiForm.estates')}` }
             ].map((option) => (
                 <Radio
                     key={option.value}
@@ -277,14 +347,16 @@ export const AreaClassificationField: React.FC<Pick<FormFieldProps, 'formData' |
     </div>
 );
 
-export const BeneficiaryTypeField: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'handlers'>> = ({
+// Update BeneficiaryTypeField component
+export const BeneficiaryTypeField: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'handlers' | 't'>> = ({
     formData,
     formOptions,
     errors,
-    handlers
+    handlers,
+    t
 }) => (
     <div className="flex flex-col gap-4">
-        <Label>Are you a Samurdhi beneficiary?/ Aswasuma beneficiary?/low-income earner?</Label>
+        <Label>{t('samurdhiForm.beneficiaryType')}</Label>
         <div className='flex flex-col md:flex-row gap-5 md:gap-20'>
             {formOptions.beneficiaryStatuses.map((status) => (
                 <Radio
@@ -308,20 +380,22 @@ export const BeneficiaryTypeField: React.FC<Pick<FormFieldProps, 'formData' | 'f
     </div>
 );
 
-export const HouseholdNumberField: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'householdNumbers' | 'isLoadingHouseholdNumbers' | 'handlers'>> = ({
+// Update HouseholdNumberField component
+export const HouseholdNumberField: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'householdNumbers' | 'isLoadingHouseholdNumbers' | 'handlers' | 't'>> = ({
     formData,
     formOptions,
     errors,
     householdNumbers,
     isLoadingHouseholdNumbers,
-    handlers
+    handlers,
+    t
 }) => {
     if (!shouldShowHouseholdField(formData, formOptions)) return null;
 
     return (
         <div>
             <Label>
-                Aswasuma household number
+                {t('samurdhiForm.householdNumber')}
                 {isHouseholdRequired(formData, formOptions) && <span className="text-red-500"> *</span>}
             </Label>
             <div className="relative">
@@ -332,8 +406,8 @@ export const HouseholdNumberField: React.FC<Pick<FormFieldProps, 'formData' | 'f
                     }))}
                     placeholder={
                         householdNumbers.length === 0
-                            ? 'No household numbers available for this GN division'
-                            : 'Select household number'
+                            ? t('samurdhiForm.noHouseholdNumbers')
+                            : t('samurdhiForm.selectHouseholdNumber')
                     }
                     onChange={handlers.handleHouseholdSelection}
                     className={`dark:bg-dark-900 ${errors.aswasumaHouseholdNo ? 'border-red-500' : ''}`}
@@ -351,12 +425,14 @@ export const HouseholdNumberField: React.FC<Pick<FormFieldProps, 'formData' | 'f
     );
 };
 
-export const NicField: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'isFetching' | 'handlers'>> = ({
+// Update NicField component
+export const NicField: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'isFetching' | 'handlers' | 't'>> = ({
     formData,
     formOptions,
     errors,
     isFetching,
-    handlers
+    handlers,
+    t
 }) => {
     if (!shouldShowNicField(formData, formOptions)) return null;
 
@@ -364,7 +440,7 @@ export const NicField: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' 
         <div className="flex flex-col md:flex-row gap-2 md:items-end">
             <div className="md:flex-1">
                 <Label>
-                    National Identity Card Number
+                    {t('samurdhiForm.nicNumber')}
                     {isNicRequired(formData, formOptions) && <span className="text-red-500"> *</span>}
                 </Label>
                 <Input
@@ -384,20 +460,22 @@ export const NicField: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' 
                 className="h-11 w-full md:w-auto flex items-center gap-2"
             >
                 {isFetching && <LoadingSpinner size="sm" color="white" />}
-                {isFetching ? 'Fetching...' : 'Get Details'}
+                {isFetching ? t('samurdhiForm.fetching') : t('samurdhiForm.getDetails')}
             </Button>
         </div>
     );
 };
 
-export const BasicInfoFields: React.FC<Pick<FormFieldProps, 'formData' | 'errors' | 'handlers'>> = ({
+// Update BasicInfoFields component
+export const BasicInfoFields: React.FC<Pick<FormFieldProps, 'formData' | 'errors' | 'handlers' | 't'>> = ({
     formData,
     errors,
-    handlers
+    handlers,
+    t
 }) => (
     <>
         <div>
-            <Label>Name of the Beneficiary</Label>
+            <Label>{t('samurdhiForm.beneficiaryName')}</Label>
             <Input
                 type="text"
                 name="beneficiaryName"
@@ -409,22 +487,22 @@ export const BasicInfoFields: React.FC<Pick<FormFieldProps, 'formData' | 'errors
         </div>
 
         <div className="flex flex-col gap-4">
-            <Label>Gender</Label>
+            <Label>{t('samurdhiForm.gender')}</Label>
             {['Female', 'Male', 'Other'].map(gender => (
                 <Radio
                     key={gender}
                     id={`gender-${gender.toLowerCase()}`}
-                    name="gender"
+                    name="beneficiaryGender"
                     value={gender}
-                    checked={formData.gender === gender}
-                    onChange={() => handlers.handleRadioChange('gender', gender)}
-                    label={gender}
+                    checked={formData.beneficiaryGender === gender}
+                    onChange={() => handlers.handleRadioChange('beneficiaryGender', gender)}
+                    label={t(`common.${gender.toLowerCase()}`)}
                 />
             ))}
         </div>
 
         <div>
-            <Label>Address</Label>
+            <Label>{t('samurdhiForm.address')}</Label>
             <Input
                 type="text"
                 name="address"
@@ -436,28 +514,40 @@ export const BasicInfoFields: React.FC<Pick<FormFieldProps, 'formData' | 'errors
         </div>
 
         <div>
-            <Label>Phone Number</Label>
+            <Label>{t('samurdhiForm.mobilePhone')}</Label>
             <Input
                 type="text"
-                name="phone"
-                value={formData.phone || ""}
+                name="mobilePhone"
+                value={formData.mobilePhone || ""}
                 onChange={handlers.handleInputChange}
-                className={errors.phone ? 'border-red-500' : ''}
+                className={errors.mobilePhone ? 'border-red-500' : ''}
             />
-            <ErrorMessage error={errors.phone} />
+            <ErrorMessage error={errors.mobilePhone} />
+        </div>
+
+        <div>
+            <Label>{t('samurdhiForm.telephone')}</Label>
+            <Input
+                type="text"
+                name="telephone"
+                value={formData.telephone || ""}
+                onChange={handlers.handleInputChange}
+            />
         </div>
     </>
 );
 
-export const ProjectOwnerFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'handlers'>> = ({
+// Update ProjectOwnerFields component
+export const ProjectOwnerFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'handlers' | 't'>> = ({
     formData,
     formOptions,
     errors,
-    handlers
+    handlers,
+    t
 }) => (
     <>
         <div>
-            <Label>Project Owner Name</Label>
+            <Label>{t('samurdhiForm.projectOwnerName')}</Label>
             <Input
                 type="text"
                 name="projectOwnerName"
@@ -467,7 +557,7 @@ export const ProjectOwnerFields: React.FC<Pick<FormFieldProps, 'formData' | 'for
         </div>
 
         <div className="flex flex-col gap-4">
-            <Label>Project Owner Gender</Label>
+            <Label>{t('samurdhiForm.projectOwnerGender')}</Label>
             {['Female', 'Male', 'Other'].map(gender => (
                 <Radio
                     key={gender}
@@ -476,13 +566,13 @@ export const ProjectOwnerFields: React.FC<Pick<FormFieldProps, 'formData' | 'for
                     value={gender}
                     checked={formData.projectOwnerGender === gender}
                     onChange={() => handlers.handleRadioChange('projectOwnerGender', gender)}
-                    label={gender}
+                    label={t(`common.${gender.toLowerCase()}`)}
                 />
             ))}
         </div>
 
         <div>
-            <Label>Age of Project Owner</Label>
+            <Label>{t('samurdhiForm.projectOwnerAge')}</Label>
             <Input
                 type="number"
                 name="projectOwnerAge"
@@ -493,59 +583,157 @@ export const ProjectOwnerFields: React.FC<Pick<FormFieldProps, 'formData' | 'for
             <ErrorMessage error={errors.projectOwnerAge} />
         </div>
 
-        <div>
-            <Label>Disability (if any)</Label>
-            <div className="relative">
-                <Select
-                    options={[
-                        { value: '', label: 'No disability' },
-                        ...formOptions.disabilities.map(disability => ({
-                            value: disability.disabilityId,
-                            label: `${disability.nameSi} - ${disability.nameTa} - ${disability.nameEN}`
-                        }))
-                    ]}
-                    placeholder="Select disability status"
-                    onChange={(value) => handlers.handleSelectChange('disability_id', value)}
-                    className="dark:bg-dark-900"
-                    value={formData.disability_id || ''}
+        <div className="flex flex-col gap-4">
+            <Label>{t('samurdhiForm.hasDisability')}</Label>
+            <div className="flex flex-col gap-3">
+                <Radio
+                    id="disability-yes"
+                    name="hasDisability"
+                    value="true"
+                    checked={formData.hasDisability === true}
+                    onChange={() => handlers.handleRadioChange('hasDisability', 'true')}
+                    label={t('common.yes')}
+                />
+                <Radio
+                    id="disability-no"
+                    name="hasDisability"
+                    value="false"
+                    checked={formData.hasDisability === false}
+                    onChange={() => {
+                        handlers.handleRadioChange('hasDisability', 'false');
+                        handlers.handleSelectChange('disability_id', '');
+                    }}
+                    label={t('common.no')}
                 />
             </div>
         </div>
+
+        {formData.hasDisability && (
+            <div>
+                <Label>{t('samurdhiForm.disabilityType')} <span className="text-red-500">*</span></Label>
+                <div className="relative">
+                    <Select
+                        options={formOptions.disabilities.map(disability => ({
+                            value: disability.disabilityId,
+                            label: `${disability.nameSi} - ${disability.nameTa} - ${disability.nameEN}`
+                        }))}
+                        placeholder={t('samurdhiForm.selectDisabilityType')}
+                        onChange={(value) => handlers.handleSelectChange('disability_id', value)}
+                        className={`dark:bg-dark-900 ${errors.disability_id ? 'border-red-500' : ''}`}
+                        value={formData.disability_id || ''}
+                    />
+                    <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                        <ChevronDownIcon />
+                    </span>
+                </div>
+                <ErrorMessage error={errors.disability_id} />
+            </div>
+        )}
     </>
 );
 
-export const HouseholdMembersField: React.FC<Pick<FormFieldProps, 'formData' | 'handlers'>> = ({
+// Update HouseholdMembersField component
+export const HouseholdMembersField: React.FC<Pick<FormFieldProps, 'formData' | 'handlers' | 't'>> = ({
     formData,
-    handlers
+    handlers,
+    t
 }) => (
-    <div>
-        <Label>No. of Household Members Aged 18–60</Label>
-        <Label>Female</Label>
-        <Input
-            type="number"
-            name="female18To60"
-            value={formData.female18To60 || 0}
-            onChange={handlers.handleInputChange}
-        />
-        <Label>Male</Label>
-        <Input
-            type="number"
-            name="male18To60"
-            value={formData.male18To60 || 0}
-            onChange={handlers.handleInputChange}
-        />
+    <div className="space-y-6">
+        <Label className="text-lg font-medium">{t('samurdhiForm.householdMembers')}</Label>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+                <h4 className="text-md font-medium text-gray-800 dark:text-gray-200">{t('samurdhiForm.age16To24')}</h4>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <Label>{t('common.male')}</Label>
+                        <Input
+                            type="number"
+                            name="male16To24"
+                            value={formData.male16To24 || 0}
+                            onChange={handlers.handleInputChange}
+                            min="0"
+                        />
+                    </div>
+                    <div>
+                        <Label>{t('common.female')}</Label>
+                        <Input
+                            type="number"
+                            name="female16To24"
+                            value={formData.female16To24 || 0}
+                            onChange={handlers.handleInputChange}
+                            min="0"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <div className="space-y-4">
+                <h4 className="text-md font-medium text-gray-800 dark:text-gray-200">{t('samurdhiForm.age25To45')}</h4>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <Label>{t('common.male')}</Label>
+                        <Input
+                            type="number"
+                            name="male25To45"
+                            value={formData.male25To45 || 0}
+                            onChange={handlers.handleInputChange}
+                            min="0"
+                        />
+                    </div>
+                    <div>
+                        <Label>{t('common.female')}</Label>
+                        <Input
+                            type="number"
+                            name="female25To45"
+                            value={formData.female25To45 || 0}
+                            onChange={handlers.handleInputChange}
+                            min="0"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <div className="space-y-4">
+                <h4 className="text-md font-medium text-gray-800 dark:text-gray-200">{t('samurdhiForm.age46To60')}</h4>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <Label>{t('common.male')}</Label>
+                        <Input
+                            type="number"
+                            name="male46To60"
+                            value={formData.male46To60 || 0}
+                            onChange={handlers.handleInputChange}
+                            min="0"
+                        />
+                    </div>
+                    <div>
+                        <Label>{t('common.female')}</Label>
+                        <Input
+                            type="number"
+                            name="female46To60"
+                            value={formData.female46To60 || 0}
+                            onChange={handlers.handleInputChange}
+                            min="0"
+                        />
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 );
 
-export const EmploymentFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'handlers'>> = ({
+// Update EmploymentFields component
+export const EmploymentFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'handlers' | 't'>> = ({
     formData,
     formOptions,
     errors,
-    handlers
+    handlers,
+    t
 }) => (
     <>
         <div className="space-y-2">
-            <Label>Current Employment</Label>
+            <Label>{t('samurdhiForm.currentEmployment')}</Label>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {formOptions.employmentOptions.map((option) => (
                     <Radio
@@ -564,7 +752,7 @@ export const EmploymentFields: React.FC<Pick<FormFieldProps, 'formData' | 'formO
         </div>
 
         <div>
-            <Label>Other Occupation (if any)</Label>
+            <Label>{t('samurdhiForm.otherOccupation')}</Label>
             <Input
                 type="text"
                 name="otherOccupation"
@@ -575,21 +763,23 @@ export const EmploymentFields: React.FC<Pick<FormFieldProps, 'formData' | 'formO
     </>
 );
 
-export const BenefitsFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'handlers'>> = ({
+// Update BenefitsFields component
+export const BenefitsFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'handlers' | 't'>> = ({
     formData,
     formOptions,
-    handlers
+    handlers,
+    t
 }) => (
     <>
         <div>
-            <Label>Samurdhi subsidy received</Label>
+            <Label>{t('samurdhiForm.samurdhiSubsidy')}</Label>
             <div className="relative">
                 <Select
                     options={formOptions.subsidyOptions.map(option => ({
                         value: option.subsisdy_id,
                         label: formatAmount(option.amount)
                     }))}
-                    placeholder="Select Subsidy Amount"
+                    placeholder={t('samurdhiForm.selectSubsidyAmount')}
                     onChange={(value) => handlers.handleSelectChange('subsisdy_id', value)}
                     className="dark:bg-dark-900"
                     value={formData.subsisdy_id || ""}
@@ -601,14 +791,14 @@ export const BenefitsFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOpt
         </div>
 
         <div>
-            <Label>Aswasuma category</Label>
+            <Label>{t('samurdhiForm.aswasumaCategory')}</Label>
             <div className="relative">
                 <Select
                     options={formOptions.aswasumaCategories.map(category => ({
                         value: category.aswesuma_cat_id,
                         label: formatCategoryLabel(category)
                     }))}
-                    placeholder="Select Aswasuma Category"
+                    placeholder={t('samurdhiForm.selectAswasumaCategory')}
                     onChange={(value) => handlers.handleSelectChange('aswesuma_cat_id', value)}
                     className="dark:bg-dark-900"
                     value={formData.aswesuma_cat_id || ""}
@@ -621,14 +811,16 @@ export const BenefitsFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOpt
     </>
 );
 
-export const EmpowermentField: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'handlers'>> = ({
+// Update EmpowermentField component
+export const EmpowermentField: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'handlers' | 't'>> = ({
     formData,
     formOptions,
     errors,
-    handlers
+    handlers,
+    t
 }) => (
     <div className="space-y-2">
-        <Label>What is Empowerment Dimension</Label>
+        <Label>{t('samurdhiForm.empowermentDimension')}</Label>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {formOptions.empowermentDimensions.map((dimension) => (
                 <Radio
@@ -652,18 +844,20 @@ export const EmpowermentField: React.FC<Pick<FormFieldProps, 'formData' | 'formO
     </div>
 );
 
-export const ProjectTypeField: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'showAllFieldsForExistingBeneficiary' | 'handlers'>> = ({
+// Update ProjectTypeField component
+export const ProjectTypeField: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'showAllFieldsForExistingBeneficiary' | 'handlers' | 't'>> = ({
     formData,
     formOptions,
     errors,
     showAllFieldsForExistingBeneficiary,
-    handlers
+    handlers,
+    t
 }) => {
     if (!shouldShowProjectFields(formData, formOptions, showAllFieldsForExistingBeneficiary)) return null;
 
     return (
         <div className="space-y-2">
-            <Label>Types of Projects</Label>
+            <Label>{t('samurdhiForm.projectTypes')}</Label>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {formOptions.projectTypes.map((project) => (
                     <Radio
@@ -688,19 +882,21 @@ export const ProjectTypeField: React.FC<Pick<FormFieldProps, 'formData' | 'formO
     );
 };
 
-export const ChildDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'showAllFieldsForExistingBeneficiary' | 'handlers'>> = ({
+// Update ChildDetailsFields component
+export const ChildDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'showAllFieldsForExistingBeneficiary' | 'handlers' | 't'>> = ({
     formData,
     formOptions,
     errors,
     showAllFieldsForExistingBeneficiary,
-    handlers
+    handlers,
+    t
 }) => {
     if (!shouldShowChildFields(formData, formOptions, showAllFieldsForExistingBeneficiary)) return null;
 
     return (
         <>
             <div>
-                <Label>පුහුණුව ලබාදීමට/ රැකියාගත කිරීමට අපේක්ෂිත දරුවාගේ නම</Label>
+                <Label>{t('samurdhiForm.childName')}</Label>
                 <Input
                     type="text"
                     name="childName"
@@ -712,7 +908,7 @@ export const ChildDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'for
             </div>
 
             <div>
-                <Label>පුහුණුව ලබාදීමට/ රැකියාගත කිරීමට අපේක්ෂිත දරුවාගේ වයස</Label>
+                <Label>{t('samurdhiForm.childAge')}</Label>
                 <Input
                     type="number"
                     name="childAge"
@@ -724,7 +920,7 @@ export const ChildDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'for
             </div>
 
             <div className="flex flex-col gap-4">
-                <Label>පුහුණුව ලබාදීමට/ රැකියාගත කිරීමට අපේක්ෂිත දරුවාගේ ස්ත්‍රී - පුරුෂ භාවය</Label>
+                <Label>{t('samurdhiForm.childGender')}</Label>
                 {['Female', 'Male'].map(gender => (
                     <Radio
                         key={gender}
@@ -733,13 +929,13 @@ export const ChildDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'for
                         value={gender}
                         checked={formData.childGender === gender}
                         onChange={() => handlers.handleRadioChange('childGender', gender)}
-                        label={gender}
+                        label={t(`common.${gender.toLowerCase()}`)}
                     />
                 ))}
             </div>
 
             <div className="space-y-2">
-                <Label>Job Field</Label>
+                <Label>{t('samurdhiForm.jobField')}</Label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     {formOptions.jobFields.map((jobField) => (
                         <Radio
@@ -763,7 +959,7 @@ export const ChildDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'for
             </div>
 
             <div>
-                <Label>Please specify Other employment fields</Label>
+                <Label>{t('samurdhiForm.otherJobField')}</Label>
                 <Input
                     type="text"
                     name="otherJobField"
@@ -775,15 +971,77 @@ export const ChildDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'for
     );
 };
 
-export const CheckboxSections: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'handlers'>> = ({
+// Update MonthlySavingField component
+export const MonthlySavingField: React.FC<Pick<FormFieldProps, 'formData' | 'errors' | 'handlers' | 't'>> = ({
+    formData,
+    errors,
+    handlers,
+    t
+}) => (
+    <div className="space-y-4">
+        <Label>{t('samurdhiForm.monthlySaving')} <span className="text-red-500">*</span></Label>
+
+        <div className="flex flex-col gap-3">
+            <Radio
+                id="monthly-saving-yes"
+                name="monthlySaving"
+                value="true"
+                checked={formData.monthlySaving === true}
+                onChange={() => handlers.handleRadioChange('monthlySaving', 'true')}
+                label={t('common.yes')}
+            />
+            <Radio
+                id="monthly-saving-no"
+                name="monthlySaving"
+                value="false"
+                checked={formData.monthlySaving === false}
+                onChange={() => {
+                    handlers.handleRadioChange('monthlySaving', 'false');
+                    handlers.handleInputChange({
+                        target: { name: 'savingAmount', value: '0' }
+                    } as React.ChangeEvent<HTMLInputElement>);
+                }}
+                label={t('common.no')}
+            />
+        </div>
+        <ErrorMessage error={errors.monthlySaving} />
+
+        {formData.monthlySaving === true && (
+            <div>
+                <Label>
+                    {t('samurdhiForm.savingAmount')}
+                    <span className="text-red-500"> *</span>
+                </Label>
+                <Input
+                    type="number"
+                    name="savingAmount"
+                    value={formData.savingAmount || 0}
+                    onChange={handlers.handleInputChange}
+                    min="0"
+                    step={100}
+                    placeholder={t('samurdhiForm.enterAmountLKR')}
+                    className={`w-full max-w-xs ${errors.savingAmount ? 'border-red-500' : ''}`}
+                />
+                <ErrorMessage error={errors.savingAmount} />
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    {t('samurdhiForm.amountInLKR')}
+                </p>
+            </div>
+        )}
+    </div>
+);
+
+// Update CheckboxSections component
+export const CheckboxSections: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'handlers' | 't'>> = ({
     formData,
     formOptions,
     errors,
-    handlers
+    handlers,
+    t
 }) => (
     <>
         <div className="space-y-2">
-            <Label>Resources Needed</Label>
+            <Label>{t('samurdhiForm.resourcesNeeded')}</Label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {formOptions.resourcesNeeded.map((resource) => (
                     <div key={resource.resource_id} className="flex gap-3 items-start">
@@ -801,7 +1059,7 @@ export const CheckboxSections: React.FC<Pick<FormFieldProps, 'formData' | 'formO
         </div>
 
         <div className="space-y-2">
-            <Label>Health/Nutrition/Education</Label>
+            <Label>{t('samurdhiForm.healthNutritionEducation')}</Label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {formOptions.healthIndicators.map((indicator) => (
                     <div key={indicator.health_indicator_id} className="flex gap-3 items-start">
@@ -821,7 +1079,7 @@ export const CheckboxSections: React.FC<Pick<FormFieldProps, 'formData' | 'formO
         </div>
 
         <div className="space-y-2">
-            <Label>Domestic Dynamics</Label>
+            <Label>{t('samurdhiForm.domesticDynamics')}</Label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {formOptions.domesticDynamics.map((dynamic) => (
                     <div key={dynamic.domestic_dynamic_id} className="flex gap-3 items-start">
@@ -841,7 +1099,7 @@ export const CheckboxSections: React.FC<Pick<FormFieldProps, 'formData' | 'formO
         </div>
 
         <div className="space-y-2">
-            <Label>Community Participation</Label>
+            <Label>{t('samurdhiForm.communityParticipation')}</Label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {formOptions.communityParticipationOptions.map((item) => (
                     <div key={item.community_participation_id} className="flex gap-3 items-start">
@@ -859,7 +1117,7 @@ export const CheckboxSections: React.FC<Pick<FormFieldProps, 'formData' | 'formO
         </div>
 
         <div className="space-y-2">
-            <Label>Housing Services</Label>
+            <Label>{t('samurdhiForm.housingServices')}</Label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {formOptions.housingServices.map((service) => (
                     <div key={service.housing_service_id} className="flex gap-3 items-start">
@@ -880,24 +1138,26 @@ export const CheckboxSections: React.FC<Pick<FormFieldProps, 'formData' | 'formO
     </>
 );
 
-export const BankingDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'handlers'>> = ({
+// Update BankingDetailsFields component
+export const BankingDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'handlers' | 't'>> = ({
     formData,
-    handlers
+    handlers,
+    t
 }) => (
     <div className="space-y-6 pt-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Banking Details
+            {t('samurdhiForm.bankingDetails')}
         </h3>
 
         {/* Commercial Bank Details */}
         <div className="space-y-4">
             <h4 className="text-md font-medium text-gray-800 dark:text-gray-200">
-                Commercial Bank Details
+                {t('samurdhiForm.commercialBankDetails')}
             </h4>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <Label>Account Name</Label>
+                    <Label>{t('samurdhiForm.accountName')}</Label>
                     <Input
                         type="text"
                         name="commercialBankAccountName"
@@ -907,7 +1167,7 @@ export const BankingDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'h
                 </div>
 
                 <div>
-                    <Label>Account Number</Label>
+                    <Label>{t('samurdhiForm.accountNumber')}</Label>
                     <Input
                         type="text"
                         name="commercialBankAccountNumber"
@@ -917,7 +1177,7 @@ export const BankingDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'h
                 </div>
 
                 <div>
-                    <Label>Bank Name</Label>
+                    <Label>{t('samurdhiForm.bankName')}</Label>
                     <Input
                         type="text"
                         name="commercialBankName"
@@ -927,7 +1187,7 @@ export const BankingDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'h
                 </div>
 
                 <div>
-                    <Label>Branch</Label>
+                    <Label>{t('samurdhiForm.branch')}</Label>
                     <Input
                         type="text"
                         name="commercialBankBranch"
@@ -941,12 +1201,12 @@ export const BankingDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'h
         {/* Samurdhi Bank Details */}
         <div className="space-y-4">
             <h4 className="text-md font-medium text-gray-800 dark:text-gray-200">
-                Samurdhi Bank Details
+                {t('samurdhiForm.samurdhiBankDetails')}
             </h4>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <Label>Account Name</Label>
+                    <Label>{t('samurdhiForm.accountName')}</Label>
                     <Input
                         type="text"
                         name="samurdhiBankAccountName"
@@ -956,7 +1216,7 @@ export const BankingDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'h
                 </div>
 
                 <div>
-                    <Label>Account Number</Label>
+                    <Label>{t('samurdhiForm.accountNumber')}</Label>
                     <Input
                         type="text"
                         name="samurdhiBankAccountNumber"
@@ -966,7 +1226,7 @@ export const BankingDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'h
                 </div>
 
                 <div>
-                    <Label>Bank Name</Label>
+                    <Label>{t('samurdhiForm.bankName')}</Label>
                     <Input
                         type="text"
                         name="samurdhiBankName"
@@ -976,7 +1236,7 @@ export const BankingDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'h
                 </div>
 
                 <div>
-                    <Label>Account Type</Label>
+                    <Label>{t('samurdhiForm.accountType')}</Label>
                     <Input
                         type="text"
                         name="samurdhiBankAccountType"
@@ -985,6 +1245,141 @@ export const BankingDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'h
                     />
                 </div>
             </div>
+        </div>
+
+        {/* Aswasuma Bank Transfer Preference */}
+        <div className="space-y-4">
+            <h4 className="text-md font-medium text-gray-800 dark:text-gray-200">
+                {t('samurdhiForm.aswasumaBankTransfer')}
+            </h4>
+
+            <div className="flex flex-col gap-4">
+                <Label>{t('samurdhiForm.wantsBankTransfer')}</Label>
+                <div className="flex flex-col gap-3">
+                    <Radio
+                        id="aswasuma-transfer-yes"
+                        name="wantsAswesumaBankTransfer"
+                        value="true"
+                        checked={formData.wantsAswesumaBankTransfer === true}
+                        onChange={() => handlers.handleRadioChange('wantsAswesumaBankTransfer', 'true')}
+                        label={t('common.yes')}
+                    />
+                    <Radio
+                        id="aswasuma-transfer-no"
+                        name="wantsAswesumaBankTransfer"
+                        value="false"
+                        checked={formData.wantsAswesumaBankTransfer === false}
+                        onChange={() => handlers.handleRadioChange('wantsAswesumaBankTransfer', 'false')}
+                        label={t('common.no')}
+                    />
+                </div>
+            </div>
+        </div>
+
+        {/* Other Bank Details (conditional) */}
+        {formData.wantsAswesumaBankTransfer === false && (
+            <div className="space-y-4">
+                <h4 className="text-md font-medium text-gray-800 dark:text-gray-200">
+                    {t('samurdhiForm.otherBankDetails')}
+                </h4>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <Label>{t('samurdhiForm.bankName')}</Label>
+                        <Input
+                            type="text"
+                            name="otherBankName"
+                            value={formData.otherBankName || ""}
+                            onChange={handlers.handleInputChange}
+                        />
+                    </div>
+
+                    <div>
+                        <Label>{t('samurdhiForm.branch')}</Label>
+                        <Input
+                            type="text"
+                            name="otherBankBranch"
+                            value={formData.otherBankBranch || ""}
+                            onChange={handlers.handleInputChange}
+                        />
+                    </div>
+
+                    <div>
+                        <Label>{t('samurdhiForm.accountHolder')}</Label>
+                        <Input
+                            type="text"
+                            name="otherBankAccountHolder"
+                            value={formData.otherBankAccountHolder || ""}
+                            onChange={handlers.handleInputChange}
+                        />
+                    </div>
+
+                    <div>
+                        <Label>{t('samurdhiForm.accountNumber')}</Label>
+                        <Input
+                            type="text"
+                            name="otherBankAccountNumber"
+                            value={formData.otherBankAccountNumber || ""}
+                            onChange={handlers.handleInputChange}
+                        />
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* Other Government Subsidy */}
+        <div className="space-y-4">
+            <h4 className="text-md font-medium text-gray-800 dark:text-gray-200">
+                {t('samurdhiForm.otherGovernmentSubsidies')}
+            </h4>
+
+            <div className="flex flex-col gap-4">
+                <Label>{t('samurdhiForm.hasOtherSubsidy')}</Label>
+                <div className="flex flex-col gap-3">
+                    <Radio
+                        id="other-subsidy-yes"
+                        name="hasOtherGovernmentSubsidy"
+                        value="true"
+                        checked={formData.hasOtherGovernmentSubsidy === true}
+                        onChange={() => handlers.handleRadioChange('hasOtherGovernmentSubsidy', 'true')}
+                        label={t('common.yes')}
+                    />
+                    <Radio
+                        id="other-subsidy-no"
+                        name="hasOtherGovernmentSubsidy"
+                        value="false"
+                        checked={formData.hasOtherGovernmentSubsidy === false}
+                        onChange={() => handlers.handleRadioChange('hasOtherGovernmentSubsidy', 'false')}
+                        label={t('common.no')}
+                    />
+                </div>
+            </div>
+
+            {formData.hasOtherGovernmentSubsidy && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <Label>{t('samurdhiForm.governmentInstitution')}</Label>
+                        <Input
+                            type="text"
+                            name="otherGovernmentInstitution"
+                            value={formData.otherGovernmentInstitution || ""}
+                            onChange={handlers.handleInputChange}
+                        />
+                    </div>
+
+                    <div>
+                        <Label>{t('samurdhiForm.subsidyAmount')}</Label>
+                        <Input
+                            type="number"
+                            name="otherSubsidyAmount"
+                            value={formData.otherSubsidyAmount || ""}
+                            onChange={handlers.handleInputChange}
+                            min="0"
+                            step={0.01}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     </div>
 );

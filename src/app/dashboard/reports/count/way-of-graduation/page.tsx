@@ -14,7 +14,7 @@ import { getAccessibleLocations, AccessibleLocations } from '@/services/projectD
 const MAIN_PROGRAMS = [
   { value: 'NP', label: 'National Program' },
   { value: 'ADB', label: 'ADB Program' },
-  { value: 'WB', label: 'World Bank Program' },
+  { value: 'WB', label: 'World Bank pilot program' },
 ]
 
 const WayOfGraduationCountReports = () => {

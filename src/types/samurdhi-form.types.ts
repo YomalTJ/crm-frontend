@@ -2,26 +2,38 @@ export interface LocationData {
     id: string;
     name: string;
 }
-
 export interface FormData {
     district: LocationData;
     dsDivision: LocationData;
     zone: LocationData;
     gnd: LocationData;
     mainProgram: string | null;
+    isImpactEvaluation: boolean | null;
     hasConsentedToEmpowerment: boolean | null;
+    consentLetterPath?: string | null;
     hasObtainedConsentLetter: boolean | null;
     consentGivenAt: string | null;
     beneficiary_type_id: string | null;
     aswasumaHouseholdNo: string | null;
     nic: string | null;
     beneficiaryName: string | null;
-    gender: string | null;
+    beneficiaryGender: string | null;
     address: string | null;
-    phone: string | null;
+    mobilePhone: string | null;
+    telephone?: string | null;
+    projectOwnerName: string | null;
     projectOwnerAge: number;
-    male18To60: number;
-    female18To60: number;
+    projectOwnerGender: string | null;
+    hasDisability: boolean;
+    disability_id: string | null;
+    
+    male16To24: number; // NEW
+    female16To24: number; // NEW
+    male25To45: number; // NEW
+    female25To45: number; // NEW
+    male46To60: number; // NEW
+    female46To60: number; // NEW
+    
     employment_id: string | null;
     otherOccupation: string | null;
     subsisdy_id: string | null;
@@ -43,9 +55,8 @@ export interface FormData {
     housing_service_id: string[];
     areaClassification: string | null;
     refusal_reason_id: string | null;
-    disability_id: string | null;
-    projectOwnerName: string | null;
-    projectOwnerGender: string | null;
+    
+    // Banking details
     commercialBankAccountName: string | null;
     commercialBankAccountNumber: string | null;
     commercialBankName: string | null;
@@ -54,6 +65,16 @@ export interface FormData {
     samurdhiBankAccountNumber: string | null;
     samurdhiBankName: string | null;
     samurdhiBankAccountType: string | null;
+    
+    // NEW - Additional banking fields
+    wantsAswesumaBankTransfer: boolean;
+    otherBankName?: string | null;
+    otherBankBranch?: string | null;
+    otherBankAccountHolder?: string | null;
+    otherBankAccountNumber?: string | null;
+    hasOtherGovernmentSubsidy: boolean;
+    otherGovernmentInstitution?: string | null;
+    otherSubsidyAmount?: number | null;
 }
 
 export interface FormErrors {
@@ -180,5 +201,5 @@ export interface Resource {
 export const MAIN_PROGRAM_OPTIONS = [
     { value: 'NP', label: 'National Program' },
     { value: 'ADB', label: 'ADB Program' },
-    { value: 'WB', label: 'World Bank Program' }
+    { value: 'WB', label: 'World Bank pilot program' }
 ];

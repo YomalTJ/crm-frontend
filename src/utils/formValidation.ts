@@ -2,13 +2,18 @@ import { FormData, FormErrors, FormOptions } from '@/types/samurdhi-form.types';
 
 export const validateSamurdhiForm = (
     formData: FormData,
-    formOptions: FormOptions
+    formOptions: FormOptions,
+    selectedFile?: File | null
 ): { isValid: boolean; errors: FormErrors } => {
     const newErrors: FormErrors = {};
 
     // Main program validation
     if (!formData.mainProgram || formData.mainProgram.trim() === '') {
         newErrors.mainProgram = 'Please select main program';
+    }
+
+    if (formData.mainProgram === 'WB' && formData.isImpactEvaluation === null) {
+        newErrors.isImpactEvaluation = 'Please select impact evaluation status';
     }
 
     // Beneficiary type validation
@@ -30,10 +35,6 @@ export const validateSamurdhiForm = (
     // Consent validation
     if (formData.hasConsentedToEmpowerment === null || formData.hasConsentedToEmpowerment === undefined) {
         newErrors.hasConsentedToEmpowerment = 'Please select consent to empowerment program';
-    }
-
-    if (formData.hasObtainedConsentLetter === null || formData.hasObtainedConsentLetter === undefined) {
-        newErrors.hasObtainedConsentLetter = 'Please select consent letter status';
     }
 
     // Consent date validation
@@ -60,14 +61,16 @@ export const validateSamurdhiForm = (
         newErrors.beneficiaryName = 'Beneficiary name is required';
     }
 
+    if (!formData.beneficiaryGender) {
+        newErrors.beneficiaryGender = 'Gender is required';
+    }
+
     if (!formData.address || formData.address.trim() === '') {
         newErrors.address = 'Address is required';
     }
 
-    if (!formData.phone || formData.phone.trim() === '') {
-        newErrors.phone = 'Phone number is required';
-    } else if (!/^[0-9+\-\s()]+$/.test(formData.phone)) {
-        newErrors.phone = 'Please enter a valid phone number';
+    if (!formData.mobilePhone?.trim()) {
+        newErrors.mobilePhone = 'Mobile phone number is required';
     }
 
     if (!formData.projectOwnerAge || formData.projectOwnerAge <= 0) {
@@ -76,10 +79,27 @@ export const validateSamurdhiForm = (
         newErrors.projectOwnerAge = 'Please enter a valid age';
     }
 
+    if (formData.hasDisability && !formData.disability_id) {
+        newErrors.disability_id = 'Please select the type of disability';
+    }
+
     // Household number validation for non-Samurdhi/low-income beneficiaries
     if (!isSamurdhiOrLowIncome && isAswasumaBeneficiary && !formData.aswasumaHouseholdNo) {
         newErrors.aswasumaHouseholdNo = 'Aswasuma household number is required';
     }
+
+    const ageFields = [
+        'male16To24', 'female16To24',
+        'male25To45', 'female25To45',
+        'male46To60', 'female46To60'
+    ];
+
+    ageFields.forEach(field => {
+        const value = formData[field as keyof FormData] as number;
+        if (value < 0) {
+            newErrors[field] = 'Value cannot be negative';
+        }
+    });
 
     // Saving amount validation
     if (formData.monthlySaving && (!formData.savingAmount || formData.savingAmount <= 0)) {
@@ -106,6 +126,51 @@ export const validateSamurdhiForm = (
         }
     }
 
+    if (formData.monthlySaving === null || formData.monthlySaving === undefined) {
+        newErrors.monthlySaving = 'Please select monthly saving status';
+    }
+
+    if (formData.monthlySaving === true) {
+        if (!formData.savingAmount || formData.savingAmount <= 0) {
+            newErrors.savingAmount = 'Please enter a valid saving amount';
+        } else if (formData.savingAmount > 1000000) {
+            newErrors.savingAmount = 'Saving amount seems too high. Please verify.';
+        }
+    }
+
+    if (formData.hasConsentedToEmpowerment === false &&
+        !selectedFile) {
+        newErrors.consentLetter = 'Please upload the consent letter PDF';
+    }
+
+    if (selectedFile) {
+        if (selectedFile.type !== 'application/pdf') {
+            newErrors.consentLetter = 'Only PDF files are allowed';
+        }
+        if (selectedFile.size > 5 * 1024 * 1024) { // 5MB limit
+            newErrors.consentLetter = 'File size must be less than 5MB';
+        }
+    }
+
+    if (formData.wantsAswesumaBankTransfer) {
+        if (!formData.otherBankName?.trim()) {
+            newErrors.otherBankName = 'Bank name is required when requesting transfer';
+        }
+        if (!formData.otherBankAccountNumber?.trim()) {
+            newErrors.otherBankAccountNumber = 'Account number is required when requesting transfer';
+        }
+    }
+
+    // Validate government subsidy details
+    if (formData.hasOtherGovernmentSubsidy) {
+        if (!formData.otherGovernmentInstitution?.trim()) {
+            newErrors.otherGovernmentInstitution = 'Institution name is required';
+        }
+        if (!formData.otherSubsidyAmount || formData.otherSubsidyAmount <= 0) {
+            newErrors.otherSubsidyAmount = 'Subsidy amount must be greater than 0';
+        }
+    }
+
     // Business Opportunities validation
     const hasBusinessOpportunities = formData.empowerment_dimension_id && (() => {
         const dimension = formOptions.empowermentDimensions.find(
@@ -119,6 +184,18 @@ export const validateSamurdhiForm = (
         if (!formData.project_type_id) {
             newErrors.project_type_id = 'Project type is required for Business Opportunities/Self-Employment';
         }
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+        console.log('=== VALIDATION ERRORS ===');
+        console.log('Total errors:', Object.keys(newErrors).length);
+        console.log('Errors object:', newErrors);
+
+        // Log each error in a readable format
+        Object.entries(newErrors).forEach(([field, error]) => {
+            console.log(`${field}: ${error}`);
+        });
+        console.log('=========================');
     }
 
     return {

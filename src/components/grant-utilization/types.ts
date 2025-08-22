@@ -42,21 +42,21 @@ export interface BeneficiaryDetailsResponse {
 
 export interface LocationDetails {
     district?: {
-        id: number; // Changed from string to number
+        id: number;
         name: string;
-    };
+    } | null; // Add null to match service
     divisionalSecretariat?: {
-        id: number; // Changed from string to number
+        id: number;
         name: string;
-    };
+    } | null; // Add null to match service
     samurdhiBank?: {
-        id: number; // Changed from string to number
+        id: number;
         name: string;
-    };
+    } | null; // Add null to match service
     gramaNiladhariDivision?: {
-        id: string; // This remains string as it's different in the backend
+        id: string;
         name: string;
-    };
+    } | null; // Add null to match service
 }
 
 export interface AccessibleLocations {

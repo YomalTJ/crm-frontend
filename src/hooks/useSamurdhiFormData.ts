@@ -28,24 +28,35 @@ const createEmptyFormData = (locationData: Partial<{
     zone: locationData.zone || { id: '', name: '' },
     gnd: locationData.gnd || { id: '', name: '' },
     mainProgram: null,
+    isImpactEvaluation: null,
     areaClassification: null,
     beneficiary_type_id: null,
     hasConsentedToEmpowerment: null,
+    consentLetterPath: null, // NEW
     hasObtainedConsentLetter: null,
     refusal_reason_id: null,
     consentGivenAt: null,
     aswasumaHouseholdNo: null,
     nic: null,
     beneficiaryName: null,
-    gender: null,
+    beneficiaryGender: null, // RENAMED
     address: null,
-    phone: null,
+    mobilePhone: null, // RENAMED
+    telephone: null, // NEW
     projectOwnerName: null,
     projectOwnerAge: 0,
     projectOwnerGender: null,
+    hasDisability: false, // NEW
     disability_id: null,
-    male18To60: 0,
-    female18To60: 0,
+
+    // UPDATED age ranges
+    male16To24: 0, // NEW
+    female16To24: 0, // NEW
+    male25To45: 0, // NEW
+    female25To45: 0, // NEW
+    male46To60: 0, // NEW
+    female46To60: 0, // NEW
+
     employment_id: null,
     otherOccupation: null,
     subsisdy_id: null,
@@ -72,7 +83,17 @@ const createEmptyFormData = (locationData: Partial<{
     samurdhiBankAccountName: null,
     samurdhiBankAccountNumber: null,
     samurdhiBankName: null,
-    samurdhiBankAccountType: null
+    samurdhiBankAccountType: null,
+
+    // NEW fields
+    wantsAswesumaBankTransfer: false,
+    otherBankName: null,
+    otherBankBranch: null,
+    otherBankAccountHolder: null,
+    otherBankAccountNumber: null,
+    hasOtherGovernmentSubsidy: false,
+    otherGovernmentInstitution: null,
+    otherSubsidyAmount: null
 });
 
 export const useSamurdhiFormData = () => {

@@ -216,7 +216,7 @@ const GrantUtilization = () => {
                         <option value="">All Programs</option>
                         <option value="NP">National Program</option>
                         <option value="ADB">ADB Program</option>
-                        <option value="WB">World Bank Program</option>
+                        <option value="WB">World Bank pilot program</option>
                     </select>
                 </div>
             </div>
