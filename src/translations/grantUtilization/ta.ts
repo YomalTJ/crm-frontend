@@ -88,6 +88,10 @@ export const translations = {
         loadingError: 'தரவை ஏற்ற முடியவில்லை',
         loadingFormData: 'படிவ தரவை ஏற்றுகிறது...',
         errorLoadingData: 'தரவை ஏற்றுவதில் பிழை',
-        retry: 'மீண்டும் முயற்சிக்கவும்'
-    }
+        retry: 'மீண்டும் முயற்சிக்கவும்',
+
+        beneficiaryLoaded: "பயனாளி தரவு வெற்றிகரமாக ஏற்றப்பட்டது",
+        existingDataLoaded: "இருக்கும் தரவு வெற்றிகரமாக ஏற்றப்பட்டது",
+        updateSuccess: "மானிய பயன்பாட்டு பதிவு வெற்றிகரமாக புதுப்பிக்கப்பட்டது",
+    },
 };

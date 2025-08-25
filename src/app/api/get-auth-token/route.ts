@@ -63,10 +63,8 @@ export async function POST(request: NextRequest) {
         }
 
         const loginData = await loginResponse.json()
-        console.log("loginData: ", loginData);
         
         const newToken = loginData?.token?.accessToken
-        console.log("newToken: ", newToken);
 
         if (!newToken) {
             console.log('Login response structure:', JSON.stringify(loginData, null, 2))

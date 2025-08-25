@@ -116,7 +116,7 @@ export const getGrantUtilizationById = async (id: string): Promise<GrantUtilizat
   }
 };
 
-export const updateGrantUtilization = async (id: string, payload: GrantUtilizationPayload): Promise<GrantUtilizationResponse> => {
+export const updateGrantUtilization = async (hhNumberOrNic: string, payload: GrantUtilizationPayload): Promise<GrantUtilizationResponse> => {
   try {
     const token = (await cookies()).get('accessToken')?.value ||
       (await cookies()).get('staffAccessToken')?.value;
@@ -125,7 +125,7 @@ export const updateGrantUtilization = async (id: string, payload: GrantUtilizati
       throw new Error('No authentication token found');
     }
 
-    const response = await axiosInstance.put(`/grant-utilization/${id}`, payload, {
+    const response = await axiosInstance.put(`/grant-utilization/${hhNumberOrNic}`, payload, {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -155,6 +155,51 @@ export const getAllGrantUtilizations = async (filters?: any): Promise<GrantUtili
     }
 
     const response = await axiosInstance.get(`/grant-utilization?${params.toString()}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch Grant Utilization records');
+  }
+};
+
+export const checkGrantUtilizationExists = async (hhNumberOrNic: string): Promise<boolean> => {
+  try {
+    const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
+
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await axiosInstance.get(`/grant-utilization/family/${hhNumberOrNic}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    // If we get a successful response and there are grant utilizations, return true
+    return response.data.grantUtilizations && response.data.grantUtilizations.length > 0;
+  } catch (error: any) {
+    // If it's a 404 error, it means no records exist
+    if (error.response?.status === 404) {
+      return false;
+    }
+    throw new Error(error.response?.data?.message || 'Failed to check Grant Utilization existence');
+  }
+};
+
+// Add this function to get existing grant utilizations
+export const getGrantUtilizationsByHhNumberOrNic = async (hhNumberOrNic: string): Promise<any> => {
+  try {
+    const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
+
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await axiosInstance.get(`/grant-utilization/family/${hhNumberOrNic}`, {
       headers: {
         Authorization: `Bearer ${token}`
       }

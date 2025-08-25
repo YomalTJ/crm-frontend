@@ -88,6 +88,17 @@ export const translations = {
         loadingError: 'Failed to load data',
         loadingFormData: 'Loading form data...',
         errorLoadingData: 'Error Loading Data',
-        retry: 'Retry'
-    }
+        retry: 'Retry',
+
+        updateTitle: "Update Grant Utilization",
+        updateMode: "Update Mode",
+        updateGrantUtilization: "Update Grant Utilization",
+        updating: "Updating...",
+        updateError: "Failed to update grant utilization",
+
+        beneficiaryLoaded: "Beneficiary data loaded successfully",
+        existingDataLoaded: "Existing data loaded successfully",
+        updateSuccess: "Grant utilization record updated successfully",
+
+    },
 };

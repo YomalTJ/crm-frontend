@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Label from '../form/Label';
 import Input from '../form/input/InputField';
 import Select from '../form/Select';
@@ -275,38 +275,168 @@ export const ConsentLetterUpload: React.FC<FileUploadProps & { t: (key: string) 
     selectedFile,
     t
 }) => {
+    const [isValidating, setIsValidating] = useState(false);
+    const [validationStatus, setValidationStatus] = useState<'valid' | 'invalid' | 'pending' | null>(null);
+
     if (formData.hasConsentedToEmpowerment !== false) {
         return null;
     }
 
-    const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0] || null;
-        handlers.handleFileChange(file);
+        
+        if (file) {
+            setIsValidating(true);
+            setValidationStatus('pending');
+            
+            try {
+                // Simulate validation process (replace with actual validation)
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Check file integrity
+                const isValid = await validateFileIntegrity(file);
+                
+                if (isValid) {
+                    setValidationStatus('valid');
+                    handlers.handleFileChange(file);
+                    // toast.success('File validated successfully!');
+                } else {
+                    setValidationStatus('invalid');
+                    handlers.handleFileChange(null);
+                    // Clear the file input
+                    e.target.value = '';
+                }
+            } catch (error) {
+                console.error('File validation error:', error);
+                setValidationStatus('invalid');
+                handlers.handleFileChange(null);
+                e.target.value = '';
+            } finally {
+                setIsValidating(false);
+            }
+        } else {
+            handlers.handleFileChange(null);
+            setValidationStatus(null);
+        }
+    };
+
+    const validateFileIntegrity = async (file: File): Promise<boolean> => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            
+            reader.onload = () => {
+                try {
+                    // Basic integrity checks
+                    if (file.size === 0) {
+                        resolve(false);
+                        return;
+                    }
+
+                    // Check file signature/magic numbers
+                    const arrayBuffer = reader.result as ArrayBuffer;
+                    const view = new Uint8Array(arrayBuffer.slice(0, 8));
+                    
+                    // Common file signatures
+                    const signatures = {
+                        pdf: [0x25, 0x50, 0x44, 0x46], // %PDF
+                        jpg: [0xFF, 0xD8, 0xFF],
+                        png: [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A],
+                        gif: [0x47, 0x49, 0x46, 0x38], // GIF8
+                    };
+
+                    // Verify file matches its declared type
+                    let isValid = true;
+                    if (file.type === 'application/pdf') {
+                        isValid = signatures.pdf.every((byte, index) => view[index] === byte);
+                    } else if (file.type.startsWith('image/')) {
+                        const isJpg = signatures.jpg.every((byte, index) => view[index] === byte);
+                        const isPng = signatures.png.every((byte, index) => view[index] === byte);
+                        const isGif = signatures.gif.every((byte, index) => view[index] === byte);
+                        isValid = isJpg || isPng || isGif;
+                    }
+
+                    resolve(isValid);
+                } catch (error) {
+                    console.error('File validation error:', error);
+                    resolve(false);
+                }
+            };
+
+            reader.onerror = () => {
+                resolve(false);
+            };
+
+            reader.readAsArrayBuffer(file);
+        });
+    };
+
+    const getValidationMessage = () => {
+        if (validationStatus === 'valid') {
+            return (
+                <div className="flex items-center text-green-600 dark:text-green-400 text-sm mt-1">
+                    {/* <CheckCircleIcon className="h-4 w-4 mr-1" /> */}
+                    {t('samurdhiForm.fileValid')}
+                </div>
+            );
+        }
+        if (validationStatus === 'invalid') {
+            return (
+                <div className="flex items-center text-red-600 dark:text-red-400 text-sm mt-1">
+                    {/* <ExclamationTriangleIcon className="h-4 w-4 mr-1" /> */}
+                    {t('samurdhiForm.fileInvalid')}
+                </div>
+            );
+        }
+        return null;
     };
 
     return (
         <div className="space-y-2">
-            <Label>{t('samurdhiForm.uploadRejectionLetter')} <span className="text-red-500">*</span></Label>
+            <Label>
+                {t('samurdhiForm.uploadRejectionLetter')} <span className="text-red-500">*</span>
+            </Label>
+            
             <div className="flex flex-col gap-2">
-                <input
-                    type="file"
-                    accept=".pdf"
-                    onChange={handleFileInput}
-                    className={`block w-full text-sm text-gray-500 dark:text-gray-400
-                        file:mr-4 file:py-2 file:px-4
-                        file:rounded-md file:border-0
-                        file:text-sm file:font-medium
-                        file:bg-blue-50 file:text-blue-700
-                        hover:file:bg-blue-100
-                        dark:file:bg-blue-900 dark:file:text-blue-300
-                        dark:hover:file:bg-blue-800
-                        ${errors.consentLetter ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}
-                        border rounded-md p-2`}
-                />
+                <div className="relative">
+                    <input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.bmp"
+                        onChange={handleFileInput}
+                        disabled={isValidating}
+                        className={`block w-full text-sm text-gray-500 dark:text-gray-400
+                            file:mr-4 file:py-2 file:px-4
+                            file:rounded-md file:border-0
+                            file:text-sm file:font-medium
+                            file:bg-blue-50 file:text-blue-700
+                            hover:file:bg-blue-100
+                            dark:file:bg-blue-900 dark:file:text-blue-300
+                            dark:hover:file:bg-blue-800
+                            ${errors.consentLetter ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}
+                            border rounded-md p-2
+                            ${isValidating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    />
+                    
+                    {isValidating && (
+                        <div className="absolute inset-0 bg-white dark:bg-gray-800 bg-opacity-80 flex items-center justify-center rounded-md">
+                            <LoadingSpinner size="sm" />
+                            <span className="ml-2 text-sm text-white">{t('samurdhiForm.validatingFile')}</span>
+                        </div>
+                    )}
+                </div>
 
-                {selectedFile && (
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {t('samurdhiForm.selectedFile')}: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                {selectedFile && validationStatus === 'valid' && (
+                    <div className="text-sm text-green-600 dark:text-green-400 p-2 bg-green-50 dark:bg-green-900 rounded-md">
+                        <div className="font-medium">{t('samurdhiForm.selectedFile')}:</div>
+                        <div>{selectedFile.name}</div>
+                        <div>{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</div>
+                        {getValidationMessage()}
+                    </div>
+                )}
+
+                {validationStatus === 'invalid' && (
+                    <div className="text-sm text-red-600 dark:text-red-400 p-2 bg-red-50 dark:bg-red-900 rounded-md">
+                        {/* <ExclamationTriangleIcon className="h-4 w-4 inline mr-1" /> */}
+                        {t('samurdhiForm.fileDamagedWarning')}
                     </div>
                 )}
 
@@ -314,6 +444,7 @@ export const ConsentLetterUpload: React.FC<FileUploadProps & { t: (key: string) 
                     {t('samurdhiForm.fileUploadNote')}
                 </p>
             </div>
+            
             <ErrorMessage error={errors.consentLetter} />
         </div>
     );

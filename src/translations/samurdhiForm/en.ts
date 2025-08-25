@@ -51,9 +51,9 @@ export const translations = {
         selectRefusalReason: 'Select refusal reason',
 
         // File Upload
-        uploadRejectionLetter: 'Upload Rejection Letter (PDF only)',
+        uploadRejectionLetter: 'Upload Rejection Letter',
         rejectionLetterRequired: 'Rejection letter is required when consent is not given',
-        fileUploadNote: 'Maximum file size: 5MB. Only PDF files are allowed.',
+        fileUploadNote: 'Maximum file size: 5MB',
         selectedFile: 'Selected',
 
         // Area Classification

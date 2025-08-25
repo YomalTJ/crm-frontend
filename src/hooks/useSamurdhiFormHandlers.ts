@@ -2,14 +2,15 @@
 import { useState } from 'react';
 import { FormData as SamurdhiFormData, FormErrors, FormOptions } from '@/types/samurdhi-form.types';
 import {
-    getBeneficiaryByNIC,
     getHouseholdDetailsByReference,
     createSamurdhiFamily,
     updateSamurdhiFamily,
-    SamurdhiFamilyPayload
+    SamurdhiFamilyPayload,
+    getBeneficiaryByIdentifier // Add this import
 } from '@/services/samurdhiService';
 import { validateSamurdhiForm, convertEmptyToNull, getAswasumaIdByLevel } from '@/utils/formValidation';
 import toast from 'react-hot-toast';
+import { validateFile } from '@/utils/fileValidation';
 
 interface UseFormHandlersProps {
     formData: SamurdhiFormData;
@@ -80,9 +81,40 @@ export const useSamurdhiFormHandlers = ({
         }));
     };
 
-    const handleFileChange = (file: File | null) => {
-        setSelectedFile(file);
-        clearError('consentLetter');
+    const validateAndSetFile = async (file: File | null): Promise<boolean> => {
+        if (!file) {
+            setSelectedFile(null);
+            return true;
+        }
+
+        try {
+            const validationResult = await validateFile(file);
+
+            if (!validationResult.isValid) {
+                setErrors(prev => ({
+                    ...prev,
+                    consentLetter: validationResult.error || 'File validation failed'
+                }));
+                setSelectedFile(null);
+                return false;
+            }
+
+            setSelectedFile(file);
+            clearError('consentLetter');
+            return true;
+        } catch (error) {
+            console.error('File validation error:', error);
+            setErrors(prev => ({
+                ...prev,
+                consentLetter: 'Failed to validate file'
+            }));
+            setSelectedFile(null);
+            return false;
+        }
+    };
+
+    const handleFileChange = async (file: File | null) => {
+        await validateAndSetFile(file);
     };
 
     const handleSelectChange = (name: string, value: string) => {
@@ -136,123 +168,134 @@ export const useSamurdhiFormHandlers = ({
 
         setIsFetching(true);
         try {
-            const data = await getBeneficiaryByNIC(formData.nic);
+            // Use the new unified service method
+            const data = await getBeneficiaryByIdentifier(formData.nic);
             setIsExistingBeneficiary(true);
 
-            const isPreviousSamurdhi = data.beneficiary_type_id === '77744e4d-48a4-4295-8a5d-38d2100599f9' ||
-                data.beneficiary_type_name?.includes("Previous Samurdhi") ||
-                data.beneficiary_type_name?.includes("Low income");
+            // Check if this is a previous Samurdhi beneficiary
+            const isPreviousSamurdhi = data.beneficiaryType?.id === '77744e4d-48a4-4295-8a5d-38d2100599f9' ||
+                data.beneficiaryType?.nameEnglish?.includes("Previous Samurdhi") ||
+                data.beneficiaryType?.nameEnglish?.includes("Low income");
             setIsAswasumaHouseholdDisabled(isPreviousSamurdhi);
 
             // Check if the fetched data has values for fields that might be hidden
-            const hasHiddenFieldValues = data.aswasumaHouseholdNo ||
-                data.empowerment_dimension_id ||
-                data.project_type_id ||
+            const hasHiddenFieldValues = data.householdNumber ||
+                data.empowermentDimension ||
+                data.projectType ||
                 data.childName ||
-                data.job_field_id ||
-                data.resource_id?.length > 0 ||
-                data.health_indicator_id?.length > 0 ||
-                data.domestic_dynamic_id?.length > 0 ||
-                data.community_participation_id?.length > 0 ||
-                data.housing_service_id?.length > 0;
+                data.jobField ||
+                data.resources?.length > 0 ||
+                data.healthIndicators?.length > 0 ||
+                data.domesticDynamics?.length > 0 ||
+                data.communityParticipations?.length > 0 ||
+                data.housingServices?.length > 0;
 
             if (hasHiddenFieldValues) {
                 setShowAllFieldsForExistingBeneficiary(true);
             }
 
-            // Update form data with fetched information
+            // Update form data with fetched information - PRESERVE existing form state
             setFormData(prev => ({
                 ...prev,
-                mainProgram: null,
-                aswasumaHouseholdNo: null,
-                beneficiaryName: data.name || '',
-                beneficiaryGender: data.gender || 'Male', // Updated field name
-                address: data.address || '',
-                mobilePhone: data.phone || '', // Updated field name
-                telephone: data.telephone || null, // NEW field
-                projectOwnerAge: data.age || 0,
-                hasDisability: data.hasDisability || false, // NEW field
-                disability_id: data.disability_id || null,
-                male16To24: data.male16To24 || 0,
-                female16To24: data.female16To24 || 0,
-                male25To45: data.male25To45 || 0,
-                female25To45: data.female25To45 || 0,
-                male46To60: data.male46To60 || 0,
-                female46To60: data.female46To60 || 0,
-                beneficiary_type_id: data.beneficiary_type_id || '',
-                employment_id: data.employment_id || '',
-                otherOccupation: data.otherOccupation || '',
-                subsisdy_id: data.subsisdy_id || '',
-                aswesuma_cat_id: data.aswesuma_cat_id || '',
-                empowerment_dimension_id: data.empowerment_dimension_id || null,
-                project_type_id: data.project_type_id || '',
-                otherProject: data.otherProject || '',
-                childName: data.childName || '',
-                childAge: data.childAge || 0,
-                childGender: data.childGender || 'Male',
-                job_field_id: data.job_field_id || '',
-                otherJobField: data.otherJobField || '',
-                resource_id: Array.isArray(data.resource_id) ? data.resource_id : (data.resource_id ? [data.resource_id] : []),
-                monthlySaving: data.monthlySaving || false,
-                savingAmount: data.savingAmount || 0,
-                health_indicator_id: Array.isArray(data.health_indicator_id) ? data.health_indicator_id : (data.health_indicator_id ? [data.health_indicator_id] : []),
-                domestic_dynamic_id: Array.isArray(data.domestic_dynamic_id) ? data.domestic_dynamic_id : (data.domestic_dynamic_id ? [data.domestic_dynamic_id] : []),
-                community_participation_id: Array.isArray(data.community_participation_id) ? data.community_participation_id : (data.community_participation_id ? [data.community_participation_id] : []),
-                housing_service_id: Array.isArray(data.housing_service_id) ? data.housing_service_id : (data.housing_service_id ? [data.housing_service_id] : []),
-                wantsAswesumaBankTransfer: data.wantsAswesumaBankTransfer || false,
-                otherBankName: data.otherBankName || null,
-                otherBankBranch: data.otherBankBranch || null,
-                otherBankAccountHolder: data.otherBankAccountHolder || null,
-                otherBankAccountNumber: data.otherBankAccountNumber || null,
-                hasOtherGovernmentSubsidy: data.hasOtherGovernmentSubsidy || false,
-                otherGovernmentInstitution: data.otherGovernmentInstitution || null,
-                otherSubsidyAmount: data.otherSubsidyAmount || null
+                // Keep the current beneficiary type and NIC - DON'T reset them
+                // nic: formData.nic, // Keep current NIC
+                // beneficiary_type_id: prev.beneficiary_type_id, // Keep current selection
+
+                // Update with fetched data
+                mainProgram: data.mainProgram || prev.mainProgram,
+                aswasumaHouseholdNo: data.householdNumber || prev.aswasumaHouseholdNo,
+                beneficiaryName: data.beneficiaryDetails.name || prev.beneficiaryName,
+                beneficiaryGender: data.beneficiaryDetails.gender || prev.beneficiaryGender,
+                address: data.address || prev.address,
+                mobilePhone: data.mobilePhone || prev.mobilePhone,
+                telephone: data.telephone || prev.telephone,
+                projectOwnerName: data.projectOwnerDetails.name || prev.projectOwnerName,
+                projectOwnerAge: data.projectOwnerDetails.age || prev.projectOwnerAge,
+                projectOwnerGender: data.projectOwnerDetails.gender || prev.projectOwnerGender,
+                hasDisability: data.hasDisability !== undefined ? data.hasDisability : prev.hasDisability,
+                disability_id: data.disability?.id || prev.disability_id,
+
+                // Household members
+                male16To24: data.noOfMembers?.male?.age16To24 || prev.male16To24,
+                female16To24: data.noOfMembers?.female?.age16To24 || prev.female16To24,
+                male25To45: data.noOfMembers?.male?.age25To45 || prev.male25To45,
+                female25To45: data.noOfMembers?.female?.age25To45 || prev.female25To45,
+                male46To60: data.noOfMembers?.male?.age46To60 || prev.male46To60,
+                female46To60: data.noOfMembers?.female?.age46To60 || prev.female46To60,
+
+                // Employment and benefits
+                employment_id: data.currentEmployment?.id || prev.employment_id,
+                otherOccupation: data.otherOccupation || prev.otherOccupation,
+                subsisdy_id: data.samurdhiSubsidy?.id || prev.subsisdy_id,
+                aswesuma_cat_id: data.aswasumaCategory?.id || prev.aswesuma_cat_id,
+
+                // Empowerment and projects
+                empowerment_dimension_id: data.empowermentDimension?.id || prev.empowerment_dimension_id,
+                project_type_id: data.projectType?.id || prev.project_type_id,
+                otherProject: data.otherProject || prev.otherProject,
+
+                // Child details
+                childName: data.childName || prev.childName,
+                childAge: data.childAge || prev.childAge,
+                childGender: data.childGender || prev.childGender,
+                job_field_id: data.jobField?.id || prev.job_field_id,
+                otherJobField: data.otherJobField || prev.otherJobField,
+
+                // Arrays - ensure they're properly formatted
+                resource_id: Array.isArray(data.resources) ? data.resources.map(r => r.id) : prev.resource_id,
+                health_indicator_id: Array.isArray(data.healthIndicators) ? data.healthIndicators.map(h => h.id) : prev.health_indicator_id,
+                domestic_dynamic_id: Array.isArray(data.domesticDynamics) ? data.domesticDynamics.map(d => d.id) : prev.domestic_dynamic_id,
+                community_participation_id: Array.isArray(data.communityParticipations) ? data.communityParticipations.map(c => c.id) : prev.community_participation_id,
+                housing_service_id: Array.isArray(data.housingServices) ? data.housingServices.map(h => h.id) : prev.housing_service_id,
+
+                // Savings
+                monthlySaving: data.monthlySaving !== undefined ? data.monthlySaving : prev.monthlySaving,
+                savingAmount: data.savingAmount || prev.savingAmount,
+
+                // Banking and subsidy details
+                commercialBankAccountName: data.location?.commercialBankDetails?.accountName || prev.commercialBankAccountName,
+                commercialBankAccountNumber: data.location?.commercialBankDetails?.accountNumber || prev.commercialBankAccountNumber,
+                commercialBankName: data.location?.commercialBankDetails?.bankName || prev.commercialBankName,
+                commercialBankBranch: data.location?.commercialBankDetails?.branch || prev.commercialBankBranch,
+                samurdhiBankAccountName: data.location?.samurdhiBankDetails?.accountName || prev.samurdhiBankAccountName,
+                samurdhiBankAccountNumber: data.location?.samurdhiBankDetails?.accountNumber || prev.samurdhiBankAccountNumber,
+                samurdhiBankName: data.location?.samurdhiBankDetails?.bankName || prev.samurdhiBankName,
+                samurdhiBankAccountType: data.location?.samurdhiBankDetails?.accountType || prev.samurdhiBankAccountType,
+
+                // Bank transfer preferences
+                wantsAswesumaBankTransfer: data.bankTransferPreferences?.wantsAswesumaBankTransfer !== undefined ?
+                    data.bankTransferPreferences.wantsAswesumaBankTransfer : prev.wantsAswesumaBankTransfer,
+                otherBankName: data.bankTransferPreferences?.otherBankDetails?.bankName || prev.otherBankName,
+                otherBankBranch: data.bankTransferPreferences?.otherBankDetails?.branch || prev.otherBankBranch,
+                otherBankAccountHolder: data.bankTransferPreferences?.otherBankDetails?.accountHolder || prev.otherBankAccountHolder,
+                otherBankAccountNumber: data.bankTransferPreferences?.otherBankDetails?.accountNumber || prev.otherBankAccountNumber,
+
+                // Government subsidy
+                hasOtherGovernmentSubsidy: data.governmentSubsidy?.hasOtherGovernmentSubsidy !== undefined ?
+                    data.governmentSubsidy.hasOtherGovernmentSubsidy : prev.hasOtherGovernmentSubsidy,
+                otherGovernmentInstitution: data.governmentSubsidy?.institution || prev.otherGovernmentInstitution,
+                otherSubsidyAmount: data.governmentSubsidy?.amount || prev.otherSubsidyAmount,
+
+                // Consent fields
+                hasConsentedToEmpowerment: data.hasConsentedToEmpowerment !== undefined ?
+                    data.hasConsentedToEmpowerment : prev.hasConsentedToEmpowerment,
+                consentGivenAt: data.consentGivenAt || prev.consentGivenAt,
+                refusal_reason_id: data.refusalReason?.id || prev.refusal_reason_id,
+
+                // Area classification
+                areaClassification: data.areaClassification || prev.areaClassification
             }));
-        } catch {
+
+            toast.success('Beneficiary details loaded successfully!');
+
+        } catch (error) {
+            console.error('NIC lookup error:', error);
             setIsExistingBeneficiary(false);
             setShowAllFieldsForExistingBeneficiary(false);
+            setIsAswasumaHouseholdDisabled(false);
 
-            // Clear auto-filled data when NIC lookup fails
-            setFormData(prev => ({
-                ...prev,
-                mainProgram: null,
-                aswasumaHouseholdNo: null,
-                beneficiaryName: null,
-                beneficiaryGender: null, // Updated
-                address: null,
-                mobilePhone: null, // Updated
-                telephone: null, // NEW
-                projectOwnerAge: 0,
-                hasDisability: false, // NEW
-                disability_id: null,
-                male16To24: 0, // NEW
-                female16To24: 0, // NEW
-                male25To45: 0, // NEW
-                female25To45: 0, // NEW
-                male46To60: 0, // NEW
-                female46To60: 0, // NEW
-                aswesuma_cat_id: null,
-                employment_id: null,
-                otherOccupation: null,
-                subsisdy_id: null,
-                empowerment_dimension_id: null,
-                project_type_id: null,
-                otherProject: null,
-                childName: null,
-                childAge: 0,
-                childGender: null,
-                job_field_id: null,
-                otherJobField: null,
-                resource_id: [],
-                monthlySaving: false,
-                savingAmount: 0,
-                health_indicator_id: [],
-                domestic_dynamic_id: [],
-                community_participation_id: [],
-                housing_service_id: []
-            }));
-
-            toast.error('Failed to fetch beneficiary details');
+            // DON'T reset the form data completely - just show error
+            toast.error('Beneficiary not found. You can continue to add as new beneficiary.');
         } finally {
             setIsFetching(false);
         }
@@ -271,15 +314,15 @@ export const useSamurdhiFormHandlers = ({
                 ...prev,
                 aswasumaHouseholdNo: null,
                 beneficiaryName: null,
-                beneficiaryGender: null, // Updated
+                beneficiaryGender: null,
                 address: null,
                 projectOwnerAge: 0,
-                male16To24: 0, // NEW
-                female16To24: 0, // NEW
-                male25To45: 0, // NEW
-                female25To45: 0, // NEW
-                male46To60: 0, // NEW
-                female46To60: 0, // NEW
+                male16To24: 0,
+                female16To24: 0,
+                male25To45: 0,
+                female25To45: 0,
+                male46To60: 0,
+                female46To60: 0,
                 aswesuma_cat_id: null
             }));
             return;
@@ -411,14 +454,14 @@ export const useSamurdhiFormHandlers = ({
                 aswasumaHouseholdNo: convertEmptyToNull(formData.aswasumaHouseholdNo),
                 nic: convertEmptyToNull(formData.nic),
                 beneficiaryName: convertEmptyToNull(formData.beneficiaryName),
-                beneficiaryGender: convertEmptyToNull(formData.beneficiaryGender), // Updated
+                beneficiaryGender: convertEmptyToNull(formData.beneficiaryGender),
                 address: convertEmptyToNull(formData.address),
-                mobilePhone: convertEmptyToNull(formData.mobilePhone), // Updated
-                telephone: convertEmptyToNull(formData.telephone), // NEW
+                mobilePhone: convertEmptyToNull(formData.mobilePhone),
+                telephone: convertEmptyToNull(formData.telephone),
                 projectOwnerName: convertEmptyToNull(formData.projectOwnerName),
                 projectOwnerAge: formData.projectOwnerAge || 0,
                 projectOwnerGender: convertEmptyToNull(formData.projectOwnerGender),
-                hasDisability: formData.hasDisability, // NEW
+                hasDisability: formData.hasDisability,
                 disability_id: convertEmptyToNull(formData.disability_id),
                 male16To24: formData.male16To24 || 0,
                 female16To24: formData.female16To24 || 0,
@@ -485,10 +528,11 @@ export const useSamurdhiFormHandlers = ({
                 }
                 response = await updateSamurdhiFamily(editId, payload, selectedFile || undefined);
             } else if (isExistingBeneficiary) {
-                if (!formData.nic) {
-                    throw new Error("NIC is required for updating existing beneficiary");
+                if (!formData.nic && !formData.aswasumaHouseholdNo) {
+                    throw new Error("NIC or Household number is required for updating existing beneficiary");
                 }
-                response = await updateSamurdhiFamily(formData.nic, payload, selectedFile || undefined);
+                const identifier = formData.nic || formData.aswasumaHouseholdNo;
+                response = await updateSamurdhiFamily(identifier!, payload, selectedFile || undefined);
             } else {
                 response = await createSamurdhiFamily(payload, selectedFile || undefined);
             }

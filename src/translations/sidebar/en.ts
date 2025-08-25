@@ -1,0 +1,20 @@
+export const translations = {
+    sidebar: {
+        menu: "Menu",
+        noMenuItems: "No menu items available for your role",
+        apiStatus: "Check API Status",
+        householdDetails: "Fetch Household Details",
+        beneficiaryManagement: "Beneficiary Management",
+        addBeneficiaries: "Add Beneficiaries",
+        viewBeneficiaries: "View Beneficiary Details",
+        reports: "Reports",
+        countReports: "Count Reports",
+        beneficiariesCount: "Beneficiaries Count",
+        wayOfGraduationCount: "Way of Graduation Count",
+        detailReports: "Detail Reports",
+        projectDetails: "Project Details",
+        grantUtilization: "Grant Utilization",
+        viewAllBeneficiaries: "View All Beneficiaries",
+        viewAllGrantUtilizations: "View All Grant Utilizations"
+    }
+}

@@ -144,13 +144,15 @@ export const validateSamurdhiForm = (
     }
 
     if (selectedFile) {
-        if (selectedFile.type !== 'application/pdf') {
-            newErrors.consentLetter = 'Only PDF files are allowed';
-        }
-        if (selectedFile.size > 5 * 1024 * 1024) { // 5MB limit
+        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
+
+        if (!allowedTypes.includes(selectedFile.type)) {
+            newErrors.consentLetter = 'Only PDF or image files (JPG, JPEG, PNG, GIF, WEBP, BMP) are allowed';
+        } else if (selectedFile.size > 5 * 1024 * 1024) { // 5MB limit
             newErrors.consentLetter = 'File size must be less than 5MB';
         }
     }
+
 
     if (formData.wantsAswesumaBankTransfer) {
         if (!formData.otherBankName?.trim()) {

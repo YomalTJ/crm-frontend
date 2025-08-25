@@ -5,17 +5,28 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
 import {
-  CalenderIcon,
+  BoltIcon,
   ChevronDownIcon,
+  DocsIcon,
+  DollarLineIcon,
+  EyeIcon,
+  GroupIcon,
   HorizontaLDots,
+  ListIcon,
+  PieChartIcon,
+  PlusIcon,
+  TableIcon,
+  UserCircleIcon,
 } from "../icons/index";
 import { getCookie } from "@/utils/cookies";
+import { useLanguage } from "@/context/LanguageContext"; // Import the language context
 
 type SubSubItem = {
   name: string;
   path: string;
   pro?: boolean;
   new?: boolean;
+  translationKey: string;
 };
 
 type SubItem = {
@@ -23,13 +34,16 @@ type SubItem = {
   path?: string;
   pro?: boolean;
   new?: boolean;
+  translationKey: string;
   subSubItems?: SubSubItem[];
+  icon: React.ReactNode;
 };
 
 type NavItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
+  translationKey: string;
   subItems?: SubItem[];
   allowedRoles?: string[];
 };
@@ -52,59 +66,104 @@ const getUserRole = () => {
   return null;
 };
 
-const navItems: NavItem[] = [
+// Define navigation items with translation keys instead of hardcoded text
+const navItems: (NavItem & { translationKey: string })[] = [
   {
-    icon: <CalenderIcon />,
+    icon: <BoltIcon />,
     name: "Check API Status",
+    translationKey: "sidebar.apiStatus",
     path: "/dashboard/api-status",
-    allowedRoles: ['GN Level User']
+    allowedRoles: ["GN Level User"],
   },
   {
-    icon: <CalenderIcon />,
+    icon: <DocsIcon />,
     name: "Fetch Household Details",
+    translationKey: "sidebar.householdDetails",
     path: "/dashboard/household-details",
-    allowedRoles: ['GN Level User']
+    allowedRoles: ["GN Level User"],
   },
   {
-    icon: <CalenderIcon />,
+    icon: <GroupIcon />,
     name: "Beneficiary Management",
-    allowedRoles: ['GN Level User'],
-    subItems: [{ name: "Add Benificiaries", path: "/dashboard/gn-level/form" }, { name: "View Benificiary Details", path: "/dashboard/gn-level/view-benficiaries" }]
-  },
-  {
-    icon: <CalenderIcon />,
-    name: "Reports",
-    allowedRoles: ['National Level User', 'District Level User', 'Divisional Level User', 'Bank/Zone Level User', 'GN Level User'],
+    translationKey: "sidebar.beneficiaryManagement",
+    allowedRoles: ["GN Level User"],
     subItems: [
       {
-        name: "Count Reports",
-        subSubItems: [
-          { name: "Beneficiaries Count", path: "/dashboard/reports/count/beneficiaries" },
-          { name: "Way of Graduation Count", path: "/dashboard/reports/count/way-of-graduation" },
-        ]
+        icon: <PlusIcon />,
+        name: "Add Beneficiaries",
+        translationKey: "sidebar.addBeneficiaries",
+        path: "/dashboard/gn-level/form",
       },
       {
-        name: "Detail Reports",
-        subSubItems: [
-          { name: "Project Details", path: "/dashboard/reports/detail/project-detail" },
-        ]
-      }
+        icon: <EyeIcon />,
+        name: "View Beneficiary Details",
+        translationKey: "sidebar.viewBeneficiaries",
+        path: "/dashboard/gn-level/view-benficiaries",
+      },
     ],
   },
   {
-    icon: <CalenderIcon />,
-    name: "Grant Utilization",
-    path: "/dashboard/grant-utilization",
-    allowedRoles: ['National Level User', 'District Level User', 'Divisional Level User', 'Bank/Zone Level User', 'GN Level User'],
+    icon: <PieChartIcon />,
+    name: "Reports",
+    translationKey: "sidebar.reports",
+    allowedRoles: [
+      "National Level User",
+      "District Level User",
+      "Divisional Level User",
+      "Bank/Zone Level User",
+      "GN Level User",
+    ],
     subItems: [
       {
-        name: "View All Beneficiaries",
-        path: "/dashboard/grant-utilization"
+        icon: <TableIcon />,
+        name: "Count Reports",
+        translationKey: "sidebar.countReports",
+        subSubItems: [
+          {
+            name: "Beneficiaries Count",
+            translationKey: "sidebar.beneficiariesCount",
+            path: "/dashboard/reports/count/beneficiaries",
+          },
+          {
+            name: "Way of Graduation Count",
+            translationKey: "sidebar.wayOfGraduationCount",
+            path: "/dashboard/reports/count/way-of-graduation",
+          },
+        ],
       },
       {
-        name: "View All Grant Utilizations",
-        path: "/dashboard/grant-utilization/view-all"
-      }
+        icon: <ListIcon />,
+        name: "Detail Reports",
+        translationKey: "sidebar.detailReports",
+        subSubItems: [
+          {
+            name: "Project Details",
+            translationKey: "sidebar.projectDetails",
+            path: "/dashboard/reports/detail/project-detail",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    icon: <DollarLineIcon />,
+    name: "Grant Utilization",
+    translationKey: "sidebar.grantUtilization",
+    path: "/dashboard/grant-utilization",
+    allowedRoles: [
+      "National Level User",
+      "District Level User",
+      "Divisional Level User",
+      "Bank/Zone Level User",
+      "GN Level User",
+    ],
+    subItems: [
+      {
+        icon: <UserCircleIcon />,
+        name: "View All Beneficiaries",
+        translationKey: "sidebar.viewAllBeneficiaries",
+        path: "/dashboard/grant-utilization",
+      },
     ],
   },
 ];
@@ -119,6 +178,7 @@ const AppSidebar: React.FC = () => {
   const [subSubMenuHeight, setSubSubMenuHeight] = useState<Record<string, number>>({});
   const subMenuRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const subSubMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const { t } = useLanguage(); // Get the translation function
 
   useEffect(() => {
     const fetchUserRole = async () => {
@@ -139,7 +199,7 @@ const AppSidebar: React.FC = () => {
     setUserRole(role);
   }, []);
 
-  const getFilteredNavItems = (items: NavItem[]) => {
+  const getFilteredNavItems = (items: typeof navItems) => {
     if (!userRole) return [];
 
     return items.filter(item => {
@@ -268,10 +328,10 @@ const AppSidebar: React.FC = () => {
     }, 300); // Wait for animation to complete
   };
 
-  const renderMenuItems = (navItems: NavItem[]) => (
+  const renderMenuItems = (items: NavItem[]) => (
     <ul className="flex flex-col gap-4">
-      {getFilteredNavItems(navItems).map((nav, index) => (
-        <li key={nav.name}>
+      {getFilteredNavItems(items).map((nav, index) => (
+        <li key={nav.translationKey}>
           {nav.subItems ? (
             <div>
               <button
@@ -289,7 +349,7 @@ const AppSidebar: React.FC = () => {
                   {nav.icon}
                 </span>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <span className="menu-item-text">{nav.name}</span>
+                  <span className="menu-item-text">{t(nav.translationKey)}</span>
                 )}
                 {(isExpanded || isHovered || isMobileOpen) && (
                   <ChevronDownIcon
@@ -311,7 +371,7 @@ const AppSidebar: React.FC = () => {
                 >
                   <ul className="mt-2 space-y-1 ml-9">
                     {nav.subItems.map((subItem, subIndex) => (
-                      <li key={subItem.name}>
+                      <li key={subItem.translationKey}>
                         {subItem.subSubItems ? (
                           <div>
                             <button
@@ -322,7 +382,7 @@ const AppSidebar: React.FC = () => {
                                 : "menu-dropdown-item-inactive"
                                 } flex items-center justify-between`}
                             >
-                              <span>{subItem.name}</span>
+                              <span>{t(subItem.translationKey)}</span>
                               <ChevronDownIcon
                                 className={`w-4 h-4 transition-transform duration-200 ${(openSubSubMenu?.parentIndex === index && openSubSubMenu?.subIndex === subIndex)
                                   ? "rotate-180 text-brand-500"
@@ -345,7 +405,7 @@ const AppSidebar: React.FC = () => {
                             >
                               <ul className="mt-1 space-y-1 ml-4 border-l border-gray-200 dark:border-gray-700 pl-4">
                                 {subItem.subSubItems.map((subSubItem) => (
-                                  <li key={subSubItem.name}>
+                                  <li key={subSubItem.translationKey}>
                                     <Link
                                       href={subSubItem.path}
                                       className={`block py-2 px-3 text-sm rounded-md transition-colors ${isActive(subSubItem.path)
@@ -353,7 +413,7 @@ const AppSidebar: React.FC = () => {
                                         : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
                                         }`}
                                     >
-                                      {subSubItem.name}
+                                      {t(subSubItem.translationKey)}
                                     </Link>
                                   </li>
                                 ))}
@@ -369,7 +429,7 @@ const AppSidebar: React.FC = () => {
                                 : "menu-dropdown-item-inactive"
                                 }`}
                             >
-                              {subItem.name}
+                              {t(subItem.translationKey)}
                             </Link>
                           )
                         )}
@@ -391,7 +451,7 @@ const AppSidebar: React.FC = () => {
                   {nav.icon}
                 </span>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <span className="menu-item-text">{nav.name}</span>
+                  <span className="menu-item-text">{t(nav.translationKey)}</span>
                 )}
               </Link>
             )
@@ -444,13 +504,13 @@ const AppSidebar: React.FC = () => {
               <div>
                 <h2 className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
                   }`}>
-                  {isExpanded || isHovered || isMobileOpen ? "Menu" : <HorizontaLDots />}
+                  {isExpanded || isHovered || isMobileOpen ? t("sidebar.menu") : <HorizontaLDots />}
                 </h2>
                 {renderMenuItems(navItems)}
               </div>
             ) : (
               <div className="p-4 text-sm text-gray-500">
-                No menu items available for your role
+                {t("sidebar.noMenuItems")}
               </div>
             )}
           </div>

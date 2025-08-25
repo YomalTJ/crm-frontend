@@ -334,13 +334,6 @@ const SamurdhiFamilyForm: React.FC<SamurdhiFamilyFormProps> = ({
                                 t={t}
                             />
 
-                            <MainProgramField
-                                formData={formData}
-                                errors={errors}
-                                handlers={handlers}
-                                t={t}
-                            />
-
                             {/* Impact Evaluation Field */}
                             <ImpactEvaluationField
                                 formData={formData}

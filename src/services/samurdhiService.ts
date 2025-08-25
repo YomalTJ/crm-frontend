@@ -289,25 +289,25 @@ export const createSamurdhiFamily = async (payload: SamurdhiFamilyPayload, file?
 };
 
 // DEPRECATED: Remove this method and use getBeneficiaryByIdentifier instead
-export const getBeneficiaryByNIC = async (nic: string) => {
-  try {
-    const token = (await cookies()).get('accessToken')?.value ||
-      (await cookies()).get('staffAccessToken')?.value;
+// export const getBeneficiaryByNIC = async (nic: string) => {
+//   try {
+//     const token = (await cookies()).get('accessToken')?.value ||
+//       (await cookies()).get('staffAccessToken')?.value;
 
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
+//     if (!token) {
+//       throw new Error('No authentication token found');
+//     }
 
-    const response = await axiosInstance.get(`/samurdhi-family/${nic}`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-    return response.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Failed to fetch beneficiary details');
-  }
-};
+//     const response = await axiosInstance.get(`/samurdhi-family/${nic}`, {
+//       headers: {
+//         Authorization: `Bearer ${token}`
+//       }
+//     });
+//     return response.data;
+//   } catch (error: any) {
+//     throw new Error(error.response?.data?.message || 'Failed to fetch beneficiary details');
+//   }
+// };
 
 // Updated method to handle both NIC and household numbers
 export const getBeneficiaryByIdentifier = async (identifier: string): Promise<BeneficiaryDetailsResponse> => {

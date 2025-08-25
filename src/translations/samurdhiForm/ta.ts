@@ -51,9 +51,9 @@ export const translations = {
         selectRefusalReason: 'மறுப்பு காரணத்தை தேர்ந்தெடுக்கவும்',
 
         // File Upload
-        uploadRejectionLetter: 'மறுப்பு கடிதத்தை பதிவேற்றவும் (PDF மட்டும்)',
+        uploadRejectionLetter: 'மறுப்பு கடிதத்தை பதிவேற்றவும்',
         rejectionLetterRequired: 'ஒப்புதல் அளிக்காதபோது மறுப்பு கடிதம் தேவை',
-        fileUploadNote: 'அதிகபட்ச கோப்பு அளவு: 5MB. PDF கோப்புகள் மட்டுமே அனுமதிக்கப்படும்.',
+        fileUploadNote: 'அதிகபட்ச கோப்பு அளவு: 5MB',
         selectedFile: 'தேர்ந்தெடுக்கப்பட்டது',
 
         // Area Classification
