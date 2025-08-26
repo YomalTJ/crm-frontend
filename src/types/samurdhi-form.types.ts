@@ -39,6 +39,8 @@ export interface FormData {
     subsisdy_id: string | null;
     aswesuma_cat_id: string | null;
     empowerment_dimension_id: string | null;
+    selectedLivelihood: string | null;
+    livelihood_id: string | null;
     project_type_id: string | null;
     otherProject: string | null;
     childName: string | null;
@@ -81,6 +83,13 @@ export interface FormErrors {
     [key: string]: string;
 }
 
+export interface Livelihood {
+  id: string;
+  sinhala_name: string;
+  tamil_name: string;
+  english_name: string;
+}
+
 export interface FormOptions {
     employmentOptions: Array<{
         employment_id: string;
@@ -111,6 +120,7 @@ export interface FormOptions {
         nameTa: string;
     }>;
     jobFields: JobField[];
+    livelihoods: Livelihood[];
     projectTypes: ProjectType[];
     resourcesNeeded: Resource[];
     healthIndicators: HealthIndicator[];

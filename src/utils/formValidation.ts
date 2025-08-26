@@ -25,7 +25,6 @@ export const validateSamurdhiForm = (
         status => status.beneficiary_type_id === formData.beneficiary_type_id
     );
 
-    const isSamurdhiBeneficiary = selectedBeneficiaryType?.nameEnglish.includes("Samurdhi beneficiary");
     const isAswasumaBeneficiary = selectedBeneficiaryType?.nameEnglish.includes("Aswasuma beneficiary") &&
         !selectedBeneficiaryType?.nameEnglish.includes("Samurdhi") &&
         !selectedBeneficiaryType?.nameEnglish.includes("low income");
@@ -48,12 +47,10 @@ export const validateSamurdhiForm = (
     }
 
     // NIC validation for non-pure Aswasuma beneficiaries
-    if (!isAswasumaBeneficiary && isSamurdhiBeneficiary) {
-        if (!formData.nic || formData.nic.trim() === '') {
-            newErrors.nic = 'NIC number is required for Samurdhi beneficiaries';
-        } else if (formData.nic.length < 10) {
-            newErrors.nic = 'NIC must be at least 10 characters';
-        }
+    if (!formData.nic || formData.nic.trim() === '') {
+        newErrors.nic = 'NIC number is required';
+    } else if (formData.nic.length < 10) {
+        newErrors.nic = 'NIC must be at least 10 characters';
     }
 
     // Basic required fields

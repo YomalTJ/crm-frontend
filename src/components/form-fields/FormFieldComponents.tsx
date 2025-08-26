@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
 import Label from '../form/Label';
 import Input from '../form/input/InputField';
@@ -284,18 +285,18 @@ export const ConsentLetterUpload: React.FC<FileUploadProps & { t: (key: string) 
 
     const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0] || null;
-        
+
         if (file) {
             setIsValidating(true);
             setValidationStatus('pending');
-            
+
             try {
                 // Simulate validation process (replace with actual validation)
                 await new Promise(resolve => setTimeout(resolve, 1000));
-                
+
                 // Check file integrity
                 const isValid = await validateFileIntegrity(file);
-                
+
                 if (isValid) {
                     setValidationStatus('valid');
                     handlers.handleFileChange(file);
@@ -323,7 +324,7 @@ export const ConsentLetterUpload: React.FC<FileUploadProps & { t: (key: string) 
     const validateFileIntegrity = async (file: File): Promise<boolean> => {
         return new Promise((resolve) => {
             const reader = new FileReader();
-            
+
             reader.onload = () => {
                 try {
                     // Basic integrity checks
@@ -335,7 +336,7 @@ export const ConsentLetterUpload: React.FC<FileUploadProps & { t: (key: string) 
                     // Check file signature/magic numbers
                     const arrayBuffer = reader.result as ArrayBuffer;
                     const view = new Uint8Array(arrayBuffer.slice(0, 8));
-                    
+
                     // Common file signatures
                     const signatures = {
                         pdf: [0x25, 0x50, 0x44, 0x46], // %PDF
@@ -395,7 +396,7 @@ export const ConsentLetterUpload: React.FC<FileUploadProps & { t: (key: string) 
             <Label>
                 {t('samurdhiForm.uploadRejectionLetter')} <span className="text-red-500">*</span>
             </Label>
-            
+
             <div className="flex flex-col gap-2">
                 <div className="relative">
                     <input
@@ -415,7 +416,7 @@ export const ConsentLetterUpload: React.FC<FileUploadProps & { t: (key: string) 
                             border rounded-md p-2
                             ${isValidating ? 'opacity-50 cursor-not-allowed' : ''}`}
                     />
-                    
+
                     {isValidating && (
                         <div className="absolute inset-0 bg-white dark:bg-gray-800 bg-opacity-80 flex items-center justify-center rounded-md">
                             <LoadingSpinner size="sm" />
@@ -444,7 +445,7 @@ export const ConsentLetterUpload: React.FC<FileUploadProps & { t: (key: string) 
                     {t('samurdhiForm.fileUploadNote')}
                 </p>
             </div>
-            
+
             <ErrorMessage error={errors.consentLetter} />
         </div>
     );
@@ -976,42 +977,82 @@ export const EmpowermentField: React.FC<Pick<FormFieldProps, 'formData' | 'formO
 );
 
 // Update ProjectTypeField component
-export const ProjectTypeField: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'showAllFieldsForExistingBeneficiary' | 'handlers' | 't'>> = ({
+export const ProjectTypeField: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'showAllFieldsForExistingBeneficiary' | 'handlers' | 't'> & {
+    projectTypesByLivelihood: any[];
+    isLoadingProjectTypes: boolean;
+    onLivelihoodChange: (livelihoodId: string) => void;
+}> = ({
     formData,
     formOptions,
     errors,
     showAllFieldsForExistingBeneficiary,
     handlers,
+    projectTypesByLivelihood,
+    isLoadingProjectTypes,
+    onLivelihoodChange,
     t
 }) => {
-    if (!shouldShowProjectFields(formData, formOptions, showAllFieldsForExistingBeneficiary)) return null;
+        if (!shouldShowProjectFields(formData, formOptions, showAllFieldsForExistingBeneficiary)) return null;
 
-    return (
-        <div className="space-y-2">
-            <Label>{t('samurdhiForm.projectTypes')}</Label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                {formOptions.projectTypes.map((project) => (
-                    <Radio
-                        key={project.project_type_id}
-                        id={`project-${project.project_type_id}`}
-                        name="project_type_id"
-                        value={project.project_type_id}
-                        checked={formData.project_type_id === project.project_type_id}
-                        onChange={() => handlers.handleRadioChange('project_type_id', project.project_type_id)}
-                        label={
-                            <div className="flex flex-col text-sm sm:text-base">
-                                <span className="font-sinhala">{project.nameSinhala}</span>
-                                <span className="font-tamil">{project.nameTamil}</span>
-                                <span>{project.nameEnglish}</span>
-                            </div>
-                        }
-                    />
-                ))}
+        return (
+            <div className="space-y-4">
+                {/* Livelihood Dropdown */}
+                <div>
+                    <Label>{t('samurdhiForm.livelihood')}</Label>
+                    <div className="relative">
+                        <Select
+                            options={formOptions.livelihoods?.map((livelihood: any) => ({
+                                value: livelihood.id.toString(),
+                                label: `${livelihood.sinhala_name} - ${livelihood.tamil_name} - ${livelihood.english_name}`
+                            })) || []}
+                            placeholder={t('samurdhiForm.selectLivelihood')}
+                            onChange={(value) => {
+                                // Update both selectedLivelihood (for UI logic) and livelihood_id (for payload)
+                                handlers.handleSelectChange('selectedLivelihood', value);
+                                handlers.handleSelectChange('livelihood_id', value);
+                                onLivelihoodChange(value);
+                            }}
+                            className={`dark:bg-dark-900 ${errors.selectedLivelihood ? 'border-red-500' : ''}`}
+                            value={formData.selectedLivelihood || ''}
+                        />
+                        <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                            <ChevronDownIcon />
+                        </span>
+                    </div>
+                    <ErrorMessage error={errors.selectedLivelihood} />
+                </div>
+
+                {/* Project Type Dropdown - only show when livelihood is selected */}
+                {formData.selectedLivelihood && (
+                    <div>
+                        <Label>{t('samurdhiForm.projectTypes')}</Label>
+                        <div className="relative">
+                            <Select
+                                options={projectTypesByLivelihood.map(project => ({
+                                    value: project.project_type_id.toString(),
+                                    label: `${project.nameSinhala} - ${project.nameTamil} - ${project.nameEnglish}`
+                                }))}
+                                placeholder={isLoadingProjectTypes ? t('common.loading') : t('samurdhiForm.selectProjectType')}
+                                onChange={(value) => handlers.handleSelectChange('project_type_id', value)}
+                                className={`dark:bg-dark-900 ${errors.project_type_id ? 'border-red-500' : ''}`}
+                                value={formData.project_type_id || ''}
+                                disabled={isLoadingProjectTypes}
+                            />
+                            {isLoadingProjectTypes && (
+                                <div className="absolute top-2 right-3">
+                                    <LoadingSpinner size="sm" />
+                                </div>
+                            )}
+                            <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                                <ChevronDownIcon />
+                            </span>
+                        </div>
+                        <ErrorMessage error={errors.project_type_id} />
+                    </div>
+                )}
             </div>
-            <ErrorMessage error={errors.project_type_id} />
-        </div>
-    );
-};
+        );
+    };
 
 // Update ChildDetailsFields component
 export const ChildDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'showAllFieldsForExistingBeneficiary' | 'handlers' | 't'>> = ({

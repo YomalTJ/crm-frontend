@@ -196,6 +196,10 @@ export const translations = {
         invalidPhone: 'தயவுசெய்து செல்லுபடியாகும் தொலைபேசி எண்ணை உள்ளிடவும்',
         invalidAge: 'தயவுசெய்து செல்லுபடியாகும் வயதை உள்ளிடவும்',
         invalidAmount: 'தயவுசெய்து செல்லுபடியாகும் தொகையை உள்ளிடவும்',
-        fieldRequired: 'இந்த புலம் தேவை'
+        fieldRequired: 'இந்த புலம் தேவை',
+
+        livelihood: 'வாழ்வாதாரம்',
+        selectLivelihood: 'வாழ்வாதாரத்தைத் தேர்ந்தெடுக்கவும்',
+        selectProjectType: 'திட்ட வகையைத் தேர்ந்தெடுக்கவும்'
     }
 };

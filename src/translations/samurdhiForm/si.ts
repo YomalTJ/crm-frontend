@@ -196,7 +196,12 @@ export const translations = {
         invalidPhone: 'කරුණාකර වලංගු දුරකථන අංකයක් ඇතුළත් කරන්න',
         invalidAge: 'කරුණාකර වලංගු වයසක් ඇතුළත් කරන්න',
         invalidAmount: 'කරුණාකර වලංගු මුදලක් ඇතුළත් කරන්න',
-        fieldRequired: 'මෙම කොටස අනිවාර්ය වේ'
+        fieldRequired: 'මෙම කොටස අනිවාර්ය වේ',
+
+        livelihood: 'ජීවනෝපාය',
+        selectLivelihood: 'ජීවනෝපාය තෝරන්න',
+        selectProjectType: 'ව්‍යාපාර වර්ගය තෝරන්න'
+
     }
 
 };

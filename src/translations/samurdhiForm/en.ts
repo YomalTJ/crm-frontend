@@ -196,6 +196,10 @@ export const translations = {
         invalidPhone: 'Please enter a valid phone number',
         invalidAge: 'Please enter a valid age',
         invalidAmount: 'Please enter a valid amount',
-        fieldRequired: 'This field is required'
+        fieldRequired: 'This field is required',
+
+        livelihood: 'Livelihood',
+        selectLivelihood: 'Select Livelihood',
+        selectProjectType: 'Select Project Type'
     }
 };

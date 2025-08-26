@@ -88,6 +88,8 @@ const createEmptyFormData = (locationData: Partial<{
         subsisdy_id: null,
         aswesuma_cat_id: null,
         empowerment_dimension_id: null,
+        selectedLivelihood: null,
+        livelihood_id: null,
         project_type_id: null,
         otherProject: null,
         childName: null,
@@ -148,6 +150,9 @@ const SamurdhiFamilyForm: React.FC<SamurdhiFamilyFormProps> = ({
         setIsAswasumaHouseholdDisabled,
         showAllFieldsForExistingBeneficiary,
         setShowAllFieldsForExistingBeneficiary,
+        projectTypesByLivelihood,
+        isLoadingProjectTypes,
+        handleLivelihoodChange,
         setSelectedFile,
         selectedFile,
         handleInputChange,
@@ -239,6 +244,8 @@ const SamurdhiFamilyForm: React.FC<SamurdhiFamilyFormProps> = ({
                 subsisdy_id: initialData.samurdhiSubsidy?.id || null,
                 aswesuma_cat_id: initialData.aswasumaCategory?.id || null,
                 empowerment_dimension_id: initialData.empowermentDimension?.id || null,
+                selectedLivelihood: initialData.livelihood?.id || null,
+                livelihood_id: initialData.livelihood?.id || null,
                 project_type_id: initialData.projectType?.id || null,
                 otherProject: initialData.otherProject || null,
                 childName: initialData.childName || null,
@@ -453,6 +460,9 @@ const SamurdhiFamilyForm: React.FC<SamurdhiFamilyFormProps> = ({
                                 errors={errors}
                                 showAllFieldsForExistingBeneficiary={showAllFieldsForExistingBeneficiary}
                                 handlers={handlers}
+                                projectTypesByLivelihood={projectTypesByLivelihood}
+                                isLoadingProjectTypes={isLoadingProjectTypes}
+                                onLivelihoodChange={handleLivelihoodChange}
                                 t={t}
                             />
 

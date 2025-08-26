@@ -14,7 +14,7 @@ import { getBeneficiaryStatuses } from '@/services/beneficiaryService';
 import { getEmpowermentDimensions } from '@/services/empowermentService';
 import { getEmpowermentRefusalReasons } from '@/services/empowermentRefusalReasonsService';
 import { getDisabilities } from '@/services/disabilitiesService';
-import { getHouseholdNumbersByGnCode } from '@/services/samurdhiService';
+import { getHouseholdNumbersByGnCode, getLivelihoods } from '@/services/samurdhiService';
 import toast from 'react-hot-toast';
 
 const createEmptyFormData = (locationData: Partial<{
@@ -61,7 +61,9 @@ const createEmptyFormData = (locationData: Partial<{
     otherOccupation: null,
     subsisdy_id: null,
     aswesuma_cat_id: null,
+    selectedLivelihood: null,
     empowerment_dimension_id: null,
+    livelihood_id: null,
     project_type_id: null,
     otherProject: null,
     childName: null,
@@ -106,6 +108,7 @@ export const useSamurdhiFormData = () => {
         disabilities: [],
         jobFields: [],
         projectTypes: [],
+        livelihoods: [],
         resourcesNeeded: [],
         healthIndicators: [],
         domesticDynamics: [],
@@ -158,6 +161,7 @@ export const useSamurdhiFormData = () => {
                     aswasumaData,
                     jobFieldsData,
                     projectTypesData,
+                    livelihoodsData,
                     resourcesData,
                     healthIndicatorsData,
                     domesticDynamicsData,
@@ -173,6 +177,7 @@ export const useSamurdhiFormData = () => {
                     getAswasumaCategories().catch(() => []),
                     getJobFields().catch(() => []),
                     getProjectTypes().catch(() => []),
+                    getLivelihoods().catch(() => []),
                     getResourceNeeded().catch(() => []),
                     getHealthIndicators().catch(() => []),
                     getDomesticDynamics().catch(() => []),
@@ -190,6 +195,7 @@ export const useSamurdhiFormData = () => {
                     aswasumaCategories: aswasumaData,
                     jobFields: jobFieldsData,
                     projectTypes: projectTypesData,
+                    livelihoods: livelihoodsData,
                     resourcesNeeded: resourcesData,
                     healthIndicators: healthIndicatorsData,
                     domesticDynamics: domesticDynamicsData,

@@ -6,7 +6,8 @@ import {
     createSamurdhiFamily,
     updateSamurdhiFamily,
     SamurdhiFamilyPayload,
-    getBeneficiaryByIdentifier // Add this import
+    getBeneficiaryByIdentifier, // Add this import
+    getProjectTypesByLivelihood
 } from '@/services/samurdhiService';
 import { validateSamurdhiForm, convertEmptyToNull, getAswasumaIdByLevel } from '@/utils/formValidation';
 import toast from 'react-hot-toast';
@@ -36,6 +37,10 @@ export const useSamurdhiFormHandlers = ({
     const [isExistingBeneficiary, setIsExistingBeneficiary] = useState(isEditMode);
     const [isAswasumaHouseholdDisabled, setIsAswasumaHouseholdDisabled] = useState(false);
     const [showAllFieldsForExistingBeneficiary, setShowAllFieldsForExistingBeneficiary] = useState(isEditMode);
+
+    const [projectTypesByLivelihood, setProjectTypesByLivelihood] = useState<any[]>([]);
+    const [isLoadingProjectTypes, setIsLoadingProjectTypes] = useState(false);
+
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     const clearError = (fieldName: string) => {
@@ -45,6 +50,35 @@ export const useSamurdhiFormHandlers = ({
                 delete newErrors[fieldName];
                 return newErrors;
             });
+        }
+    };
+
+    const handleLivelihoodChange = async (livelihoodId: string) => {
+        clearError('selectedLivelihood');
+        clearError('livelihood_id');
+        clearError('project_type_id');
+
+        setFormData(prev => ({
+            ...prev,
+            selectedLivelihood: livelihoodId,
+            livelihood_id: livelihoodId, // ADDED: Set both for UI and payload
+            project_type_id: null // Reset project type when livelihood changes
+        }));
+
+        if (livelihoodId && livelihoodId !== '') {
+            setIsLoadingProjectTypes(true);
+            try {
+                const projectTypes = await getProjectTypesByLivelihood(parseInt(livelihoodId));
+                setProjectTypesByLivelihood(projectTypes);
+            } catch (error) {
+                console.error('Error fetching project types:', error);
+                toast.error('Failed to load project types');
+                setProjectTypesByLivelihood([]);
+            } finally {
+                setIsLoadingProjectTypes(false);
+            }
+        } else {
+            setProjectTypesByLivelihood([]);
         }
     };
 
@@ -61,7 +95,7 @@ export const useSamurdhiFormHandlers = ({
         if (fieldName === 'nic') {
             setFormData(prev => ({
                 ...prev,
-                nic: value.trim() === '' ? null : value.trim()
+                nic: value.trim()
             }));
             return;
         }
@@ -231,6 +265,8 @@ export const useSamurdhiFormHandlers = ({
 
                 // Empowerment and projects
                 empowerment_dimension_id: data.empowermentDimension?.id || prev.empowerment_dimension_id,
+                selectedLivelihood: data.livelihood?.id || prev.selectedLivelihood,
+                livelihood_id: data.livelihood?.id || prev.livelihood_id,
                 project_type_id: data.projectType?.id || prev.project_type_id,
                 otherProject: data.otherProject || prev.otherProject,
 
@@ -474,6 +510,7 @@ export const useSamurdhiFormHandlers = ({
                 subsisdy_id: convertEmptyToNull(formData.subsisdy_id),
                 aswesuma_cat_id: convertEmptyToNull(formData.aswesuma_cat_id),
                 empowerment_dimension_id: convertEmptyToNull(formData.empowerment_dimension_id),
+                livelihood_id: convertEmptyToNull(formData.livelihood_id),
                 project_type_id: convertEmptyToNull(formData.project_type_id),
                 otherProject: convertEmptyToNull(formData.otherProject),
                 childName: convertEmptyToNull(formData.childName),
@@ -505,6 +542,9 @@ export const useSamurdhiFormHandlers = ({
                 otherGovernmentInstitution: convertEmptyToNull(formData.otherGovernmentInstitution),
                 otherSubsidyAmount: formData.otherSubsidyAmount || null
             };
+
+            console.log("payload: ", payload);
+
 
             // Add JSON payload
             Object.entries(payload).forEach(([key, value]) => {
@@ -650,6 +690,9 @@ export const useSamurdhiFormHandlers = ({
         setIsAswasumaHouseholdDisabled,
         showAllFieldsForExistingBeneficiary,
         setShowAllFieldsForExistingBeneficiary,
+        projectTypesByLivelihood,
+        isLoadingProjectTypes,
+        handleLivelihoodChange,
         selectedFile,
         handleFileChange,
         handleInputChange,
