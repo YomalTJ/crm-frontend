@@ -15,6 +15,13 @@ export const translations = {
         projectDetails: "ව්‍යාපෘති විස්තර",
         grantUtilization: "ආධාර මුදල යොදවන ආකාරය",
         viewAllBeneficiaries: "සියලුම ප්‍රතිලාභීන් බලන්න",
-        viewAllGrantUtilizations: "සියලු ආධාර මුදල් යොදවන ආකාරය"
+        viewAllGrantUtilizations: "සියලු ආධාර මුදල් යොදවන ආකාරය",
+        businessOpportunityManagement: "ව්‍යාපාරික අවස්ථා",
+        addBusinessOpportunity: "ව්‍යාපාරික අවස්ථා එකතු කරන්න",
+        viewBusinessOpportunity: "ව්‍යාපාරික අවස්ථා බලන්න",
+        businessEmpowers: "ව්‍යාපාර සවිබල ගැන්වීම්",
+        addBusinessEmpowerment: "ව්‍යාපාර සවිබල ගැන්වීම එකතු කරන්න",
+        viewBusinessEmpowerment: "ව්‍යාපාර සවිබල ගැන්වීම් බලන්න"
     }
+
 }

@@ -17,6 +17,7 @@ import {
   PlusIcon,
   TableIcon,
   UserCircleIcon,
+  ShootingStarIcon
 } from "../icons/index";
 import { getCookie } from "@/utils/cookies";
 import { useLanguage } from "@/context/LanguageContext"; // Import the language context
@@ -163,6 +164,40 @@ const navItems: (NavItem & { translationKey: string })[] = [
         name: "View All Beneficiaries",
         translationKey: "sidebar.viewAllBeneficiaries",
         path: "/dashboard/grant-utilization",
+      },
+    ],
+  },
+  {
+    icon: <GroupIcon />,
+    name: "Business Opportunities Management",
+    translationKey: "sidebar.businessOpportunityManagement",
+    allowedRoles: ["National Level User"],
+    subItems: [
+      {
+        icon: <PlusIcon />,
+        name: "Add Business Opportunities",
+        translationKey: "sidebar.addBusinessOpportunity",
+        path: "/dashboard/national-level/business-opportunity/create",
+      },
+      {
+        icon: <EyeIcon />,
+        name: "View Business opportunities",
+        translationKey: "sidebar.viewBusinessOpportunity",
+        path: "/dashboard/national-level/business-opportunity/view",
+      },
+    ],
+  },
+  {
+    icon: <ShootingStarIcon />,
+    name: "Business Empowerment Plan",
+    translationKey: "sidebar.businessEmpowers",
+    allowedRoles: ["GN Level User"],
+    subItems: [
+      {
+        icon: <EyeIcon />,
+        name: "View Business Empowerment Plan",
+        translationKey: "sidebar.viewBusinessEmpowerment",
+        path: "/dashboard/gn-level/business-empowerment/view",
       },
     ],
   },

@@ -15,6 +15,13 @@ export const translations = {
         projectDetails: "Project Details",
         grantUtilization: "Grant Utilization",
         viewAllBeneficiaries: "View All Beneficiaries",
-        viewAllGrantUtilizations: "View All Grant Utilizations"
+        viewAllGrantUtilizations: "View All Grant Utilizations",
+        businessOpportunityManagement: "Business Opportunities",
+        addBusinessOpportunity: "Add Business Opportunities",
+        viewBusinessOpportunity: "View Business Opportunities",
+        businessEmpowers: "Business Empowerments",
+        addBusinessEmpowerment: "Add Business Empowerment",
+        viewBusinessEmpowerment: "View Business Empowerments"
     }
+
 }

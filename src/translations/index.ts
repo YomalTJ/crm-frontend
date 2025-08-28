@@ -10,23 +10,38 @@ import { translations as sidebarEn } from './sidebar/en';
 import { translations as sidebarSi } from './sidebar/si';
 import { translations as sidebarTa } from './sidebar/ta';
 
+import { translations as businessEmpowerEn } from './businessEmpowerment/en';
+import { translations as businessEmpowerSi } from './businessEmpowerment/si';
+import { translations as businessEmpowerTa } from './businessEmpowerment/ta';
+
 export const translations = {
     en: {
         ...en,
         ...samurdhiFormEn,
-        ...sidebarEn
+        ...sidebarEn,
+        ...businessEmpowerEn
     },
     si: {
         ...si,
         ...samurdhiFormSi,
-        ...sidebarSi
+        ...sidebarSi,
+        ...businessEmpowerSi
     },
     ta: {
         ...ta,
         ...samurdhiFormTa,
-        ...sidebarTa
+        ...sidebarTa,
+        ...businessEmpowerTa
     }
 };
 
-export type TranslationKey = keyof typeof en;
-export type NestedTranslationKey = keyof typeof en.grantUtilization | keyof typeof en.common;
+export type TranslationKey =
+    | keyof typeof en
+    | keyof typeof en.grantUtilization
+    | keyof typeof en.common
+    | keyof typeof businessEmpowerEn.businessEmpower;
+
+export type NestedTranslationKey =
+    | keyof typeof en.grantUtilization
+    | keyof typeof en.common
+    | keyof typeof businessEmpowerEn.businessEmpower;

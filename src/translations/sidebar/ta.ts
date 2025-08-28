@@ -10,11 +10,18 @@ export const translations = {
         reports: "அறிக்கைகள்",
         countReports: "எண்ணிக்கை அறிக்கைகள்",
         beneficiariesCount: "பயனாளிகள் எண்ணிக்கை",
-        wayOfGraduationCount: "பட்டம் பெறும் வழிகள் எண்ணிக்கை",
+        wayOfGraduationCount: "சுய வலுவூட்டும் வழிகள் எண்ணிக்கை",
         detailReports: "விரிவான அறிக்கைகள்",
         projectDetails: "திட்ட விவரங்கள்",
         grantUtilization: "மானிய பயன்பாடு",
         viewAllBeneficiaries: "அனைத்து பயனாளிகளையும் காண்க",
-        viewAllGrantUtilizations: "அனைத்து மானிய பயன்பாடுகளையும் காண்க"
+        viewAllGrantUtilizations: "அனைத்து மானிய பயன்பாடுகளையும் காண்க",
+        businessOpportunityManagement: "வணிக வாய்ப்புகள்",
+        addBusinessOpportunity: "வணிக வாய்ப்புகளைச் சேர்க்கவும்",
+        viewBusinessOpportunity: "வணிக வாய்ப்புகளைக் காண்க",
+        businessEmpowers: "வணிக வலுவூட்டல்கள்",
+        addBusinessEmpowerment: "வணிக வலுவூட்டலைச் சேர்க்கவும்",
+        viewBusinessEmpowerment: "வணிக வலுவூட்டல்களைக் காண்க"
     }
+
 }
