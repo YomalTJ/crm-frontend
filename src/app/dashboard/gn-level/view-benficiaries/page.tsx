@@ -15,7 +15,7 @@ const ViewBeneficiaries = () => {
   const [totalPages, setTotalPages] = useState(1)
   const [totalRecords, setTotalRecords] = useState(0)
   const router = useRouter()
-  
+
   // Filter states
   const [filters, setFilters] = useState<BeneficiaryFilters>({
     page: 1,
@@ -23,7 +23,7 @@ const ViewBeneficiaries = () => {
   })
   const [searchTerm, setSearchTerm] = useState('')
   const [showFilters, setShowFilters] = useState(false)
-  const [mainProgramFilter, setMainProgramFilter] = useState<string>('')
+  const [mainProgramFilter, setMainProgramFilter] = useState<'NP' | 'ADB' | 'WB' | ''>('');
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
 
@@ -31,10 +31,29 @@ const ViewBeneficiaries = () => {
     setLoading(true)
     setError(null)
     try {
-      const response = await getBeneficiaries(filters)
-      setBeneficiaries(response.data)
-      setTotalPages(response.meta.last_page)
-      setTotalRecords(response.meta.total)
+      // First, get all data without mainProgram filter (since backend ignores it)
+      const response = await getBeneficiaries({
+        page: filters.page,
+        limit: filters.limit,
+        search: filters.search,
+        fromDate: filters.fromDate,
+        toDate: filters.toDate,
+        // Don't send mainProgram to backend since it's not working
+      })
+
+      // Client-side filtering for mainProgram
+      let filteredData = response.data;
+
+      if (filters.mainProgram) {
+        filteredData = filteredData.filter(beneficiary =>
+          beneficiary.mainProgram === filters.mainProgram
+        )
+      }
+
+      setBeneficiaries(filteredData)
+      setTotalPages(Math.ceil(filteredData.length / (filters.limit || 10)))
+      setTotalRecords(filteredData.length)
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch beneficiaries')
     } finally {
@@ -50,20 +69,23 @@ const ViewBeneficiaries = () => {
     setFilters(prev => ({
       ...prev,
       page: 1,
-      search: searchTerm.trim() || undefined
-    }))
+      search: searchTerm.trim() || undefined,
+      mainProgram: undefined,
+      fromDate: undefined,
+      toDate: undefined
+    }));
   }
 
   const handleFilterApply = () => {
     setFilters(prev => ({
       ...prev,
       page: 1,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      mainProgram: mainProgramFilter as any || undefined,
+      mainProgram: mainProgramFilter || undefined,
       fromDate: fromDate || undefined,
-      toDate: toDate || undefined
-    }))
-    setShowFilters(false)
+      toDate: toDate || undefined,
+      search: undefined
+    }));
+    setShowFilters(false);
   }
 
   const handleClearFilters = () => {
@@ -81,19 +103,17 @@ const ViewBeneficiaries = () => {
   }
 
   const handleEdit = (beneficiary: Beneficiary) => {
-  const identifier = beneficiary.nic || beneficiary.aswasumaHouseholdNo
-  
-  if (identifier) {
-    router.push(`/dashboard/gn-level/view-benficiaries/edit-data/${encodeURIComponent(identifier)}`)
-  } else {
-    // toast.error('No valid identifier found for this beneficiary')
+    const identifier = beneficiary.nic || beneficiary.aswasumaHouseholdNo
+
+    if (identifier) {
+      router.push(`/dashboard/gn-level/view-benficiaries/edit-data/${encodeURIComponent(identifier)}`)
+    } else {
+      // toast.error('No valid identifier found for this beneficiary')
+    }
   }
-}
 
   const handleAddNew = () => {
-    // TODO: Implement add new functionality
-    console.log('Add new beneficiary')
-    // You can add your add new logic here
+    router.push("/dashboard/gn-level/form")
   }
 
   const formatDate = (dateString: string) => {
@@ -118,7 +138,7 @@ const ViewBeneficiaries = () => {
     const maxVisiblePages = 5
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2))
     const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1)
-    
+
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1)
     }
@@ -128,11 +148,10 @@ const ViewBeneficiaries = () => {
         <button
           key={i}
           onClick={() => handlePageChange(i)}
-          className={`px-3 py-1 mx-1 rounded ${
-            i === currentPage
-              ? 'bg-blue-500 text-white'
-              : `${theme === 'dark' ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`
-          }`}
+          className={`px-3 py-1 mx-1 rounded ${i === currentPage
+            ? 'bg-blue-500 text-white'
+            : `${theme === 'dark' ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`
+            }`}
         >
           {i}
         </button>
@@ -144,11 +163,10 @@ const ViewBeneficiaries = () => {
         <button
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className={`px-3 py-1 mx-1 rounded flex items-center ${
-            currentPage === 1 
-              ? 'opacity-50 cursor-not-allowed' 
-              : `${theme === 'dark' ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`
-          }`}
+          className={`px-3 py-1 mx-1 rounded flex items-center ${currentPage === 1
+            ? 'opacity-50 cursor-not-allowed'
+            : `${theme === 'dark' ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`
+            }`}
         >
           <ChevronLeft size={16} />
         </button>
@@ -156,11 +174,10 @@ const ViewBeneficiaries = () => {
         <button
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className={`px-3 py-1 mx-1 rounded flex items-center ${
-            currentPage === totalPages 
-              ? 'opacity-50 cursor-not-allowed' 
-              : `${theme === 'dark' ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`
-          }`}
+          className={`px-3 py-1 mx-1 rounded flex items-center ${currentPage === totalPages
+            ? 'opacity-50 cursor-not-allowed'
+            : `${theme === 'dark' ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`
+            }`}
         >
           <ChevronRight size={16} />
         </button>
@@ -197,11 +214,10 @@ const ViewBeneficiaries = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  className={`w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    theme === 'dark' 
-                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  }`}
+                  className={`w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === 'dark'
+                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    }`}
                 />
               </div>
               <button
@@ -213,11 +229,10 @@ const ViewBeneficiaries = () => {
             </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`px-4 py-2 rounded-md flex items-center gap-2 transition-colors ${
-                theme === 'dark' 
-                  ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-              }`}
+              className={`px-4 py-2 rounded-md flex items-center gap-2 transition-colors ${theme === 'dark'
+                ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                }`}
             >
               <Filter size={20} />
               Filters
@@ -226,24 +241,21 @@ const ViewBeneficiaries = () => {
 
           {/* Advanced Filters */}
           {showFilters && (
-            <div className={`mt-4 p-4 border rounded-md ${
-              theme === 'dark' ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-gray-50'
-            }`}>
+            <div className={`mt-4 p-4 border rounded-md ${theme === 'dark' ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-gray-50'
+              }`}>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className={`block text-sm font-medium mb-1 ${
-                    theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                  }`}>
+                  <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                    }`}>
                     Main Program
                   </label>
                   <select
                     value={mainProgramFilter}
-                    onChange={(e) => setMainProgramFilter(e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      theme === 'dark' 
-                        ? 'bg-gray-600 border-gray-500 text-white' 
-                        : 'bg-white border-gray-300 text-gray-900'
-                    }`}
+                    onChange={(e) => setMainProgramFilter(e.target.value as 'NP' | 'ADB' | 'WB' | '')}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === 'dark'
+                      ? 'bg-gray-600 border-gray-500 text-white'
+                      : 'bg-white border-gray-300 text-gray-900'
+                      }`}
                   >
                     <option value="">All Programs</option>
                     <option value="NP">NP</option>
@@ -251,38 +263,37 @@ const ViewBeneficiaries = () => {
                     <option value="WB">WB</option>
                   </select>
                 </div>
+
+                {/* Add date filters if needed */}
                 <div>
-                  <label className={`block text-sm font-medium mb-1 ${
-                    theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                  }`}>
+                  <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                    }`}>
                     From Date
                   </label>
                   <input
                     type="date"
                     value={fromDate}
                     onChange={(e) => setFromDate(e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      theme === 'dark' 
-                        ? 'bg-gray-600 border-gray-500 text-white' 
-                        : 'bg-white border-gray-300 text-gray-900'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === 'dark'
+                      ? 'bg-gray-600 border-gray-500 text-white'
+                      : 'bg-white border-gray-300 text-gray-900'
+                      }`}
                   />
                 </div>
+
                 <div>
-                  <label className={`block text-sm font-medium mb-1 ${
-                    theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                  }`}>
+                  <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                    }`}>
                     To Date
                   </label>
                   <input
                     type="date"
                     value={toDate}
                     onChange={(e) => setToDate(e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      theme === 'dark' 
-                        ? 'bg-gray-600 border-gray-500 text-white' 
-                        : 'bg-white border-gray-300 text-gray-900'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === 'dark'
+                      ? 'bg-gray-600 border-gray-500 text-white'
+                      : 'bg-white border-gray-300 text-gray-900'
+                      }`}
                   />
                 </div>
               </div>
@@ -295,11 +306,10 @@ const ViewBeneficiaries = () => {
                 </button>
                 <button
                   onClick={handleClearFilters}
-                  className={`px-4 py-2 rounded-md transition-colors ${
-                    theme === 'dark' 
-                      ? 'bg-gray-600 hover:bg-gray-500 text-gray-300' 
-                      : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                  }`}
+                  className={`px-4 py-2 rounded-md transition-colors ${theme === 'dark'
+                    ? 'bg-gray-600 hover:bg-gray-500 text-gray-300'
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                    }`}
                 >
                   Clear All
                 </button>
@@ -415,11 +425,10 @@ const ViewBeneficiaries = () => {
                           <div className="flex items-center justify-center gap-2">
                             <button
                               onClick={() => handleEdit(beneficiary)}
-                              className={`p-2 rounded-md transition-colors ${
-                                theme === 'dark' 
-                                  ? 'text-blue-400 hover:bg-gray-600' 
-                                  : 'text-blue-600 hover:bg-blue-50'
-                              }`}
+                              className={`p-2 rounded-md transition-colors ${theme === 'dark'
+                                ? 'text-blue-400 hover:bg-gray-600'
+                                : 'text-blue-600 hover:bg-blue-50'
+                                }`}
                               title="Edit beneficiary"
                             >
                               <Edit size={16} />

@@ -1,5 +1,5 @@
-// components/header/AppHeader.tsx
 "use client";
+
 import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
 import { LanguageSelector } from "@/components/common/LanguageSelector";
 // import NotificationDropdown from "@/components/header/NotificationDropdown";

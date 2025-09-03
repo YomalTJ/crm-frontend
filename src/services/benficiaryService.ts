@@ -61,12 +61,16 @@ export const getBeneficiaries = async (filters: BeneficiaryFilters = {}): Promis
         const queryString = params.toString();
         const url = `/samurdhi-family/created-by-me${queryString ? `?${queryString}` : ''}`;
 
+        console.log('API Request URL:', url); // Debug the URL being called
+        console.log('Filters being sent:', filters); // Debug the filters
+
         const response = await axiosInstance.get(url, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
         });
 
+        console.log('API Response:', response.data); // Debug the response
         return response.data;
     } catch (error) {
         console.error('Failed to fetch beneficiaries:', error);

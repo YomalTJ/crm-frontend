@@ -230,7 +230,7 @@ const HouseholdDetails = () => {
             </p>
           </div>
 
-          <div className="flex gap-4 mt-1">
+          <div className="flex flex-col md:flex-row gap-4 mt-1 w-full md:w-auto">
             <button
               onClick={fetchHouseholdData}
               disabled={loading || !gnCode}

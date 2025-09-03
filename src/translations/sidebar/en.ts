@@ -21,7 +21,9 @@ export const translations = {
         viewBusinessOpportunity: "View Business Opportunities",
         businessEmpowers: "Business Empowerments",
         addBusinessEmpowerment: "Add Business Empowerment",
-        viewBusinessEmpowerment: "View Business Empowerments"
+        viewBusinessEmpowerment: "View Business Empowerments",
+        beneficiaryTraining: "Beneficiary Training",
+        viewBeneficiaryTraining: "View Beneficiary Training"
     }
 
 }

@@ -21,7 +21,9 @@ export const translations = {
         viewBusinessOpportunity: "வணிக வாய்ப்புகளைக் காண்க",
         businessEmpowers: "வணிக வலுவூட்டல்கள்",
         addBusinessEmpowerment: "வணிக வலுவூட்டலைச் சேர்க்கவும்",
-        viewBusinessEmpowerment: "வணிக வலுவூட்டல்களைக் காண்க"
+        viewBusinessEmpowerment: "வணிக வலுவூட்டல்களைக் காண்க",
+        beneficiaryTraining: "பயனாளி பயிற்சி",
+        viewBeneficiaryTraining: "பயனாளி பயிற்சியை காண்க"
     }
 
 }

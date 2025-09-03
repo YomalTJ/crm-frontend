@@ -201,10 +201,24 @@ const navItems: (NavItem & { translationKey: string })[] = [
       },
     ],
   },
+  {
+    icon: <ShootingStarIcon />,
+    name: "Beneficiary Training",
+    translationKey: "sidebar.beneficiaryTraining",
+    allowedRoles: ["GN Level User"],
+    subItems: [
+      {
+        icon: <EyeIcon />,
+        name: "View Beneficiary Training",
+        translationKey: "sidebar.viewBeneficiaryTraining",
+        path: "/dashboard/gn-level/beneficiary-training/view",
+      },
+    ],
+  },
 ];
 
 const AppSidebar: React.FC = () => {
-  const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+  const { isExpanded, isMobileOpen, isHovered, setIsHovered, closeMobileSidebar } = useSidebar();
   const pathname = usePathname();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [openSubmenu, setOpenSubmenu] = useState<number | null>(null);
@@ -248,6 +262,13 @@ const AppSidebar: React.FC = () => {
   // Check if any sub-sub item is active
   const isSubSubMenuActive = (subItem: SubItem) => {
     return subItem.subSubItems?.some(subSubItem => isActive(subSubItem.path)) || false;
+  };
+
+  const handleNavigationClick = () => {
+    // Close sidebar on mobile after navigation
+    if (window.innerWidth < 768) {
+      closeMobileSidebar();
+    }
   };
 
   // Check if any sub item (including nested ones) is active
@@ -370,25 +391,27 @@ const AppSidebar: React.FC = () => {
           {nav.subItems ? (
             <div>
               <button
-                onClick={() => handleSubmenuToggle(index)}
-                className={`menu-item group w-full ${openSubmenu === index || isSubMenuActive(nav)
+                onClick={() => {
+                  handleSubmenuToggle(index);
+                }}
+                className={`menu-item group w-full flex items-center ${openSubmenu === index || isSubMenuActive(nav)
                   ? "menu-item-active"
                   : "menu-item-inactive"
                   } cursor-pointer ${!isExpanded && !isHovered ? "lg:justify-center" : "lg:justify-start"
                   }`}
               >
-                <span className={`${openSubmenu === index || isSubMenuActive(nav)
+                <span className={`flex-shrink-0 ${openSubmenu === index || isSubMenuActive(nav)
                   ? "menu-item-icon-active"
                   : "menu-item-icon-inactive"
                   }`}>
                   {nav.icon}
                 </span>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <span className="menu-item-text">{t(nav.translationKey)}</span>
+                  <span className="menu-item-text flex-1 text-left ml-3">{t(nav.translationKey)}</span>
                 )}
                 {(isExpanded || isHovered || isMobileOpen) && (
                   <ChevronDownIcon
-                    className={`ml-auto w-5 h-5 transition-transform duration-200 ${openSubmenu === index ? "rotate-180 text-brand-500" : ""
+                    className={`flex-shrink-0 w-5 h-5 transition-transform duration-200 ${openSubmenu === index ? "rotate-180 text-brand-500" : ""
                       }`}
                   />
                 )}
@@ -411,15 +434,15 @@ const AppSidebar: React.FC = () => {
                           <div>
                             <button
                               onClick={() => handleSubSubMenuToggle(index, subIndex)}
-                              className={`menu-dropdown-item w-full text-left ${(openSubSubMenu?.parentIndex === index && openSubSubMenu?.subIndex === subIndex) ||
+                              className={`menu-dropdown-item w-full text-left flex items-center justify-between ${(openSubSubMenu?.parentIndex === index && openSubSubMenu?.subIndex === subIndex) ||
                                 isSubSubMenuActive(subItem)
                                 ? "menu-dropdown-item-active"
                                 : "menu-dropdown-item-inactive"
-                                } flex items-center justify-between`}
+                                }`}
                             >
-                              <span>{t(subItem.translationKey)}</span>
+                              <span className="text-left">{t(subItem.translationKey)}</span>
                               <ChevronDownIcon
-                                className={`w-4 h-4 transition-transform duration-200 ${(openSubSubMenu?.parentIndex === index && openSubSubMenu?.subIndex === subIndex)
+                                className={`flex-shrink-0 w-4 h-4 transition-transform duration-200 ${(openSubSubMenu?.parentIndex === index && openSubSubMenu?.subIndex === subIndex)
                                   ? "rotate-180 text-brand-500"
                                   : ""
                                   }`}
@@ -443,7 +466,8 @@ const AppSidebar: React.FC = () => {
                                   <li key={subSubItem.translationKey}>
                                     <Link
                                       href={subSubItem.path}
-                                      className={`block py-2 px-3 text-sm rounded-md transition-colors ${isActive(subSubItem.path)
+                                      onClick={handleNavigationClick}
+                                      className={`block py-2 px-3 text-sm rounded-md transition-colors text-left ${isActive(subSubItem.path)
                                         ? "bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400"
                                         : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
                                         }`}
@@ -459,7 +483,8 @@ const AppSidebar: React.FC = () => {
                           subItem.path && (
                             <Link
                               href={subItem.path}
-                              className={`menu-dropdown-item ${isActive(subItem.path)
+                              onClick={handleNavigationClick}
+                              className={`menu-dropdown-item block text-left ${isActive(subItem.path)
                                 ? "menu-dropdown-item-active"
                                 : "menu-dropdown-item-inactive"
                                 }`}
@@ -478,15 +503,16 @@ const AppSidebar: React.FC = () => {
             nav.path && (
               <Link
                 href={nav.path}
-                className={`menu-item group ${isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
+                onClick={handleNavigationClick}
+                className={`menu-item group flex items-center ${isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
                   }`}
               >
-                <span className={`${isActive(nav.path) ? "menu-item-icon-active" : "menu-item-icon-inactive"
+                <span className={`flex-shrink-0 ${isActive(nav.path) ? "menu-item-icon-active" : "menu-item-icon-inactive"
                   }`}>
                   {nav.icon}
                 </span>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <span className="menu-item-text">{t(nav.translationKey)}</span>
+                  <span className="menu-item-text flex-1 text-left ml-3">{t(nav.translationKey)}</span>
                 )}
               </Link>
             )

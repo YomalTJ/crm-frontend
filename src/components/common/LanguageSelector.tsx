@@ -50,7 +50,7 @@ export const LanguageSelector: React.FC = () => {
   const handleLanguageChange = (langCode: LanguageCode) => {
     setLanguage(langCode);
     setIsOpen(false);
-    
+
     // Optional: Save language preference to localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('preferredLanguage', langCode);
@@ -61,11 +61,10 @@ export const LanguageSelector: React.FC = () => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg border transition-colors ${
-          theme === 'dark'
-            ? 'bg-gray-800 border-gray-600 text-gray-200 hover:bg-gray-700'
-            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-        }`}
+        className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg border transition-colors ${theme === 'dark'
+          ? 'bg-gray-800 border-gray-600 text-gray-200 hover:bg-gray-700'
+          : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+          }`}
         aria-label="Select Language"
         aria-expanded={isOpen}
         aria-haspopup="true"
@@ -84,12 +83,11 @@ export const LanguageSelector: React.FC = () => {
       </button>
 
       {isOpen && (
-        <div 
-          className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg border z-50 ${
-            theme === 'dark'
-              ? 'bg-gray-800 border-gray-600'
-              : 'bg-white border-gray-300'
-          }`}
+        <div
+          className={`absolute mt-2 w-48 rounded-lg shadow-lg border z-50 ${theme === 'dark'
+            ? 'bg-gray-800 border-gray-600'
+            : 'bg-white border-gray-300'
+            } right-0`}
           role="menu"
           aria-orientation="vertical"
           aria-labelledby="language-selector-button"
@@ -99,15 +97,14 @@ export const LanguageSelector: React.FC = () => {
               <button
                 key={lang.code}
                 onClick={() => handleLanguageChange(lang.code)}
-                className={`flex items-center gap-3 w-full px-4 py-2 text-sm text-left transition-colors ${
-                  language === lang.code
-                    ? theme === 'dark'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-blue-50 text-blue-700'
-                    : theme === 'dark'
+                className={`flex items-center gap-3 w-full px-4 py-2 text-sm text-left transition-colors ${language === lang.code
+                  ? theme === 'dark'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-blue-50 text-blue-700'
+                  : theme === 'dark'
                     ? 'text-gray-200 hover:bg-gray-700'
                     : 'text-gray-700 hover:bg-gray-50'
-                }`}
+                  }`}
                 role="menuitem"
               >
                 <span>{lang.name}</span>
