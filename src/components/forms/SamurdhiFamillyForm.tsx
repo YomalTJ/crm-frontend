@@ -77,12 +77,21 @@ const createEmptyFormData = (locationData: Partial<{
         projectOwnerGender: null,
         hasDisability: false,
         disability_id: null,
+        maleBelow16: 0,
+        femaleBelow16: 0,
+
         male16To24: 0,
         female16To24: 0,
+
         male25To45: 0,
         female25To45: 0,
+
         male46To60: 0,
         female46To60: 0,
+
+        maleAbove60: 0,
+        femaleAbove60: 0,
+
         employment_id: null,
         otherOccupation: null,
         subsisdy_id: null,
@@ -233,12 +242,21 @@ const SamurdhiFamilyForm: React.FC<SamurdhiFamilyFormProps> = ({
                 projectOwnerGender: initialData.projectOwnerDetails.gender || null,
                 hasDisability: initialData.hasDisability || false,
                 disability_id: initialData.disability?.id || null,
+                maleBelow16: initialData.noOfMembers.male.ageBelow16 || 0,
+                femaleBelow16: initialData.noOfMembers.female.ageBelow16 || 0,
+
                 male16To24: initialData.noOfMembers.male.age16To24 || 0,
                 female16To24: initialData.noOfMembers.female.age16To24 || 0,
+
                 male25To45: initialData.noOfMembers.male.age25To45 || 0,
                 female25To45: initialData.noOfMembers.female.age25To45 || 0,
+
                 male46To60: initialData.noOfMembers.male.age46To60 || 0,
                 female46To60: initialData.noOfMembers.female.age46To60 || 0,
+
+                maleAbove60: initialData.noOfMembers.male.ageAbove60 || 0,
+                femaleAbove60: initialData.noOfMembers.female.ageAbove60 || 0,
+
                 employment_id: initialData.currentEmployment?.id || null,
                 otherOccupation: initialData.otherOccupation || null,
                 subsisdy_id: initialData.samurdhiSubsidy?.id || null,

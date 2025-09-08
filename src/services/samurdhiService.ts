@@ -30,12 +30,21 @@ export interface SamurdhiFamilyPayload {
   disability_id: string | null;
 
   // UPDATED age ranges
-  male16To24: number; // NEW
-  female16To24: number; // NEW
-  male25To45: number; // NEW
-  female25To45: number; // NEW
-  male46To60: number; // NEW
-  female46To60: number; // NEW
+  maleBelow16: number;   // NEW
+  femaleBelow16: number; // NEW
+
+  male16To24: number;    // NEW
+  female16To24: number;  // NEW
+
+  male25To45: number;    // NEW
+  female25To45: number;  // NEW
+
+  male46To60: number;    // NEW
+  female46To60: number;  // NEW
+
+  maleAbove60: number;   // NEW
+  femaleAbove60: number; // NEW
+
   // REMOVE: male18To60, female18To60
 
   employment_id: string | null;
@@ -97,12 +106,16 @@ export interface BeneficiaryDetailsResponse {
   disability: any;
   noOfMembers: {
     male: {
+      ageBelow16: number;
+      ageAbove60: number;
       age16To24: number;
       age25To45: number;
       age46To60: number;
       total: number;
     };
     female: {
+      ageBelow16: number;
+      ageAbove60: number;
       age16To24: number;
       age25To45: number;
       age46To60: number;

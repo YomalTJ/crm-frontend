@@ -100,9 +100,11 @@ export const translations = {
 
         // Household Members
         householdMembers: 'Number of Household Members by Age and Gender',
+        ageBelow16: 'Age below 16',
         age16To24: 'Age 16-24',
         age25To45: 'Age 25-45',
         age46To60: 'Age 46-60',
+        ageAbove60: 'Age above 60',
 
         // Employment
         currentEmployment: 'Current Employment',

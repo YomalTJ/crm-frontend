@@ -23,7 +23,8 @@ export const translations = {
         addBusinessEmpowerment: "ව්‍යාපාර සවිබල ගැන්වීම එකතු කරන්න",
         viewBusinessEmpowerment: "ව්‍යාපාර සවිබල ගැන්වීම් බලන්න",
         beneficiaryTraining: "ප්‍රතිලාභී පුහුණු කිරීම",
-        viewBeneficiaryTraining: "ප්‍රතිලාභී පුහුණු කිරීම් බලන්න"
+        viewBeneficiaryTraining: "ප්‍රතිලාභී පුහුණු කිරීම් බලන්න",
+        ownerDemographics: "අයිතිකරුගේ ජනගහණ විස්තර"
     }
 
 }

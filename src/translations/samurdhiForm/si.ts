@@ -100,9 +100,11 @@ export const translations = {
 
         // Household Members
         householdMembers: 'වයස සහ ස්ත්‍රී පුරුෂ භාවය අනුව ගෘහස්ථ සාමාජිකයින් සංඛ්‍යාව',
+        ageBelow16: 'වයස 16ට අඩු',
         age16To24: 'වයස 16-24',
         age25To45: 'වයස 25-45',
         age46To60: 'වයස 46-60',
+        ageAbove60: 'වයස 60ට ඉහල',
 
         // Employment
         currentEmployment: 'වත්මන් රැකියාව',

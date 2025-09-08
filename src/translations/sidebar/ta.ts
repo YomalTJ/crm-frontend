@@ -23,7 +23,8 @@ export const translations = {
         addBusinessEmpowerment: "வணிக வலுவூட்டலைச் சேர்க்கவும்",
         viewBusinessEmpowerment: "வணிக வலுவூட்டல்களைக் காண்க",
         beneficiaryTraining: "பயனாளி பயிற்சி",
-        viewBeneficiaryTraining: "பயனாளி பயிற்சியை காண்க"
+        viewBeneficiaryTraining: "பயனாளி பயிற்சியை காண்க",
+        ownerDemographics: "உரிமையாளர் மக்கள்தொகை விவரங்கள்"
     }
 
 }

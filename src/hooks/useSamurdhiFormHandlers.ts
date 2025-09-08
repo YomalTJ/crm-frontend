@@ -250,12 +250,21 @@ export const useSamurdhiFormHandlers = ({
                 disability_id: data.disability?.id || prev.disability_id,
 
                 // Household members
+                maleBelow16: data.noOfMembers?.male?.ageBelow16 || prev.maleBelow16,
+                femaleBelow16: data.noOfMembers?.female?.ageBelow16 || prev.femaleBelow16,
+
                 male16To24: data.noOfMembers?.male?.age16To24 || prev.male16To24,
                 female16To24: data.noOfMembers?.female?.age16To24 || prev.female16To24,
+
                 male25To45: data.noOfMembers?.male?.age25To45 || prev.male25To45,
                 female25To45: data.noOfMembers?.female?.age25To45 || prev.female25To45,
+
                 male46To60: data.noOfMembers?.male?.age46To60 || prev.male46To60,
                 female46To60: data.noOfMembers?.female?.age46To60 || prev.female46To60,
+
+                maleAbove60: data.noOfMembers?.male?.ageAbove60 || prev.maleAbove60,
+                femaleAbove60: data.noOfMembers?.female?.ageAbove60 || prev.femaleAbove60,
+
 
                 // Employment and benefits
                 employment_id: data.currentEmployment?.id || prev.employment_id,
@@ -405,33 +414,44 @@ export const useSamurdhiFormHandlers = ({
 
                 // Calculate household members aged 18-60
                 if (householdData.citizens && householdData.citizens.length > 0) {
+                    let maleBelow16 = 0, femaleBelow16 = 0;
                     let male16To24 = 0, female16To24 = 0;
                     let male25To45 = 0, female25To45 = 0;
                     let male46To60 = 0, female46To60 = 0;
+                    let maleAbove60 = 0, femaleAbove60 = 0;
 
                     householdData.citizens.forEach((citizen: any) => {
                         const age = citizen.age;
                         const isMale = citizen.gender === 'male';
 
-                        if (age >= 16 && age <= 24) {
+                        if (age < 16) {
+                            if (isMale) maleBelow16++; else femaleBelow16++;
+                        } else if (age >= 16 && age <= 24) {
                             if (isMale) male16To24++; else female16To24++;
                         } else if (age >= 25 && age <= 45) {
                             if (isMale) male25To45++; else female25To45++;
                         } else if (age >= 46 && age <= 60) {
                             if (isMale) male46To60++; else female46To60++;
+                        } else if (age > 60) {
+                            if (isMale) maleAbove60++; else femaleAbove60++;
                         }
                     });
 
                     setFormData(prev => ({
                         ...prev,
+                        maleBelow16,
+                        femaleBelow16,
                         male16To24,
                         female16To24,
                         male25To45,
                         female25To45,
                         male46To60,
-                        female46To60
+                        female46To60,
+                        maleAbove60,
+                        femaleAbove60
                     }));
                 }
+
             }
         } catch (error: unknown) {
             console.error('Error fetching household details:', error);
@@ -442,12 +462,21 @@ export const useSamurdhiFormHandlers = ({
                 beneficiaryGender: null,
                 address: null,
                 projectOwnerAge: 0,
+                maleBelow16: 0,
+                femaleBelow16: 0,
+
                 male16To24: 0,
                 female16To24: 0,
+
                 male25To45: 0,
                 female25To45: 0,
+
                 male46To60: 0,
                 female46To60: 0,
+
+                maleAbove60: 0,
+                femaleAbove60: 0,
+
                 aswesuma_cat_id: null
             }));
             toast.error('Failed to fetch household details. Please try again.');
@@ -499,12 +528,21 @@ export const useSamurdhiFormHandlers = ({
                 projectOwnerGender: convertEmptyToNull(formData.projectOwnerGender),
                 hasDisability: formData.hasDisability,
                 disability_id: convertEmptyToNull(formData.disability_id),
+                maleBelow16: formData.maleBelow16 || 0,
+                femaleBelow16: formData.femaleBelow16 || 0,
+
                 male16To24: formData.male16To24 || 0,
                 female16To24: formData.female16To24 || 0,
+
                 male25To45: formData.male25To45 || 0,
                 female25To45: formData.female25To45 || 0,
+
                 male46To60: formData.male46To60 || 0,
                 female46To60: formData.female46To60 || 0,
+
+                maleAbove60: formData.maleAbove60 || 0,
+                femaleAbove60: formData.femaleAbove60 || 0,
+
                 employment_id: convertEmptyToNull(formData.employment_id),
                 otherOccupation: convertEmptyToNull(formData.otherOccupation),
                 subsisdy_id: convertEmptyToNull(formData.subsisdy_id),

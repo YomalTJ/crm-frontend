@@ -774,6 +774,34 @@ export const HouseholdMembersField: React.FC<Pick<FormFieldProps, 'formData' | '
         <Label className="text-lg font-medium">{t('samurdhiForm.householdMembers')}</Label>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Below 16 */}
+            <div className="space-y-4">
+                <h4 className="text-md font-medium text-gray-800 dark:text-gray-200">{t('samurdhiForm.ageBelow16')}</h4>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <Label>{t('common.male')}</Label>
+                        <Input
+                            type="number"
+                            name="maleBelow16"
+                            value={formData.maleBelow16 || 0}
+                            onChange={handlers.handleInputChange}
+                            min="0"
+                        />
+                    </div>
+                    <div>
+                        <Label>{t('common.female')}</Label>
+                        <Input
+                            type="number"
+                            name="femaleBelow16"
+                            value={formData.femaleBelow16 || 0}
+                            onChange={handlers.handleInputChange}
+                            min="0"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* 16 to 24 */}
             <div className="space-y-4">
                 <h4 className="text-md font-medium text-gray-800 dark:text-gray-200">{t('samurdhiForm.age16To24')}</h4>
                 <div className="grid grid-cols-2 gap-4">
@@ -800,6 +828,7 @@ export const HouseholdMembersField: React.FC<Pick<FormFieldProps, 'formData' | '
                 </div>
             </div>
 
+            {/* 25 to 45 */}
             <div className="space-y-4">
                 <h4 className="text-md font-medium text-gray-800 dark:text-gray-200">{t('samurdhiForm.age25To45')}</h4>
                 <div className="grid grid-cols-2 gap-4">
@@ -826,6 +855,7 @@ export const HouseholdMembersField: React.FC<Pick<FormFieldProps, 'formData' | '
                 </div>
             </div>
 
+            {/* 46 to 60 */}
             <div className="space-y-4">
                 <h4 className="text-md font-medium text-gray-800 dark:text-gray-200">{t('samurdhiForm.age46To60')}</h4>
                 <div className="grid grid-cols-2 gap-4">
@@ -851,9 +881,37 @@ export const HouseholdMembersField: React.FC<Pick<FormFieldProps, 'formData' | '
                     </div>
                 </div>
             </div>
+
+            {/* Above 60 */}
+            <div className="space-y-4">
+                <h4 className="text-md font-medium text-gray-800 dark:text-gray-200">{t('samurdhiForm.ageAbove60')}</h4>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <Label>{t('common.male')}</Label>
+                        <Input
+                            type="number"
+                            name="maleAbove60"
+                            value={formData.maleAbove60 || 0}
+                            onChange={handlers.handleInputChange}
+                            min="0"
+                        />
+                    </div>
+                    <div>
+                        <Label>{t('common.female')}</Label>
+                        <Input
+                            type="number"
+                            name="femaleAbove60"
+                            value={formData.femaleAbove60 || 0}
+                            onChange={handlers.handleInputChange}
+                            min="0"
+                        />
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 );
+
 
 // Update EmploymentFields component
 export const EmploymentFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'handlers' | 't'>> = ({

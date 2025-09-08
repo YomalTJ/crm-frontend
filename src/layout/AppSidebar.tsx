@@ -142,6 +142,11 @@ const navItems: (NavItem & { translationKey: string })[] = [
             translationKey: "sidebar.projectDetails",
             path: "/dashboard/reports/detail/project-detail",
           },
+          {
+            name: "Owner Demographics",
+            translationKey: "sidebar.ownerDemographics",
+            path: "/dashboard/reports/detail/owner-demographics",
+          },
         ],
       },
     ],
@@ -353,7 +358,7 @@ const AppSidebar: React.FC = () => {
         }
       });
     }
-  }, [openSubmenu, navItems, userRole]);
+  }, [openSubmenu, userRole]);
 
   const handleSubmenuToggle = (index: number) => {
     if (openSubmenu === index) {

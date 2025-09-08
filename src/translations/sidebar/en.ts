@@ -23,7 +23,8 @@ export const translations = {
         addBusinessEmpowerment: "Add Business Empowerment",
         viewBusinessEmpowerment: "View Business Empowerments",
         beneficiaryTraining: "Beneficiary Training",
-        viewBeneficiaryTraining: "View Beneficiary Training"
+        viewBeneficiaryTraining: "View Beneficiary Training",
+        ownerDemographics: "Owner Demographics"
     }
 
 }

@@ -50,12 +50,21 @@ const createEmptyFormData = (locationData: Partial<{
     disability_id: null,
 
     // UPDATED age ranges
-    male16To24: 0, // NEW
-    female16To24: 0, // NEW
-    male25To45: 0, // NEW
-    female25To45: 0, // NEW
-    male46To60: 0, // NEW
-    female46To60: 0, // NEW
+    maleBelow16: 0,   // NEW
+    femaleBelow16: 0, // NEW
+
+    male16To24: 0,    // NEW
+    female16To24: 0,  // NEW
+
+    male25To45: 0,    // NEW
+    female25To45: 0,  // NEW
+
+    male46To60: 0,    // NEW
+    female46To60: 0,  // NEW
+
+    maleAbove60: 0,   // NEW
+    femaleAbove60: 0, // NEW
+
 
     employment_id: null,
     otherOccupation: null,

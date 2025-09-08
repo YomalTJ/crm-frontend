@@ -2,6 +2,7 @@ export interface LocationData {
     id: string;
     name: string;
 }
+
 export interface FormData {
     district: LocationData;
     dsDivision: LocationData;
@@ -26,14 +27,23 @@ export interface FormData {
     projectOwnerGender: string | null;
     hasDisability: boolean;
     disability_id: string | null;
-    
-    male16To24: number; // NEW
-    female16To24: number; // NEW
-    male25To45: number; // NEW
-    female25To45: number; // NEW
-    male46To60: number; // NEW
-    female46To60: number; // NEW
-    
+
+    maleBelow16: number;   // NEW
+    femaleBelow16: number; // NEW
+
+    male16To24: number;    // NEW
+    female16To24: number;  // NEW
+
+    male25To45: number;    // NEW
+    female25To45: number;  // NEW
+
+    male46To60: number;    // NEW
+    female46To60: number;  // NEW
+
+    maleAbove60: number;   // NEW
+    femaleAbove60: number; // NEW
+
+
     employment_id: string | null;
     otherOccupation: string | null;
     subsisdy_id: string | null;
@@ -57,7 +67,7 @@ export interface FormData {
     housing_service_id: string[];
     areaClassification: string | null;
     refusal_reason_id: string | null;
-    
+
     // Banking details
     commercialBankAccountName: string | null;
     commercialBankAccountNumber: string | null;
@@ -67,7 +77,7 @@ export interface FormData {
     samurdhiBankAccountNumber: string | null;
     samurdhiBankName: string | null;
     samurdhiBankAccountType: string | null;
-    
+
     // NEW - Additional banking fields
     wantsAswesumaBankTransfer: boolean;
     otherBankName?: string | null;
@@ -84,10 +94,10 @@ export interface FormErrors {
 }
 
 export interface Livelihood {
-  id: string;
-  sinhala_name: string;
-  tamil_name: string;
-  english_name: string;
+    id: string;
+    sinhala_name: string;
+    tamil_name: string;
+    english_name: string;
 }
 
 export interface FormOptions {
