@@ -147,6 +147,16 @@ const navItems: (NavItem & { translationKey: string })[] = [
             translationKey: "sidebar.ownerDemographics",
             path: "/dashboard/reports/detail/owner-demographics",
           },
+          {
+            name: "Family Age Groups",
+            translationKey: "sidebar.familyAgeGroups",
+            path: "/dashboard/reports/detail/family-age-groups",
+          },
+          {
+            name: "Owner Details",
+            translationKey: "sidebar.ownerDetails",
+            path: "/dashboard/reports/detail/owner-details",
+          },
         ],
       },
     ],

@@ -24,7 +24,9 @@ export const translations = {
         viewBusinessEmpowerment: "வணிக வலுவூட்டல்களைக் காண்க",
         beneficiaryTraining: "பயனாளி பயிற்சி",
         viewBeneficiaryTraining: "பயனாளி பயிற்சியை காண்க",
-        ownerDemographics: "உரிமையாளர் மக்கள்தொகை விவரங்கள்"
+        ownerDemographics: "உரிமையாளர் மக்கள்தொகை விவரங்கள்",
+        familyAgeGroups: "வயது குழுக்கள்",
+        ownerDetails: "உரிமையாளர் விவரங்கள்",
     }
 
 }

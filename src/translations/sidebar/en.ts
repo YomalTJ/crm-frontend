@@ -24,7 +24,9 @@ export const translations = {
         viewBusinessEmpowerment: "View Business Empowerments",
         beneficiaryTraining: "Beneficiary Training",
         viewBeneficiaryTraining: "View Beneficiary Training",
-        ownerDemographics: "Owner Demographics"
+        ownerDemographics: "Owner Demographics",
+        familyAgeGroups: "Age Groups",
+        ownerDetails: "Owner Details",
     }
 
 }
