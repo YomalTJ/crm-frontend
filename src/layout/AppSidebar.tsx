@@ -130,6 +130,11 @@ const navItems: (NavItem & { translationKey: string })[] = [
             translationKey: "sidebar.wayOfGraduationCount",
             path: "/dashboard/reports/count/way-of-graduation",
           },
+          {
+            name: "Area types Count",
+            translationKey: "sidebar.areaTypes",
+            path: "/dashboard/reports/count/area-types",
+          },
         ],
       },
       {

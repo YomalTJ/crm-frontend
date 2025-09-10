@@ -85,19 +85,27 @@ const ProjectOwnersTable: React.FC<ProjectOwnersTableProps> = ({
                                     className={theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}
                                 >
                                     <td className={`px-6 py-4 whitespace-nowrap text-sm ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'}`}>
-                                        {item.district.district_name}
+                                        {item.district.district_name.split('/').map((part, index) => (
+                                            <div key={index}>{part}</div>
+                                        ))}
                                     </td>
 
                                     <td className={`px-6 py-4 whitespace-nowrap text-sm ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'}`}>
-                                        {item.ds.ds_name}
+                                        {item.ds.ds_name.split('/').map((part, index) => (
+                                            <div key={index}>{part}</div>
+                                        ))}
                                     </td>
 
                                     <td className={`px-6 py-4 whitespace-nowrap text-sm ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'}`}>
-                                        {item.zone.zone_name}
+                                        {item.zone.zone_name.split('/').map((part, index) => (
+                                            <div key={index}>{part}</div>
+                                        ))}
                                     </td>
 
                                     <td className={`px-6 py-4 whitespace-nowrap text-sm ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'}`}>
-                                        {item.gnd.gnd_name}
+                                        {item.gnd.gnd_name.split('/').map((part, index) => (
+                                            <div key={index}>{part}</div>
+                                        ))}
                                     </td>
 
                                     <td className="px-6 py-4 whitespace-nowrap">
@@ -112,8 +120,12 @@ const ProjectOwnersTable: React.FC<ProjectOwnersTableProps> = ({
                                         </div>
                                     </td>
 
-                                    <td className={`px-6 py-4 text-sm ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'} max-w-xs truncate`}>
-                                        <div title={item.address}>{item.address}</div>
+                                    <td className={`px-6 py-4 text-sm ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'} max-w-xs`}>
+                                        <div title={item.address}>
+                                            {item.address.split(',').map((part, index) => (
+                                                <div key={index}>{part.trim()}</div>
+                                            ))}
+                                        </div>
                                     </td>
 
                                     <td className="px-6 py-4 whitespace-nowrap">
@@ -141,7 +153,7 @@ const ProjectOwnersTable: React.FC<ProjectOwnersTableProps> = ({
 
                                     <td className="px-6 py-4">
                                         <div className={`text-sm ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'}`}>
-                                                {item.projectType?.nameEnglish}
+                                            {item.projectType?.nameEnglish}
                                         </div>
                                     </td>
 

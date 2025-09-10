@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
 import React, { useState, useEffect } from 'react';
@@ -9,13 +10,13 @@ import {
   ProjectOwnerItem,
   ProjectOwnerFilters,
   AccessibleLocations,
-  BeneficiaryType
+  BeneficiaryType,
+  getUserDefaultLocation
 } from '@/services/projectOwnersService';
 import { useTheme } from '@/context/ThemeContext';
 import ExportButton from '@/components/form-fields/ExportButton';
 import LocationDropdowns from '@/components/form-fields/LocationDropdowns';
 import ProjectOwnersTable from '@/components/form-fields/ProjectOwnersTable';
-import ProjectOwnersStatsCards from '@/components/form-fields/ProjectOwnersStatsCards';
 
 const ProjectOwnersReport = () => {
   const { theme } = useTheme();
@@ -66,8 +67,14 @@ const ProjectOwnersReport = () => {
         console.log("beneficiary types: ", types);
         setBeneficiaryTypes(types);
 
-        // Load initial project owners without filters (will be filtered by user's role on backend)
-        const data = await getProjectOwners();
+        // Get user's default location filters
+        const defaultFilters = await getUserDefaultLocation();
+
+        // Set the initial filters to user's default location
+        setFilters(defaultFilters);
+
+        // Load project owners with user's default location filters
+        const data = await getProjectOwners(defaultFilters);
         setReportData(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load data');
@@ -78,7 +85,7 @@ const ProjectOwnersReport = () => {
     };
 
     loadInitialData();
-  }, []);
+  }, [])
 
   // Handle filter changes
   const handleFilterChange = async (newFilters: ProjectOwnerFilters) => {
@@ -95,18 +102,18 @@ const ProjectOwnersReport = () => {
   };
 
   // Handle individual filter updates
-  const updateFilter = (key: keyof ProjectOwnerFilters, value: string) => {
+  const updateFilter = (key: string, value: string) => {
     const newFilters = { ...filters };
 
     if (value === '') {
-      delete newFilters[key];
+      delete newFilters[key as keyof ProjectOwnerFilters];
     } else {
       if (key === 'mainProgram') {
         if (value === 'NP' || value === 'ADB' || value === 'WB') {
-          newFilters[key] = value;
+          newFilters[key as keyof ProjectOwnerFilters] = value as any;
         }
       } else {
-        newFilters[key] = value;
+        newFilters[key as keyof ProjectOwnerFilters] = value as any;
       }
     }
 
@@ -344,9 +351,6 @@ const ProjectOwnersReport = () => {
           </select>
         </div>
       </div>
-
-      {/* Statistics */}
-      <ProjectOwnersStatsCards data={filteredData} />
 
       {/* Data Table */}
       <ProjectOwnersTable

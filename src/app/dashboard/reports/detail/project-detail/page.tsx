@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
 import React, { useState, useEffect } from 'react';
@@ -86,19 +87,19 @@ const ProjectDetailReport = () => {
         }
     };
 
-    // Handle individual filter updates
-    const updateFilter = (key: keyof ProjectDetailReportFilters, value: string) => {
+    // Change the updateFilter function signature to accept string keys
+    const updateFilter = (key: string, value: string) => {
         const newFilters = { ...filters };
 
         if (value === '') {
-            delete newFilters[key];
+            delete newFilters[key as keyof ProjectDetailReportFilters];
         } else {
             if (key === 'mainProgram') {
                 if (value === 'NP' || value === 'ADB' || value === 'WB') {
-                    newFilters[key] = value;
+                    newFilters[key as keyof ProjectDetailReportFilters] = value as any;
                 }
             } else {
-                newFilters[key] = value;
+                newFilters[key as keyof ProjectDetailReportFilters] = value as any;
             }
         }
 
@@ -274,7 +275,7 @@ const ProjectDetailReport = () => {
                     </div>
                     <select
                         value={filters.mainProgram || ''}
-                        onChange={(e) => updateFilter('mainProgram', e.target.value as 'NP' | 'ADB' | 'WB' | '')}
+                        onChange={(e) => updateFilter('mainProgram', e.target.value)}
                         className={`px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${getInputBorderColor()} ${getInputBgColor()}`}
                     >
                         <option value="">All Programs</option>

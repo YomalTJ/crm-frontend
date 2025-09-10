@@ -232,3 +232,30 @@ export const getFamilyDemographics = async (filters?: FamilyDemographicsFilters)
         throw new Error('Failed to fetch family demographics');
     }
 };
+
+// Add this function to familyDemographicsService.ts
+export const getUserDefaultLocation = async (): Promise<FamilyDemographicsFilters> => {
+    try {
+        const locations = await getAccessibleLocations();
+        const filters: FamilyDemographicsFilters = {};
+
+        // If user has access to only one location at each level, use that as default
+        if (locations.districts.length === 1) {
+            filters.district_id = locations.districts[0].district_id.toString();
+        }
+        if (locations.dss.length === 1) {
+            filters.ds_id = locations.dss[0].ds_id.toString();
+        }
+        if (locations.zones.length === 1) {
+            filters.zone_id = locations.zones[0].zone_id.toString();
+        }
+        if (locations.gndDivisions.length === 1) {
+            filters.gnd_id = locations.gndDivisions[0].gnd_id;
+        }
+
+        return filters;
+    } catch (error) {
+        console.error('Failed to get user default location:', error);
+        return {};
+    }
+};

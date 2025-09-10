@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
 import React, { useState, useEffect } from 'react';
@@ -9,13 +10,13 @@ import {
     OwnerDemographicsItem,
     OwnerDemographicsFilters,
     AccessibleLocations,
-    BeneficiaryType
+    BeneficiaryType,
+    getUserDefaultLocation
 } from '@/services/ownerDemographicsService';
 import { useTheme } from '@/context/ThemeContext';
 import ExportButton from '@/components/form-fields/ExportButton';
 import LocationDropdowns from '@/components/form-fields/LocationDropdowns';
 import OwnerDemographicsTable from '@/components/form-fields/OwnerDemographicsTable';
-import DemographicsStatsCards from '@/components/form-fields/DemographicsStatsCards';
 
 const OwnerDemographicsReport = () => {
     const { theme } = useTheme();
@@ -66,8 +67,14 @@ const OwnerDemographicsReport = () => {
                 console.log("beneficiary types: ", types);
                 setBeneficiaryTypes(types);
 
-                // Load initial owner demographics without filters (will be filtered by user's role on backend)
-                const data = await getOwnerDemographics();
+                // Get user's default location filters
+                const defaultFilters = await getUserDefaultLocation();
+
+                // Set the initial filters to user's default location
+                setFilters(defaultFilters);
+
+                // Load owner demographics with user's default location filters
+                const data = await getOwnerDemographics(defaultFilters);
                 setReportData(data);
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Failed to load data');
@@ -95,18 +102,19 @@ const OwnerDemographicsReport = () => {
     };
 
     // Handle individual filter updates
-    const updateFilter = (key: keyof OwnerDemographicsFilters, value: string) => {
+    // Change the updateFilter function signature to accept string keys
+    const updateFilter = (key: string, value: string) => {
         const newFilters = { ...filters };
 
         if (value === '') {
-            delete newFilters[key];
+            delete newFilters[key as keyof OwnerDemographicsFilters];
         } else {
             if (key === 'mainProgram') {
                 if (value === 'NP' || value === 'ADB' || value === 'WB') {
-                    newFilters[key] = value;
+                    newFilters[key as keyof OwnerDemographicsFilters] = value as any;
                 }
             } else {
-                newFilters[key] = value;
+                newFilters[key as keyof OwnerDemographicsFilters] = value as any;
             }
         }
 
@@ -318,9 +326,6 @@ const OwnerDemographicsReport = () => {
                     </select>
                 </div>
             </div>
-
-            {/* Statistics */}
-            <DemographicsStatsCards data={filteredData} />
 
             {/* Data Table */}
             <OwnerDemographicsTable

@@ -27,6 +27,7 @@ export const translations = {
         ownerDemographics: "Owner Demographics",
         familyAgeGroups: "Age Groups",
         ownerDetails: "Owner Details",
+        areaTypes: "Area Types",
     }
 
 }

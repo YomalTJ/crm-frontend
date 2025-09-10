@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
 import {
     getProjectDetails,
@@ -22,7 +23,7 @@ interface UseProjectDataResult {
     error: string | null;
     filters: ProjectDetailReportFilters;
     handleFilterChange: (newFilters: ProjectDetailReportFilters) => Promise<void>;
-    updateFilter: (key: keyof ProjectDetailReportFilters, value: string) => void;
+    updateFilter: (key: string, value: string) => void; // Changed to accept string keys
 }
 
 export const useProjectData = (initialFilters: ProjectDetailReportFilters = {}): UseProjectDataResult => {
@@ -74,18 +75,18 @@ export const useProjectData = (initialFilters: ProjectDetailReportFilters = {}):
         }
     };
 
-    const updateFilter = (key: keyof ProjectDetailReportFilters, value: string) => {
+    const updateFilter = (key: string, value: string) => {
         const newFilters = { ...filters };
 
         if (value === '') {
-            delete newFilters[key];
+            delete newFilters[key as keyof ProjectDetailReportFilters];
         } else {
             if (key === 'mainProgram') {
                 if (value === 'NP' || value === 'ADB' || value === 'WB') {
-                    newFilters[key] = value;
+                    newFilters[key as keyof ProjectDetailReportFilters] = value as any;
                 }
             } else {
-                newFilters[key] = value;
+                newFilters[key as keyof ProjectDetailReportFilters] = value as any;
             }
         }
 

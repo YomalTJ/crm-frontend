@@ -3,76 +3,48 @@
 import axiosInstance from "@/lib/axios";
 import { cookies } from 'next/headers';
 
-// Owner Demographics Response Interface
-export interface OwnerDemographicsItem {
-    district: {
-        district_id: string;
+// Area Types Response Interface
+export interface AreaTypeItem {
+    district?: {
+        district_id: number;
         district_name: string;
     };
-    ds: {
-        ds_id: string;
+    ds?: {
+        ds_id: number;
         ds_name: string;
     };
-    zone: {
-        zone_id: string;
+    zone?: {
+        zone_id: number;
         zone_name: string;
     };
-    gnd: {
+    gnd?: {
         gnd_id: string;
         gnd_name: string;
     };
-    mainProgram: 'NP' | 'ADB' | 'WB';
-    projectOwnerName: string;
-    projectOwnerAge: number;
-    projectOwnerGender: string;
-    disability?: {
-        disability_id: number;
-        nameEN: string;
-        nameSi: string;
-        nameTa: string;
-    };
-    beneficiaryType?: {
-        beneficiary_type_id: string;
-        nameEnglish: string;
-        nameSinhala: string;
-        nameTamil: string;
+    programs: ProgramAreaType[];
+}
+
+export interface ProgramAreaType {
+    mainProgram: string;
+    areaTypeCounts: {
+        URBAN: number;
+        RURAL: number;
+        ESTATE: number;
+        total: number;
     };
 }
 
-// Filter interface for owner demographics
-export interface OwnerDemographicsFilters {
+// Filter interface for area types
+export interface AreaTypeFilters {
     district_id?: string;
     ds_id?: string;
     zone_id?: string;
     gnd_id?: string;
     mainProgram?: 'NP' | 'ADB' | 'WB';
-    beneficiary_type_id?: string;
+    areaClassification?: 'URBAN' | 'RURAL' | 'ESTATE';
 }
 
-// Beneficiary Type interface
-export interface BeneficiaryType {
-    beneficiary_type_id: string;
-    nameEnglish: string;
-    nameSinhala: string;
-    nameTamil: string;
-    createdBy: {
-        id: string;
-        name: string;
-        username: string;
-        language: string;
-        locationCode: string;
-        role: {
-            id: string;
-            name: string;
-            canAdd: boolean;
-            canUpdate: boolean;
-            canDelete: boolean;
-        };
-    };
-    createdAt: string;
-}
-
-// Updated AccessibleLocations interface to match backend response
+// AccessibleLocations interface (reused from project owners)
 export interface AccessibleLocations {
     districts: {
         district_id: number;
@@ -148,30 +120,8 @@ export const getAccessibleLocations = async (): Promise<AccessibleLocations> => 
     }
 };
 
-// Get beneficiary types
-export const getBeneficiaryTypes = async (): Promise<BeneficiaryType[]> => {
-    try {
-        const token = (await cookies()).get('staffAccessToken')?.value;
-
-        if (!token) {
-            throw new Error('No authentication token found');
-        }
-
-        const response = await axiosInstance.get('/beneficiary-status', {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
-
-        return response.data;
-    } catch (error) {
-        console.error('Failed to fetch beneficiary types:', error);
-        throw new Error('Failed to fetch beneficiary types');
-    }
-};
-
-// Get owner demographics data with filters
-export const getOwnerDemographics = async (filters?: OwnerDemographicsFilters): Promise<OwnerDemographicsItem[]> => {
+// Get area types data with filters
+export const getAreaTypes = async (filters?: AreaTypeFilters): Promise<AreaTypeItem[]> => {
     try {
         const token = (await cookies()).get('staffAccessToken')?.value;
 
@@ -186,10 +136,10 @@ export const getOwnerDemographics = async (filters?: OwnerDemographicsFilters): 
         if (filters?.zone_id) queryParams.append('zone_id', filters.zone_id);
         if (filters?.gnd_id) queryParams.append('gnd_id', filters.gnd_id);
         if (filters?.mainProgram) queryParams.append('mainProgram', filters.mainProgram);
-        if (filters?.beneficiary_type_id) queryParams.append('beneficiary_type_id', filters.beneficiary_type_id);
+        if (filters?.areaClassification) queryParams.append('areaClassification', filters.areaClassification);
 
         const queryString = queryParams.toString();
-        const url = `/beneficiaries${queryString ? `?${queryString}` : ''}`;
+        const url = `/beneficiaries/area-types${queryString ? `?${queryString}` : ''}`;
 
         const response = await axiosInstance.get(url, {
             headers: {
@@ -199,16 +149,15 @@ export const getOwnerDemographics = async (filters?: OwnerDemographicsFilters): 
 
         return response.data;
     } catch (error) {
-        console.error('Failed to fetch owner demographics:', error);
-        throw new Error('Failed to fetch owner demographics');
+        console.error('Failed to fetch area types:', error);
+        throw new Error('Failed to fetch area types');
     }
 };
 
-// Add this function to ownerDemographicsService.ts
-export const getUserDefaultLocation = async (): Promise<OwnerDemographicsFilters> => {
+export const getUserDefaultLocation = async (): Promise<AreaTypeFilters> => {
     try {
         const locations = await getAccessibleLocations();
-        const filters: OwnerDemographicsFilters = {};
+        const filters: AreaTypeFilters = {};
 
         // If user has access to only one location at each level, use that as default
         if (locations.districts.length === 1) {

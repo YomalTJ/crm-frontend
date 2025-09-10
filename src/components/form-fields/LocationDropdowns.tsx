@@ -1,17 +1,18 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import { useTheme } from '@/context/ThemeContext';
-import { AccessibleLocations, ProjectDetailReportFilters } from '@/services/projectDetailReportService';
+import { AccessibleLocations } from '@/services/areaTypesService';
 
 interface LocationDropdownsProps {
     accessibleLocations: AccessibleLocations;
-    filters: ProjectDetailReportFilters;
-    updateFilter: (key: keyof ProjectDetailReportFilters, value: string) => void;
+    filters: any; // Use any to make it generic
+    updateFilter: (key: string, value: string) => void;
 }
 
-const LocationDropdowns: React.FC<LocationDropdownsProps> = ({ 
-    accessibleLocations, 
-    filters, 
-    updateFilter 
+const LocationDropdowns: React.FC<LocationDropdownsProps> = ({
+    accessibleLocations,
+    filters,
+    updateFilter
 }) => {
     const { theme } = useTheme();
 
@@ -23,20 +24,20 @@ const LocationDropdowns: React.FC<LocationDropdownsProps> = ({
         let availableGNDs = accessibleLocations.gndDivisions;
 
         if (filters.district_id) {
-            availableDS = accessibleLocations.dss.filter(ds => 
-                ds.district_id === filters.district_id
+            availableDS = accessibleLocations.dss.filter(ds =>
+                ds.district_id?.toString() === filters.district_id
             );
         }
 
         if (filters.ds_id) {
-            availableZones = accessibleLocations.zones.filter(zone => 
-                zone.ds_id === filters.ds_id
+            availableZones = accessibleLocations.zones.filter(zone =>
+                zone.ds_id?.toString() === filters.ds_id
             );
         }
 
         if (filters.zone_id) {
-            availableGNDs = accessibleLocations.gndDivisions.filter(gnd => 
-                gnd.zone_id === filters.zone_id
+            availableGNDs = accessibleLocations.gndDivisions.filter(gnd =>
+                gnd.zone_id?.toString() === filters.zone_id
             );
         }
 

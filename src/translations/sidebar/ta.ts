@@ -27,6 +27,7 @@ export const translations = {
         ownerDemographics: "உரிமையாளர் மக்கள்தொகை விவரங்கள்",
         familyAgeGroups: "வயது குழுக்கள்",
         ownerDetails: "உரிமையாளர் விவரங்கள்",
+        areaTypes: "பகுதி வகைகள்",
     }
 
 }

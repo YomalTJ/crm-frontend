@@ -6,7 +6,7 @@ import LocationDropdowns from '@/components/form-fields/LocationDropdowns';
 interface ProjectFiltersProps {
     accessibleLocations: AccessibleLocations | null;
     filters: ProjectDetailReportFilters;
-    updateFilter: (key: keyof ProjectDetailReportFilters, value: string) => void;
+    updateFilter: (key: string, value: string) => void; // Changed to accept string keys
     searchTerm: string;
     onSearchChange: (term: string) => void;
     showProgramFilter?: boolean;
@@ -53,7 +53,7 @@ const ProjectFilters: React.FC<ProjectFiltersProps> = ({
                 {showProgramFilter && (
                     <select
                         value={filters.mainProgram || ''}
-                        onChange={(e) => updateFilter('mainProgram', e.target.value as 'NP' | 'ADB' | 'WB' | '')}
+                        onChange={(e) => updateFilter('mainProgram', e.target.value)}
                         className={`px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${getInputBorderColor()} ${getInputBgColor()}`}
                     >
                         <option value="">All Programs</option>
