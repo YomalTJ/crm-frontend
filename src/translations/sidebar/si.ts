@@ -28,6 +28,7 @@ export const translations = {
         familyAgeGroups: "වයස් කාණ්ඩ",
         ownerDetails: "අයිතිකරු විස්තර",
         areaTypes: "ප්‍රදේශ වර්ග",
+        dashboard: "පුවරුව",
     }
 
 }

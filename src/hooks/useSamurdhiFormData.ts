@@ -129,6 +129,11 @@ export const useSamurdhiFormData = () => {
     const [householdNumbers, setHouseholdNumbers] = useState<string[]>([]);
     const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [isLoadingHouseholdNumbers, setIsLoadingHouseholdNumbers] = useState(false);
+    const [householdLoadedFields, setHouseholdLoadedFields] = useState<Set<string>>(new Set());
+
+    const clearHouseholdLoadedFields = () => {
+        setHouseholdLoadedFields(new Set());
+    };
 
     // Initialize location data from localStorage
     useEffect(() => {
@@ -294,6 +299,9 @@ export const useSamurdhiFormData = () => {
         isLoadingHouseholdNumbers,
         setIsLoadingHouseholdNumbers,
         resetForm,
-        createEmptyFormData
+        createEmptyFormData,
+        householdLoadedFields,
+        setHouseholdLoadedFields,
+        clearHouseholdLoadedFields 
     };
 };

@@ -1,11 +1,11 @@
 import React from 'react'
 
-const HrExecutiveDashboard = () => {
+const ZoneOfficerDashboard = () => {
   return (
     <div>
-      <h1 className='text-3xl text-white font-semibold'>HR Executive Dashboard</h1>
+      <h1 className='text-3xl text-white font-semibold'>Zone Officer</h1>
     </div>
   )
 }
 
-export default HrExecutiveDashboard
+export default ZoneOfficerDashboard

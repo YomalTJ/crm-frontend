@@ -1,17 +1,11 @@
-// import Audit from "@/components/admin/audit/Audit";
-import type { Metadata } from "next";
-import React from "react";
+import React from 'react'
 
-export const metadata: Metadata = {
-  title: "Admin Dashboard - Department of Samurdhi Development",
-  description: "This is Admin Dashboard for Department of Samurdhi Development",
-};
-
-export default async function AdminDashboard() {
-
+const NationalOfficerDashboard = () => {
   return (
     <div>
-      {/* <Audit /> */}
+      <h1 className='text-3xl text-white font-semibold'>National Officer</h1>
     </div>
-  );
+  )
 }
+
+export default NationalOfficerDashboard

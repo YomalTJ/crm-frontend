@@ -145,7 +145,10 @@ const SamurdhiFamilyForm: React.FC<SamurdhiFamilyFormProps> = ({
         householdNumbers,
         isInitialLoading,
         isLoadingHouseholdNumbers,
-        resetForm
+        householdLoadedFields,
+        setHouseholdLoadedFields,
+        resetForm,
+        clearHouseholdLoadedFields
     } = useSamurdhiFormData();
 
     const {
@@ -178,7 +181,9 @@ const SamurdhiFamilyForm: React.FC<SamurdhiFamilyFormProps> = ({
         formOptions,
         resetForm,
         isEditMode,
-        editId
+        editId,
+        householdLoadedFields,
+        setHouseholdLoadedFields
     });
 
     const { t } = useLanguage();
@@ -191,7 +196,8 @@ const SamurdhiFamilyForm: React.FC<SamurdhiFamilyFormProps> = ({
         handleCheckboxChange,
         handleNicLookup,
         handleHouseholdSelection,
-        handleFileChange
+        handleFileChange,
+        clearHouseholdLoadedFields
     };
 
     useEffect(() => {
@@ -316,6 +322,8 @@ const SamurdhiFamilyForm: React.FC<SamurdhiFamilyFormProps> = ({
         setIsAswasumaHouseholdDisabled(false);
         setShowAllFieldsForExistingBeneficiary(false);
         setSelectedFile(null);
+        setHouseholdLoadedFields(new Set());
+        clearHouseholdLoadedFields();
     };
 
     const formTitle = isEditMode
@@ -426,6 +434,7 @@ const SamurdhiFamilyForm: React.FC<SamurdhiFamilyFormProps> = ({
                                 formData={formData}
                                 errors={errors}
                                 handlers={handlers}
+                                householdLoadedFields={householdLoadedFields}
                                 t={t}
                             />
 
@@ -435,6 +444,7 @@ const SamurdhiFamilyForm: React.FC<SamurdhiFamilyFormProps> = ({
                                 formOptions={formOptions}
                                 errors={errors}
                                 handlers={handlers}
+                                householdLoadedFields={householdLoadedFields}
                                 t={t}
                             />
 
@@ -442,6 +452,7 @@ const SamurdhiFamilyForm: React.FC<SamurdhiFamilyFormProps> = ({
                             <HouseholdMembersField
                                 formData={formData}
                                 handlers={handlers}
+                                householdLoadedFields={householdLoadedFields}
                                 t={t}
                             />
 
@@ -459,6 +470,7 @@ const SamurdhiFamilyForm: React.FC<SamurdhiFamilyFormProps> = ({
                                 formData={formData}
                                 formOptions={formOptions}
                                 handlers={handlers}
+                                householdLoadedFields={householdLoadedFields}
                                 t={t}
                             />
 

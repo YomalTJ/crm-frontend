@@ -1,16 +1,11 @@
-import SamurdhiFamillyForm from '@/components/forms/SamurdhiFamillyForm'
 import React from 'react'
 
-const DepartmentManagerDashboard = () => {
+const DistrictOfficerDashboard = () => {
   return (
     <div>
-      <h1 className='text-3xl text-white font-semibold'>Department Manager Dashboard</h1>
-
-      <div className="space-y-6 mt-10">
-        <SamurdhiFamillyForm />
-      </div>
+      <h1 className='text-3xl text-white font-semibold'>District Officer</h1>
     </div>
   )
 }
 
-export default DepartmentManagerDashboard
+export default DistrictOfficerDashboard

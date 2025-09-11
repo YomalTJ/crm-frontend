@@ -20,6 +20,8 @@ interface UseFormHandlersProps {
     resetForm: () => void;
     isEditMode?: boolean;
     editId?: string;
+    householdLoadedFields: Set<string>;
+    setHouseholdLoadedFields: React.Dispatch<React.SetStateAction<Set<string>>>;
 }
 
 export const useSamurdhiFormHandlers = ({
@@ -28,7 +30,8 @@ export const useSamurdhiFormHandlers = ({
     formOptions,
     resetForm,
     isEditMode = false,
-    editId
+    editId,
+    setHouseholdLoadedFields
 }: UseFormHandlersProps) => {
     const [errors, setErrors] = useState<FormErrors>({});
     const [isFetching, setIsFetching] = useState(false);
@@ -51,6 +54,10 @@ export const useSamurdhiFormHandlers = ({
                 return newErrors;
             });
         }
+    };
+
+    const clearHouseholdLoadedFields = () => {
+        setHouseholdLoadedFields(new Set());
     };
 
     const handleLivelihoodChange = async (livelihoodId: string) => {
@@ -169,6 +176,12 @@ export const useSamurdhiFormHandlers = ({
 
     const handleRadioChange = (name: string, value: string) => {
         clearError(name);
+
+        if (name === 'beneficiary_type_id') {
+            clearHouseholdLoadedFields();
+            setIsAswasumaHouseholdDisabled(false);
+        }
+
         setFormData(prev => ({
             ...prev,
             [name]: value === 'true' ? true : value === 'false' ? false : value
@@ -354,7 +367,8 @@ export const useSamurdhiFormHandlers = ({
         }
 
         if (!selectedHhNumber) {
-            // Clear auto-filled data when no household is selected
+            // Clear auto-filled data and reset disabled fields
+            setHouseholdLoadedFields(new Set());
             setFormData(prev => ({
                 ...prev,
                 aswasumaHouseholdNo: null,
@@ -362,12 +376,16 @@ export const useSamurdhiFormHandlers = ({
                 beneficiaryGender: null,
                 address: null,
                 projectOwnerAge: 0,
+                maleBelow16: 0,
+                femaleBelow16: 0,
                 male16To24: 0,
                 female16To24: 0,
                 male25To45: 0,
                 female25To45: 0,
                 male46To60: 0,
                 female46To60: 0,
+                maleAbove60: 0,
+                femaleAbove60: 0,
                 aswesuma_cat_id: null
             }));
             return;
@@ -378,6 +396,8 @@ export const useSamurdhiFormHandlers = ({
             const primaryCitizen = householdData.citizens?.[0];
 
             if (householdData.household && primaryCitizen) {
+                const loadedFields = new Set<string>();
+
                 setFormData(prev => ({
                     ...prev,
                     nic: null,
@@ -391,6 +411,8 @@ export const useSamurdhiFormHandlers = ({
                     projectOwnerAge: primaryCitizen.age || 0,
                     beneficiaryGender: primaryCitizen.gender === 'male' ? 'Male' : 'Female',
                     aswesuma_cat_id: getAswasumaIdByLevel(householdData.household.level),
+
+                    // reset optional/other fields
                     mobilePhone: null,
                     employment_id: null,
                     otherOccupation: null,
@@ -412,7 +434,24 @@ export const useSamurdhiFormHandlers = ({
                     housing_service_id: []
                 }));
 
-                // Calculate household members aged 18-60
+                // Track which fields were loaded from household data
+                if (householdData.household.applicantName || primaryCitizen.name) {
+                    loadedFields.add('beneficiaryName');
+                }
+                if (householdData.household.addressLine1 || householdData.household.addressLine2 || householdData.household.addressLine3) {
+                    loadedFields.add('address');
+                }
+                if (primaryCitizen.age) {
+                    loadedFields.add('projectOwnerAge');
+                }
+                if (primaryCitizen.gender) {
+                    loadedFields.add('beneficiaryGender');
+                }
+                if (householdData.household.level) {
+                    loadedFields.add('aswesuma_cat_id');
+                }
+
+                // Calculate household member counts
                 if (householdData.citizens && householdData.citizens.length > 0) {
                     let maleBelow16 = 0, femaleBelow16 = 0;
                     let male16To24 = 0, female16To24 = 0;
@@ -450,11 +489,24 @@ export const useSamurdhiFormHandlers = ({
                         maleAbove60,
                         femaleAbove60
                     }));
+
+                    loadedFields.add('maleBelow16');
+                    loadedFields.add('femaleBelow16');
+                    loadedFields.add('male16To24');
+                    loadedFields.add('female16To24');
+                    loadedFields.add('male25To45');
+                    loadedFields.add('female25To45');
+                    loadedFields.add('male46To60');
+                    loadedFields.add('female46To60');
+                    loadedFields.add('maleAbove60');
+                    loadedFields.add('femaleAbove60');
                 }
 
+                setHouseholdLoadedFields(loadedFields);
             }
         } catch (error: unknown) {
             console.error('Error fetching household details:', error);
+            setHouseholdLoadedFields(new Set());
             setFormData(prev => ({
                 ...prev,
                 aswasumaHouseholdNo: null,
@@ -464,24 +516,20 @@ export const useSamurdhiFormHandlers = ({
                 projectOwnerAge: 0,
                 maleBelow16: 0,
                 femaleBelow16: 0,
-
                 male16To24: 0,
                 female16To24: 0,
-
                 male25To45: 0,
                 female25To45: 0,
-
                 male46To60: 0,
                 female46To60: 0,
-
                 maleAbove60: 0,
                 femaleAbove60: 0,
-
                 aswesuma_cat_id: null
             }));
             toast.error('Failed to fetch household details. Please try again.');
         }
     };
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

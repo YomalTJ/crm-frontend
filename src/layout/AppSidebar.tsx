@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
 import {
   BoltIcon,
@@ -47,6 +47,7 @@ type NavItem = {
   translationKey: string;
   subItems?: SubItem[];
   allowedRoles?: string[];
+  isDashboard?: boolean; // New flag to identify dashboard item
 };
 
 const getUserRole = () => {
@@ -67,8 +68,37 @@ const getUserRole = () => {
   return null;
 };
 
+// Function to get dashboard path based on user role
+const getDashboardPath = (userRole: string | null): string => {
+  if (!userRole) return '/dashboard';
+
+  const rolePathMapping: Record<string, string> = {
+    'National Level User': '/dashboard/national-level',
+    'District Level User': '/dashboard/district-level',
+    'Divisional Level User': '/dashboard/divisional-level',
+    'Bank/Zone Level User': '/dashboard/bank-zone-level',
+    'GN Level User': '/dashboard/gn-level',
+  };
+
+  return rolePathMapping[userRole] || '/dashboard';
+};
+
 // Define navigation items with translation keys instead of hardcoded text
 const navItems: (NavItem & { translationKey: string })[] = [
+  {
+    icon: <PieChartIcon />,
+    name: "Dashboard",
+    translationKey: "sidebar.dashboard",
+    path: "", // Will be set dynamically based on user role
+    isDashboard: true,
+    allowedRoles: [
+      "National Level User",
+      "District Level User",
+      "Divisional Level User",
+      "Bank/Zone Level User",
+      "GN Level User",
+    ],
+  },
   {
     icon: <BoltIcon />,
     name: "Check API Status",
@@ -240,6 +270,7 @@ const navItems: (NavItem & { translationKey: string })[] = [
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered, closeMobileSidebar } = useSidebar();
   const pathname = usePathname();
+  const router = useRouter();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [openSubmenu, setOpenSubmenu] = useState<number | null>(null);
   const [openSubSubMenu, setOpenSubSubMenu] = useState<{ parentIndex: number; subIndex: number } | null>(null);
@@ -289,6 +320,26 @@ const AppSidebar: React.FC = () => {
     if (window.innerWidth < 768) {
       closeMobileSidebar();
     }
+  };
+
+  // Handle dashboard navigation with role-based redirection
+  const handleDashboardClick = () => {
+    const dashboardPath = getDashboardPath(userRole);
+    router.push(dashboardPath);
+    handleNavigationClick();
+  };
+
+  // Check if dashboard is active (any of the dashboard paths)
+  const isDashboardActive = () => {
+    const dashboardPaths = [
+      '/dashboard/national-level',
+      '/dashboard/district-level',
+      '/dashboard/divisional-level',
+      '/dashboard/bank-zone-level',
+      '/dashboard/gn-level'
+    ];
+
+    return dashboardPaths.some(path => pathname.startsWith(path));
   };
 
   // Check if any sub item (including nested ones) is active
@@ -519,6 +570,21 @@ const AppSidebar: React.FC = () => {
                 </div>
               )}
             </div>
+          ) : nav.isDashboard ? (
+            // Special handling for dashboard item
+            <button
+              onClick={handleDashboardClick}
+              className={`menu-item group flex items-center w-full ${isDashboardActive() ? "menu-item-active" : "menu-item-inactive"
+                }`}
+            >
+              <span className={`flex-shrink-0 ${isDashboardActive() ? "menu-item-icon-active" : "menu-item-icon-inactive"
+                }`}>
+                {nav.icon}
+              </span>
+              {(isExpanded || isHovered || isMobileOpen) && (
+                <span className="menu-item-text flex-1 text-left ml-3">{t(nav.translationKey)}</span>
+              )}
+            </button>
           ) : (
             nav.path && (
               <Link

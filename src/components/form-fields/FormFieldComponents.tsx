@@ -31,6 +31,7 @@ interface FormFieldProps {
     isFetching: boolean;
     showAllFieldsForExistingBeneficiary: boolean;
     t: (key: string) => string;
+    householdLoadedFields: Set<string>;
     handlers: {
         handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
         handleSelectChange: (name: string, value: string) => void;
@@ -38,6 +39,8 @@ interface FormFieldProps {
         handleCheckboxChange: (name: string, value: string, isChecked: boolean) => void;
         handleNicLookup: () => void;
         handleHouseholdSelection: (value: string) => void;
+        handleFileChange?: (file: File | null) => void;
+        clearHouseholdLoadedFields?: () => void
     };
 }
 
@@ -497,7 +500,13 @@ export const BeneficiaryTypeField: React.FC<Pick<FormFieldProps, 'formData' | 'f
                     name="beneficiary_type_id"
                     value={status.beneficiary_type_id}
                     checked={formData.beneficiary_type_id === status.beneficiary_type_id}
-                    onChange={() => handlers.handleRadioChange('beneficiary_type_id', status.beneficiary_type_id)}
+                    onChange={() => {
+                        // Clear household loaded fields when beneficiary type changes
+                        if (handlers.clearHouseholdLoadedFields) {
+                            handlers.clearHouseholdLoadedFields();
+                        }
+                        handlers.handleRadioChange('beneficiary_type_id', status.beneficiary_type_id);
+                    }}
                     label={
                         <div className="flex flex-col">
                             <span className="font-sinhala">{status.nameSinhala}</span>
@@ -599,10 +608,11 @@ export const NicField: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' 
 };
 
 // Update BasicInfoFields component
-export const BasicInfoFields: React.FC<Pick<FormFieldProps, 'formData' | 'errors' | 'handlers' | 't'>> = ({
+export const BasicInfoFields: React.FC<Pick<FormFieldProps, 'formData' | 'errors' | 'handlers' | 'householdLoadedFields' | 't'>> = ({
     formData,
     errors,
     handlers,
+    householdLoadedFields,
     t
 }) => (
     <>
@@ -614,6 +624,8 @@ export const BasicInfoFields: React.FC<Pick<FormFieldProps, 'formData' | 'errors
                 value={formData.beneficiaryName || ""}
                 onChange={handlers.handleInputChange}
                 className={errors.beneficiaryName ? 'border-red-500' : ''}
+                disabled={householdLoadedFields.has('beneficiaryName')}
+                readOnly={householdLoadedFields.has('beneficiaryName')}
             />
             <ErrorMessage error={errors.beneficiaryName} />
         </div>
@@ -629,6 +641,7 @@ export const BasicInfoFields: React.FC<Pick<FormFieldProps, 'formData' | 'errors
                     checked={formData.beneficiaryGender === gender}
                     onChange={() => handlers.handleRadioChange('beneficiaryGender', gender)}
                     label={t(`common.${gender.toLowerCase()}`)}
+                    disabled={householdLoadedFields.has('beneficiaryGender')}
                 />
             ))}
         </div>
@@ -641,6 +654,8 @@ export const BasicInfoFields: React.FC<Pick<FormFieldProps, 'formData' | 'errors
                 value={formData.address || ""}
                 onChange={handlers.handleInputChange}
                 className={errors.address ? 'border-red-500' : ''}
+                disabled={householdLoadedFields.has('address')}
+                readOnly={householdLoadedFields.has('address')}
             />
             <ErrorMessage error={errors.address} />
         </div>
@@ -670,11 +685,12 @@ export const BasicInfoFields: React.FC<Pick<FormFieldProps, 'formData' | 'errors
 );
 
 // Update ProjectOwnerFields component
-export const ProjectOwnerFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'handlers' | 't'>> = ({
+export const ProjectOwnerFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'handlers' | 'householdLoadedFields' | 't'>> = ({
     formData,
     formOptions,
     errors,
     handlers,
+    householdLoadedFields,
     t
 }) => (
     <>
@@ -711,6 +727,8 @@ export const ProjectOwnerFields: React.FC<Pick<FormFieldProps, 'formData' | 'for
                 value={formData.projectOwnerAge}
                 onChange={handlers.handleInputChange}
                 className={errors.projectOwnerAge ? 'border-red-500' : ''}
+                disabled={householdLoadedFields.has('projectOwnerAge')}
+                readOnly={householdLoadedFields.has('projectOwnerAge')}
             />
             <ErrorMessage error={errors.projectOwnerAge} />
         </div>
@@ -765,9 +783,10 @@ export const ProjectOwnerFields: React.FC<Pick<FormFieldProps, 'formData' | 'for
 );
 
 // Update HouseholdMembersField component
-export const HouseholdMembersField: React.FC<Pick<FormFieldProps, 'formData' | 'handlers' | 't'>> = ({
+export const HouseholdMembersField: React.FC<Pick<FormFieldProps, 'formData' | 'handlers' | 'householdLoadedFields' | 't'>> = ({
     formData,
     handlers,
+    householdLoadedFields,
     t
 }) => (
     <div className="space-y-6">
@@ -786,6 +805,8 @@ export const HouseholdMembersField: React.FC<Pick<FormFieldProps, 'formData' | '
                             value={formData.maleBelow16 || 0}
                             onChange={handlers.handleInputChange}
                             min="0"
+                            disabled={householdLoadedFields.has('maleBelow16')}
+                            readOnly={householdLoadedFields.has('maleBelow16')}
                         />
                     </div>
                     <div>
@@ -796,6 +817,8 @@ export const HouseholdMembersField: React.FC<Pick<FormFieldProps, 'formData' | '
                             value={formData.femaleBelow16 || 0}
                             onChange={handlers.handleInputChange}
                             min="0"
+                            disabled={householdLoadedFields.has('femaleBelow16')}
+                            readOnly={householdLoadedFields.has('femaleBelow16')}
                         />
                     </div>
                 </div>
@@ -813,6 +836,8 @@ export const HouseholdMembersField: React.FC<Pick<FormFieldProps, 'formData' | '
                             value={formData.male16To24 || 0}
                             onChange={handlers.handleInputChange}
                             min="0"
+                            disabled={householdLoadedFields.has('male16To24')}
+                            readOnly={householdLoadedFields.has('male16To24')}
                         />
                     </div>
                     <div>
@@ -823,6 +848,8 @@ export const HouseholdMembersField: React.FC<Pick<FormFieldProps, 'formData' | '
                             value={formData.female16To24 || 0}
                             onChange={handlers.handleInputChange}
                             min="0"
+                            disabled={householdLoadedFields.has('female16To24')}
+                            readOnly={householdLoadedFields.has('female16To24')}
                         />
                     </div>
                 </div>
@@ -840,6 +867,8 @@ export const HouseholdMembersField: React.FC<Pick<FormFieldProps, 'formData' | '
                             value={formData.male25To45 || 0}
                             onChange={handlers.handleInputChange}
                             min="0"
+                            disabled={householdLoadedFields.has('male25To45')}
+                            readOnly={householdLoadedFields.has('male25To45')}
                         />
                     </div>
                     <div>
@@ -850,6 +879,8 @@ export const HouseholdMembersField: React.FC<Pick<FormFieldProps, 'formData' | '
                             value={formData.female25To45 || 0}
                             onChange={handlers.handleInputChange}
                             min="0"
+                            disabled={householdLoadedFields.has('female25To45')}
+                            readOnly={householdLoadedFields.has('female25To45')}
                         />
                     </div>
                 </div>
@@ -867,6 +898,8 @@ export const HouseholdMembersField: React.FC<Pick<FormFieldProps, 'formData' | '
                             value={formData.male46To60 || 0}
                             onChange={handlers.handleInputChange}
                             min="0"
+                            disabled={householdLoadedFields.has('male46To60')}
+                            readOnly={householdLoadedFields.has('male46To60')}
                         />
                     </div>
                     <div>
@@ -877,6 +910,8 @@ export const HouseholdMembersField: React.FC<Pick<FormFieldProps, 'formData' | '
                             value={formData.female46To60 || 0}
                             onChange={handlers.handleInputChange}
                             min="0"
+                            disabled={householdLoadedFields.has('female46To60')}
+                            readOnly={householdLoadedFields.has('female46To60')}
                         />
                     </div>
                 </div>
@@ -894,6 +929,8 @@ export const HouseholdMembersField: React.FC<Pick<FormFieldProps, 'formData' | '
                             value={formData.maleAbove60 || 0}
                             onChange={handlers.handleInputChange}
                             min="0"
+                            disabled={householdLoadedFields.has('maleAbove60')}
+                            readOnly={householdLoadedFields.has('maleAbove60')}
                         />
                     </div>
                     <div>
@@ -904,6 +941,8 @@ export const HouseholdMembersField: React.FC<Pick<FormFieldProps, 'formData' | '
                             value={formData.femaleAbove60 || 0}
                             onChange={handlers.handleInputChange}
                             min="0"
+                            disabled={householdLoadedFields.has('femaleAbove60')}
+                            readOnly={householdLoadedFields.has('femaleAbove60')}
                         />
                     </div>
                 </div>
@@ -954,10 +993,11 @@ export const EmploymentFields: React.FC<Pick<FormFieldProps, 'formData' | 'formO
 );
 
 // Update BenefitsFields component
-export const BenefitsFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'handlers' | 't'>> = ({
+export const BenefitsFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'handlers' |'householdLoadedFields'| 't'>> = ({
     formData,
     formOptions,
     handlers,
+    householdLoadedFields,
     t
 }) => (
     <>
@@ -992,6 +1032,7 @@ export const BenefitsFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOpt
                     onChange={(value) => handlers.handleSelectChange('aswesuma_cat_id', value)}
                     className="dark:bg-dark-900"
                     value={formData.aswesuma_cat_id || ""}
+                    disabled={householdLoadedFields.has('aswesuma_cat_id')}
                 />
                 <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
                     <ChevronDownIcon />
