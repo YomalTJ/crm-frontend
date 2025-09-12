@@ -29,6 +29,7 @@ export const translations = {
         ownerDetails: "உரிமையாளர் விவரங்கள்",
         areaTypes: "பகுதி வகைகள்",
         dashboard: "தகவல் பலகை",
+        refusalReasons: "மறுப்பின் காரணங்கள்",
     }
 
 }

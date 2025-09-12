@@ -29,6 +29,7 @@ export const translations = {
         ownerDetails: "Owner Details",
         areaTypes: "Area Types",
         dashboard: "Dashboard",
+        refusalReasons: "Refusal Reasons",
     }
 
 }

@@ -192,6 +192,11 @@ const navItems: (NavItem & { translationKey: string })[] = [
             translationKey: "sidebar.ownerDetails",
             path: "/dashboard/reports/detail/owner-details",
           },
+          {
+            name: "Empowerment Program Refusing Reasons",
+            translationKey: "sidebar.refusalReasons",
+            path: "/dashboard/reports/detail/refusal-reasons",
+          },
         ],
       },
     ],
