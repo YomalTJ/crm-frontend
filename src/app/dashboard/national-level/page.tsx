@@ -3,15 +3,19 @@
 import React, { useEffect, useState } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import BeneficiaryCountTable from '@/components/dashboard/BeneficiaryCountTable';
+import BeneficiaryTypeTable from '@/components/dashboard/BeneficiaryTypeTable';
 import { 
     getBeneficiaryCountByYear, 
+    getBeneficiaryTypeCounts,
     getLocationDisplayName,
-    BeneficiaryCountResponseDto 
+    BeneficiaryCountResponseDto,
+    BeneficiaryTypeCountResponseDto
 } from '@/services/dashboardService';
 
 const NationalOfficerDashboard = () => {
     const { theme } = useTheme();
     const [beneficiaryData, setBeneficiaryData] = useState<BeneficiaryCountResponseDto | null>(null);
+    const [beneficiaryTypeData, setBeneficiaryTypeData] = useState<BeneficiaryTypeCountResponseDto | null>(null);
     const [locationName, setLocationName] = useState<string>('');
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -22,13 +26,15 @@ const NationalOfficerDashboard = () => {
                 setIsLoading(true);
                 setError(null);
 
-                // Fetch beneficiary count data and location name in parallel
-                const [data, location] = await Promise.all([
+                // Fetch all data in parallel
+                const [countData, typeData, location] = await Promise.all([
                     getBeneficiaryCountByYear(),
+                    getBeneficiaryTypeCounts(),
                     getLocationDisplayName()
                 ]);
 
-                setBeneficiaryData(data);
+                setBeneficiaryData(countData);
+                setBeneficiaryTypeData(typeData);
                 setLocationName(location);
             } catch (error) {
                 console.error('Failed to fetch dashboard data:', error);
@@ -62,54 +68,28 @@ const NationalOfficerDashboard = () => {
                 </p>
             </div>
 
-            {/* Beneficiary Count Table */}
-            {beneficiaryData && (
-                <BeneficiaryCountTable
-                    data={beneficiaryData}
-                    title="Beneficiary Count by Year"
-                    locationDisplayName={locationName}
-                    isLoading={isLoading}
-                />
-            )}
+            {/* Grid Layout for Tables */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                {/* Beneficiary Count Table */}
+                {beneficiaryData && (
+                    <BeneficiaryCountTable
+                        data={beneficiaryData}
+                        title="Beneficiary Count by Year"
+                        locationDisplayName={locationName}
+                        isLoading={isLoading}
+                    />
+                )}
 
-            {/* Placeholder for additional dashboard widgets */}
-            {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className={`p-6 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-sm`}>
-                    <h3 className={`text-lg font-semibold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                        National Analytics Overview
-                    </h3>
-                    <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                        Additional charts and metrics will be added here...
-                    </p>
-                </div>
-                
-                <div className={`p-6 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-sm`}>
-                    <h3 className={`text-lg font-semibold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                        Program Performance
-                    </h3>
-                    <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                        Program-wise performance metrics coming soon...
-                    </p>
-                </div>
-
-                <div className={`p-6 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-sm`}>
-                    <h3 className={`text-lg font-semibold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                        Regional Distribution
-                    </h3>
-                    <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                        District-wise distribution charts coming soon...
-                    </p>
-                </div>
-
-                <div className={`p-6 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-sm`}>
-                    <h3 className={`text-lg font-semibold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                        Trend Analysis
-                    </h3>
-                    <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                        Year-over-year trend analysis coming soon...
-                    </p>
-                </div>
-            </div> */}
+                {/* Beneficiary Type Table */}
+                {beneficiaryTypeData && (
+                    <BeneficiaryTypeTable
+                        data={beneficiaryTypeData}
+                        title="Beneficiary Count by Type"
+                        locationDisplayName={locationName}
+                        isLoading={isLoading}
+                    />
+                )}
+            </div>
         </div>
     );
 };

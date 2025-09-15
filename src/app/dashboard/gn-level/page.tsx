@@ -3,15 +3,19 @@
 import React, { useEffect, useState } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import BeneficiaryCountTable from '@/components/dashboard/BeneficiaryCountTable';
+import BeneficiaryTypeTable from '@/components/dashboard/BeneficiaryTypeTable';
 import {
   getBeneficiaryCountByYear,
+  getBeneficiaryTypeCounts,
   getLocationDisplayName,
-  BeneficiaryCountResponseDto
+  BeneficiaryCountResponseDto,
+  BeneficiaryTypeCountResponseDto
 } from '@/services/dashboardService';
 
 const GndOfficerDashboard = () => {
   const { theme } = useTheme();
   const [beneficiaryData, setBeneficiaryData] = useState<BeneficiaryCountResponseDto | null>(null);
+  const [beneficiaryTypeData, setBeneficiaryTypeData] = useState<BeneficiaryTypeCountResponseDto | null>(null);
   const [locationName, setLocationName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,12 +26,15 @@ const GndOfficerDashboard = () => {
         setIsLoading(true);
         setError(null);
 
-        const [data, location] = await Promise.all([
+        // Fetch all data in parallel
+        const [countData, typeData, location] = await Promise.all([
           getBeneficiaryCountByYear(),
+          getBeneficiaryTypeCounts(),
           getLocationDisplayName()
         ]);
 
-        setBeneficiaryData(data);
+        setBeneficiaryData(countData);
+        setBeneficiaryTypeData(typeData);
         setLocationName(location);
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
@@ -61,72 +68,28 @@ const GndOfficerDashboard = () => {
         </p>
       </div>
 
-      {/* Beneficiary Count Table */}
-      {beneficiaryData && (
-        <BeneficiaryCountTable
-          data={beneficiaryData}
-          title="GND Beneficiary Count by Year"
-          locationDisplayName={locationName}
-          isLoading={isLoading}
-        />
-      )}
+      {/* Grid Layout for Tables */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        {/* Beneficiary Count Table */}
+        {beneficiaryData && (
+          <BeneficiaryCountTable
+            data={beneficiaryData}
+            title="GND Beneficiary Count by Year"
+            locationDisplayName={locationName}
+            isLoading={isLoading}
+          />
+        )}
 
-      {/* GND-specific dashboard widgets */}
-      {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className={`p-6 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-sm`}>
-          <h3 className={`text-lg font-semibold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-            Local Community Stats
-          </h3>
-          <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-            Detailed statistics about families and individuals in this GND...
-          </p>
-        </div>
-
-        <div className={`p-6 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-sm`}>
-          <h3 className={`text-lg font-semibold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-            Program Implementation
-          </h3>
-          <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-            Status of various programs being implemented in this area...
-          </p>
-        </div>
-
-        <div className={`p-6 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-sm`}>
-          <h3 className={`text-lg font-semibold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-            Training & Development
-          </h3>
-          <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-            Training programs and skill development initiatives...
-          </p>
-        </div>
-
-        <div className={`p-6 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-sm`}>
-          <h3 className={`text-lg font-semibold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-            Field Activities
-          </h3>
-          <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-            Recent field activities and community engagement reports...
-          </p>
-        </div>
-
-        <div className={`p-6 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-sm`}>
-          <h3 className={`text-lg font-semibold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-            Beneficiary Management
-          </h3>
-          <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-            Quick access to beneficiary management tools and reports...
-          </p>
-        </div>
-
-        <div className={`p-6 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-sm`}>
-          <h3 className={`text-lg font-semibold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-            Monthly Targets
-          </h3>
-          <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-            Monthly targets and progress tracking for this GND area...
-          </p>
-        </div>
-      </div> */}
+        {/* Beneficiary Type Table */}
+        {beneficiaryTypeData && (
+          <BeneficiaryTypeTable
+            data={beneficiaryTypeData}
+            title="GND Beneficiary Count by Type"
+            locationDisplayName={locationName}
+            isLoading={isLoading}
+          />
+        )}
+      </div>
     </div>
   );
 };

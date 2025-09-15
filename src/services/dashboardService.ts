@@ -14,6 +14,43 @@ export interface YearlyProgramCountDto {
     programs: ProgramCountDto[];
 }
 
+export interface BeneficiaryTypeCountDto {
+    beneficiary_type_id: string;
+    nameEnglish: string;
+    nameSinhala: string;
+    nameTamil: string;
+    count: number;
+}
+
+export interface BeneficiaryTypeCountResponseDto {
+    counts: BeneficiaryTypeCountDto[];
+    location?: {
+        district?: {
+            district_id: string;
+            district_name: string;
+        };
+        ds?: {
+            ds_id: string;
+            ds_name: string;
+        };
+        zone?: {
+            zone_id: string;
+            zone_name: string;
+        };
+        gnd?: {
+            gnd_id: string;
+            gnd_name: string;
+        };
+    };
+}
+
+export interface BeneficiaryTypeCountFilterDto {
+    district_id?: string;
+    ds_id?: string;
+    zone_id?: string;
+    gnd_id?: string;
+}
+
 export interface BeneficiaryCountResponseDto {
     data: YearlyProgramCountDto[];
     location?: {
@@ -240,5 +277,54 @@ export const getLocationDisplayName = async (): Promise<string> => {
     } catch (error) {
         console.error('Failed to get location display name:', error);
         return 'Unknown Location';
+    }
+};
+
+export const getBeneficiaryTypeCounts = async (additionalFilters?: Partial<BeneficiaryTypeCountFilterDto>): Promise<BeneficiaryTypeCountResponseDto> => {
+    try {
+        const token = (await cookies()).get('staffAccessToken')?.value;
+
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        // Get user's accessible locations to apply automatic filtering
+        const accessibleLocations = await getAccessibleLocations();
+        const filters: BeneficiaryTypeCountFilterDto = { ...additionalFilters };
+
+        // Apply location-based filtering based on user's access level
+        if (accessibleLocations.districts.length === 1) {
+            filters.district_id = accessibleLocations.districts[0].district_id.toString();
+        }
+        if (accessibleLocations.dss.length === 1) {
+            filters.ds_id = accessibleLocations.dss[0].ds_id.toString();
+        }
+        if (accessibleLocations.zones.length === 1) {
+            filters.zone_id = accessibleLocations.zones[0].zone_id.toString();
+        }
+        if (accessibleLocations.gndDivisions.length === 1) {
+            filters.gnd_id = accessibleLocations.gndDivisions[0].gnd_id;
+        }
+
+        // Build query parameters
+        const queryParams = new URLSearchParams();
+        if (filters.district_id) queryParams.append('district_id', filters.district_id);
+        if (filters.ds_id) queryParams.append('ds_id', filters.ds_id);
+        if (filters.zone_id) queryParams.append('zone_id', filters.zone_id);
+        if (filters.gnd_id) queryParams.append('gnd_id', filters.gnd_id);
+
+        const queryString = queryParams.toString();
+        const url = `/beneficiaries/type-counts${queryString ? `?${queryString}` : ''}`;
+
+        const response = await axiosInstance.get(url, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error('Failed to fetch beneficiary type counts:', error);
+        throw new Error('Failed to fetch beneficiary type counts');
     }
 };
