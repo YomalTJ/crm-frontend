@@ -71,7 +71,7 @@ export default function SignInForm() {
             router.push("/dashboard/bank-zone-level");
             break;
           case 'gn-level-user':
-            router.push("/dashboard/api-status");
+            router.push("/dashboard/gn-level");
             break;
           default:
             router.push("/dashboard/staff");
