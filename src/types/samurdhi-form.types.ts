@@ -1,7 +1,12 @@
 export interface LocationData {
     id: string;
     name: string;
+    districtId?: number;
+    dsId?: number;
+    zoneId?: number;
+    gndId?: number;
 }
+
 
 export interface FormData {
     district: LocationData;

@@ -51,29 +51,26 @@ const HouseholdDetails = () => {
   const [gnCode, setGnCode] = useState<string>('')
   const [level, setLevel] = useState<number>(2)
 
-  // Get staff location from localStorage and construct gn_code
   useEffect(() => {
     const locationData = localStorage.getItem('staffLocation')
+    console.log("Raw staffLocation from localStorage:", locationData)
+
     if (locationData) {
       try {
-        const location: StaffLocation = JSON.parse(locationData)
+        const location = JSON.parse(locationData)
         setStaffLocation(location)
 
-        const province = location.provinceId.toString()
-        const district = location.district.id.toString()
-        const dsDivision = location.dsDivision.id.toString().padStart(2, '0')
-        const zone = location.zone.id.toString().padStart(2, '0')
-        const gnd = location.gnd.id.padStart(3, '0')
-
-        const constructedGnCode = `${province}-${district}-${dsDivision}-${zone}-${gnd}`
-        setGnCode(constructedGnCode)
-      } catch {
+        const gnCode = location.gnd.id
+        setGnCode(gnCode)
+      } catch (err) {
+        console.error("Failed to parse staff location data:", err)
         setError('Failed to parse staff location data')
       }
     } else {
       setError('Staff location not found in localStorage')
     }
   }, [])
+
 
   const fetchHouseholdData = async () => {
     if (!gnCode) {

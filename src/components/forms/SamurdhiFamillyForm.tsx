@@ -206,19 +206,23 @@ const SamurdhiFamilyForm: React.FC<SamurdhiFamilyFormProps> = ({
             const locationData = {
                 district: {
                     id: initialData.location.district?.id?.toString() || '',
-                    name: initialData.location.district?.name || ''
+                    name: initialData.location.district?.name || '',
+                    districtId: initialData.location.district?.id || 0
                 },
                 dsDivision: {
                     id: initialData.location.divisionalSecretariat?.id?.toString() || '',
-                    name: initialData.location.divisionalSecretariat?.name || ''
+                    name: initialData.location.divisionalSecretariat?.name || '',
+                    dsId: initialData.location.divisionalSecretariat?.id || 0
                 },
                 zone: {
                     id: initialData.location.samurdhiBank?.id?.toString() || '',
-                    name: initialData.location.samurdhiBank?.name || ''
+                    name: initialData.location.samurdhiBank?.name || '',
+                    zoneId: initialData.location.samurdhiBank?.id || 0
                 },
                 gnd: {
                     id: initialData.location.gramaNiladhariDivision?.id?.toString() || '',
-                    name: initialData.location.gramaNiladhariDivision?.name || ''
+                    name: initialData.location.gramaNiladhariDivision?.name || '',
+                    gndId: parseInt(initialData.location.gramaNiladhariDivision?.id || '0') || 0
                 }
             };
 

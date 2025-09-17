@@ -23,10 +23,10 @@ const createEmptyFormData = (locationData: Partial<{
     zone: LocationData;
     gnd: LocationData;
 }> = {}): FormData => ({
-    district: locationData.district || { id: '', name: '' },
-    dsDivision: locationData.dsDivision || { id: '', name: '' },
-    zone: locationData.zone || { id: '', name: '' },
-    gnd: locationData.gnd || { id: '', name: '' },
+    district: locationData.district || { id: '', name: '', districtId: 0 },
+    dsDivision: locationData.dsDivision || { id: '', name: '', dsId: 0 },
+    zone: locationData.zone || { id: '', name: '', zoneId: 0 },
+    gnd: locationData.gnd || { id: '', name: '', gndId: 0 },
     mainProgram: null,
     isImpactEvaluation: null,
     areaClassification: null,
@@ -143,19 +143,23 @@ export const useSamurdhiFormData = () => {
             const locationData = {
                 district: {
                     id: locationDetails.district?.id?.toString() || '',
-                    name: locationDetails.district?.name || ''
+                    name: locationDetails.district?.name || '',
+                    districtId: locationDetails.district?.districtId || 0
                 },
                 dsDivision: {
                     id: locationDetails.dsDivision?.id?.toString() || '',
-                    name: locationDetails.dsDivision?.name || ''
+                    name: locationDetails.dsDivision?.name || '',
+                    dsId: locationDetails.dsDivision?.dsId || 0
                 },
                 zone: {
                     id: locationDetails.zone?.id?.toString() || '',
-                    name: locationDetails.zone?.name || ''
+                    name: locationDetails.zone?.name || '',
+                    zoneId: locationDetails.zone?.zoneId || 0
                 },
                 gnd: {
                     id: locationDetails.gnd?.id?.toString() || '',
-                    name: locationDetails.gnd?.name || ''
+                    name: locationDetails.gnd?.name || '',
+                    gndId: locationDetails.gnd?.gndId || 0
                 }
             };
 
@@ -239,15 +243,19 @@ export const useSamurdhiFormData = () => {
 
                 if (storedLocation) {
                     const locationDetails = JSON.parse(storedLocation);
-                    const { provinceId, district, dsDivision, zone, gnd } = locationDetails;
 
-                    if (provinceId && district?.id && dsDivision?.id && zone?.id && gnd?.id) {
-                        const gnCode = `${provinceId}-${district.id}-${dsDivision.id.toString().padStart(2, '0')}-${zone.id.toString().padStart(2, '0')}-${gnd.id}`;
+                    const gnCode = locationDetails.gnd?.id;
 
+                    if (gnCode) {
                         setIsLoadingHouseholdNumbers(true);
                         const numbers = await getHouseholdNumbersByGnCode(gnCode);
                         setHouseholdNumbers(numbers);
+                        console.log('Fetched household numbers for GN Code:', gnCode, numbers);
+                    } else {
+                        console.error('GN Code not found in location details');
                     }
+                } else {
+                    console.error('Staff location not found in localStorage');
                 }
             } catch (error) {
                 console.error('Error fetching household numbers:', error);
@@ -260,6 +268,7 @@ export const useSamurdhiFormData = () => {
         fetchHouseholdNumbers();
     }, []);
 
+
     const resetForm = () => {
         const storedLocation = localStorage.getItem('staffLocation');
         let locationData = {};
@@ -269,19 +278,23 @@ export const useSamurdhiFormData = () => {
             locationData = {
                 district: {
                     id: locationDetails.district?.id?.toString() || '',
-                    name: locationDetails.district?.name || ''
+                    name: locationDetails.district?.name || '',
+                    districtId: locationDetails.district?.districtId || 0
                 },
                 dsDivision: {
                     id: locationDetails.dsDivision?.id?.toString() || '',
-                    name: locationDetails.dsDivision?.name || ''
+                    name: locationDetails.dsDivision?.name || '',
+                    dsId: locationDetails.dsDivision?.dsId || 0
                 },
                 zone: {
                     id: locationDetails.zone?.id?.toString() || '',
-                    name: locationDetails.zone?.name || ''
+                    name: locationDetails.zone?.name || '',
+                    zoneId: locationDetails.zone?.zoneId || 0
                 },
                 gnd: {
                     id: locationDetails.gnd?.id?.toString() || '',
-                    name: locationDetails.gnd?.name || ''
+                    name: locationDetails.gnd?.name || '',
+                    gndId: locationDetails.gnd?.gndId || 0
                 }
             };
         }
@@ -302,6 +315,6 @@ export const useSamurdhiFormData = () => {
         createEmptyFormData,
         householdLoadedFields,
         setHouseholdLoadedFields,
-        clearHouseholdLoadedFields 
+        clearHouseholdLoadedFields
     };
 };

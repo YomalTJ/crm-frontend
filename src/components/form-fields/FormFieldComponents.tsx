@@ -68,28 +68,29 @@ export const LocationFields: React.FC<Pick<FormFieldProps, 'formData' | 't'>> = 
         <div>
             <Label>{t('samurdhiForm.district')}</Label>
             <Input type="text" value={formData.district.name} readOnly />
-            <input type="hidden" name="district_id" value={formData.district.id} />
+            <input type="hidden" name="district_id" value={formData.district.districtId} />
         </div>
 
         <div>
             <Label>{t('samurdhiForm.divisionalSecretariat')}</Label>
             <Input type="text" value={formData.dsDivision.name} readOnly />
-            <input type="hidden" name="ds_id" value={formData.dsDivision.id} />
+            <input type="hidden" name="ds_id" value={formData.dsDivision.dsId} />
         </div>
 
         <div>
             <Label>{t('samurdhiForm.samurdhiBank')}</Label>
             <Input type="text" value={formData.zone.name} readOnly />
-            <input type="hidden" name="zone_id" value={formData.zone.id} />
+            <input type="hidden" name="zone_id" value={formData.zone.zoneId} />
         </div>
 
         <div>
             <Label>{t('samurdhiForm.gnDivision')}</Label>
             <Input type="text" value={formData.gnd.name} readOnly />
-            <input type="hidden" name="gnd_id" value={formData.gnd.id} />
+            <input type="hidden" name="gnd_id" value={formData.gnd.gndId} />
         </div>
     </>
 );
+
 
 export const MainProgramField: React.FC<Pick<FormFieldProps, 'formData' | 'errors' | 'handlers' | 't'>> = ({
     formData,
@@ -993,7 +994,7 @@ export const EmploymentFields: React.FC<Pick<FormFieldProps, 'formData' | 'formO
 );
 
 // Update BenefitsFields component
-export const BenefitsFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'handlers' |'householdLoadedFields'| 't'>> = ({
+export const BenefitsFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'handlers' | 'householdLoadedFields' | 't'>> = ({
     formData,
     formOptions,
     handlers,

@@ -553,10 +553,10 @@ export const useSamurdhiFormHandlers = ({
             const submitFormData = new FormData();
 
             const payload: SamurdhiFamilyPayload = {
-                district_id: formData.district.id || "1",
-                ds_id: formData.dsDivision.id || "1",
-                zone_id: formData.zone.id || "1",
-                gnd_id: formData.gnd.id || "1",
+                district_id: formData.district.districtId?.toString() || "",
+                ds_id: formData.dsDivision.dsId?.toString() || "",
+                zone_id: formData.zone.zoneId?.toString() || "",
+                gnd_id: formData.gnd.gndId?.toString() || "",
                 beneficiary_type_id: formData.beneficiary_type_id as string,
                 mainProgram: formData.mainProgram ?? "",
                 hasConsentedToEmpowerment: formData.hasConsentedToEmpowerment,
