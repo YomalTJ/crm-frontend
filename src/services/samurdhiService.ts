@@ -19,6 +19,7 @@ export interface SamurdhiFamilyPayload {
   aswasumaHouseholdNo: string | null;
   nic: string | null;
   beneficiaryName: string | null;
+  beneficiaryAge: number;
   beneficiaryGender: string | null; // RENAMED from gender
   address: string | null;
   mobilePhone: string | null; // RENAMED from phone
@@ -90,6 +91,7 @@ export interface SamurdhiFamilyPayload {
 export interface BeneficiaryDetailsResponse {
   beneficiaryDetails: {
     name: string;
+    age: number;
     gender: string;
   };
   mainProgram: string;

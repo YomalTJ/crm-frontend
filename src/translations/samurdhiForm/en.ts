@@ -80,6 +80,7 @@ export const translations = {
 
         // Basic Information
         beneficiaryName: 'Name of the Beneficiary',
+        beneficiaryAge: 'Age of the Beneficiary',
         beneficiaryNameRequired: 'Beneficiary name is required',
         gender: 'Gender',
         address: 'Address',
@@ -135,6 +136,7 @@ export const translations = {
 
         // Job Field
         jobField: 'Job Field',
+        selectJobField: 'Select job field',
         jobFieldRequired: 'Job field is required',
         otherJobField: 'Please specify Other employment fields',
 

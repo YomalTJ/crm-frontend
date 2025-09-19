@@ -80,6 +80,7 @@ export const translations = {
 
         // Basic Information
         beneficiaryName: 'ප්‍රතිලාභියාගේ නම',
+        beneficiaryAge: 'ප්‍රතිලාභියාගේ වයස',
         beneficiaryNameRequired: 'ප්‍රතිලාභියාගේ නම අවශ්‍ය වේ',
         gender: 'ස්ත්‍රී පුරුෂ භාවය',
         address: 'ලිපිනය',
@@ -135,6 +136,7 @@ export const translations = {
 
         // Job Field
         jobField: 'රැකියා ක්ෂේත්‍රය',
+        selectJobField: 'රැකියා ක්ෂේත්‍රය තෝරන්න',
         jobFieldRequired: 'රැකියා ක්ෂේත්‍රය අවශ්‍ය වේ',
         otherJobField: 'කරුණාකර වෙනත් රැකියා ක්ෂේත්‍ර සඳහන් කරන්න',
 

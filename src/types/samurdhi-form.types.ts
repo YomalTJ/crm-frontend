@@ -23,6 +23,7 @@ export interface FormData {
     aswasumaHouseholdNo: string | null;
     nic: string | null;
     beneficiaryName: string | null;
+    beneficiaryAge: number;
     beneficiaryGender: string | null;
     address: string | null;
     mobilePhone: string | null;

@@ -68,6 +68,7 @@ const createEmptyFormData = (locationData: Partial<{
         aswasumaHouseholdNo: null,
         nic: null,
         beneficiaryName: null,
+        beneficiaryAge: 0,
         beneficiaryGender: null,
         address: null,
         mobilePhone: null,
@@ -243,6 +244,7 @@ const SamurdhiFamilyForm: React.FC<SamurdhiFamilyFormProps> = ({
                 aswasumaHouseholdNo: initialData.householdNumber || null,
                 nic: editId || null, // The edit ID is the NIC or household number
                 beneficiaryName: initialData.beneficiaryDetails.name || null,
+                beneficiaryAge: initialData.beneficiaryDetails.age || 0,
                 beneficiaryGender: initialData.beneficiaryDetails.gender || null,
                 address: initialData.address || null,
                 mobilePhone: initialData.mobilePhone || null,
@@ -499,20 +501,6 @@ const SamurdhiFamilyForm: React.FC<SamurdhiFamilyFormProps> = ({
                                 onLivelihoodChange={handleLivelihoodChange}
                                 t={t}
                             />
-
-                            {/* Other Project Field */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Specify other projects
-                                </label>
-                                <input
-                                    type="text"
-                                    name="otherProject"
-                                    value={formData.otherProject || ""}
-                                    onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-600 dark:text-white"
-                                />
-                            </div>
 
                             {/* Child Details Fields (conditional) */}
                             <ChildDetailsFields

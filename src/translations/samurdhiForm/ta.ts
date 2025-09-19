@@ -80,6 +80,7 @@ export const translations = {
 
         // Basic Information
         beneficiaryName: 'பயனாளியின் பெயர்',
+        beneficiaryAge: 'பயனாளியின் வயது',
         beneficiaryNameRequired: 'பயனாளியின் பெயர் தேவை',
         gender: 'பாலினம்',
         address: 'முகவரி',
@@ -135,6 +136,7 @@ export const translations = {
 
         // Job Field
         jobField: 'வேலை துறை',
+        selectJobField: 'வேலைத் துறையைத் தேர்ந்தெடுக்கவும்',
         jobFieldRequired: 'வேலை துறை தேவை',
         otherJobField: 'தயவுசெய்து மற்ற வேலைவாய்ப்பு துறைகளை குறிப்பிடவும்',
 

@@ -631,6 +631,20 @@ export const BasicInfoFields: React.FC<Pick<FormFieldProps, 'formData' | 'errors
             <ErrorMessage error={errors.beneficiaryName} />
         </div>
 
+        <div>
+            <Label>{t('samurdhiForm.beneficiaryAge')}</Label>
+            <Input
+                type="number"
+                name="beneficiaryAge"
+                value={formData.beneficiaryAge}
+                onChange={handlers.handleInputChange}
+                className={errors.projectOwnerAge ? 'border-red-500' : ''}
+                disabled={householdLoadedFields.has('beneficiaryAge')}
+                readOnly={householdLoadedFields.has('beneficiaryAge')}
+            />
+            <ErrorMessage error={errors.projectOwnerAge} />
+        </div>
+
         <div className="flex flex-col gap-4">
             <Label>{t('samurdhiForm.gender')}</Label>
             {['Female', 'Male', 'Other'].map(gender => (
@@ -1124,35 +1138,55 @@ export const ProjectTypeField: React.FC<Pick<FormFieldProps, 'formData' | 'formO
 
                 {/* Project Type Dropdown - only show when livelihood is selected */}
                 {formData.selectedLivelihood && (
-                    <div>
-                        <Label>{t('samurdhiForm.projectTypes')}</Label>
-                        <div className="relative">
-                            <Select
-                                options={projectTypesByLivelihood.map(project => ({
-                                    value: project.project_type_id.toString(),
-                                    label: `${project.nameSinhala} - ${project.nameTamil} - ${project.nameEnglish}`
-                                }))}
-                                placeholder={isLoadingProjectTypes ? t('common.loading') : t('samurdhiForm.selectProjectType')}
-                                onChange={(value) => handlers.handleSelectChange('project_type_id', value)}
-                                className={`dark:bg-dark-900 ${errors.project_type_id ? 'border-red-500' : ''}`}
-                                value={formData.project_type_id || ''}
-                                disabled={isLoadingProjectTypes}
-                            />
-                            {isLoadingProjectTypes && (
-                                <div className="absolute top-2 right-3">
-                                    <LoadingSpinner size="sm" />
-                                </div>
-                            )}
-                            <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
-                                <ChevronDownIcon />
-                            </span>
+                    <>
+                        <div>
+                            <Label>{t('samurdhiForm.projectTypes')}</Label>
+                            <div className="relative">
+                                <Select
+                                    options={projectTypesByLivelihood.map(project => ({
+                                        value: project.project_type_id.toString(),
+                                        label: `${project.nameSinhala} - ${project.nameTamil} - ${project.nameEnglish}`
+                                    }))}
+                                    placeholder={isLoadingProjectTypes ? t('common.loading') : t('samurdhiForm.selectProjectType')}
+                                    onChange={(value) => handlers.handleSelectChange('project_type_id', value)}
+                                    className={`dark:bg-dark-900 ${errors.project_type_id ? 'border-red-500' : ''}`}
+                                    value={formData.project_type_id || ''}
+                                    disabled={isLoadingProjectTypes}
+                                />
+                                {isLoadingProjectTypes && (
+                                    <div className="absolute top-2 right-3">
+                                        <LoadingSpinner size="sm" />
+                                    </div>
+                                )}
+                                <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                                    <ChevronDownIcon />
+                                </span>
+                            </div>
+                            <ErrorMessage error={errors.project_type_id} />
                         </div>
-                        <ErrorMessage error={errors.project_type_id} />
-                    </div>
+
+                        {/* Other Project Field */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                {t('samurdhiForm.otherProject')}
+                            </label>
+                            <input
+                                type="text"
+                                name="otherProject"
+                                value={formData.otherProject || ""}
+                                onChange={(e) => handlers.handleInputChange(e)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm 
+                                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
+                                       dark:bg-gray-900 dark:border-gray-600 dark:text-white"
+                            />
+                            <ErrorMessage error={errors.otherProject} />
+                        </div>
+                    </>
                 )}
             </div>
         );
     };
+
 
 // Update ChildDetailsFields component
 export const ChildDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'showAllFieldsForExistingBeneficiary' | 'handlers' | 't'>> = ({
@@ -1167,6 +1201,26 @@ export const ChildDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'for
 
     return (
         <>
+            <div>
+                <Label>{t('samurdhiForm.jobField')}</Label>
+                <div className="relative">
+                    <Select
+                        options={formOptions.jobFields.map(jobField => ({
+                            value: jobField.job_field_id.toString(),
+                            label: `${jobField.nameSinhala} - ${jobField.nameTamil} - ${jobField.nameEnglish}`
+                        }))}
+                        placeholder={t('samurdhiForm.selectJobField')}
+                        onChange={(value) => handlers.handleSelectChange('job_field_id', value)}
+                        className={`dark:bg-dark-900 ${errors.job_field_id ? 'border-red-500' : ''}`}
+                        value={formData.job_field_id || ''}
+                    />
+                    <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                        <ChevronDownIcon />
+                    </span>
+                </div>
+                <ErrorMessage error={errors.job_field_id} />
+            </div>
+
             <div>
                 <Label>{t('samurdhiForm.childName')}</Label>
                 <Input
@@ -1206,29 +1260,6 @@ export const ChildDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'for
                 ))}
             </div>
 
-            <div className="space-y-2">
-                <Label>{t('samurdhiForm.jobField')}</Label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                    {formOptions.jobFields.map((jobField) => (
-                        <Radio
-                            key={jobField.job_field_id}
-                            id={`job-field-${jobField.job_field_id}`}
-                            name="job_field_id"
-                            value={jobField.job_field_id}
-                            checked={formData.job_field_id === jobField.job_field_id}
-                            onChange={() => handlers.handleRadioChange('job_field_id', jobField.job_field_id)}
-                            label={
-                                <div className="flex flex-col text-sm sm:text-base">
-                                    <span className="font-sinhala">{jobField.nameSinhala}</span>
-                                    <span className="font-tamil">{jobField.nameTamil}</span>
-                                    <span>{jobField.nameEnglish}</span>
-                                </div>
-                            }
-                        />
-                    ))}
-                </div>
-                <ErrorMessage error={errors.job_field_id} />
-            </div>
 
             <div>
                 <Label>{t('samurdhiForm.otherJobField')}</Label>

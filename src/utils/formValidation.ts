@@ -41,6 +41,21 @@ export const validateSamurdhiForm = (
         newErrors.consentGivenAt = 'Please select a consent date';
     }
 
+    // Area Classification - required for certain beneficiary types
+    if (formData.beneficiary_type_id && !formData.areaClassification) {
+        newErrors.areaClassification = 'Area classification is required';
+    }
+
+    // Employment - required
+    if (!formData.employment_id) {
+        newErrors.employment_id = 'Employment status is required';
+    }
+
+    // Empowerment Dimension - required when consented to empowerment
+    if (formData.hasConsentedToEmpowerment === true && !formData.empowerment_dimension_id) {
+        newErrors.empowerment_dimension_id = 'Empowerment dimension is required when consent is given';
+    }
+
     // Refusal reason validation
     if (formData.hasConsentedToEmpowerment === false && !formData.refusal_reason_id) {
         newErrors.refusal_reason_id = 'Please select a refusal reason';

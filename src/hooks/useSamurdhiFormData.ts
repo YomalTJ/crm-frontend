@@ -39,6 +39,7 @@ const createEmptyFormData = (locationData: Partial<{
     aswasumaHouseholdNo: null,
     nic: null,
     beneficiaryName: null,
+    beneficiaryAge: 0,
     beneficiaryGender: null, // RENAMED
     address: null,
     mobilePhone: null, // RENAMED
