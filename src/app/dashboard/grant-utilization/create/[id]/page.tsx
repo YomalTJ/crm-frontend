@@ -123,7 +123,7 @@ const GrantUtilizationForm = () => {
                         // Pre-fill form with existing data including location IDs
                         setFormData(prev => ({
                             ...prev,
-                            istrictId: latestGrant.districtId || beneficiary.location?.district?.id?.toString() || null,
+                            districtIdistrictId: latestGrant.districtId || beneficiary.location?.district?.id?.toString() || null,
                             dsId: latestGrant.dsId || beneficiary.location?.divisionalSecretariat?.id?.toString() || null,
                             zoneId: latestGrant.zoneId || beneficiary.location?.samurdhiBank?.id?.toString() || null,
                             gndId: latestGrant.gndId || beneficiary.location?.gramaNiladhariDivision?.id || null,
