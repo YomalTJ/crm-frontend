@@ -82,12 +82,15 @@ export const translations = {
         beneficiaryName: 'ප්‍රතිලාභියාගේ නම',
         beneficiaryAge: 'ප්‍රතිලාභියාගේ වයස',
         beneficiaryNameRequired: 'ප්‍රතිලාභියාගේ නම අවශ්‍ය වේ',
-        gender: 'ස්ත්‍රී පුරුෂ භාවය',
+        gender: 'ප්‍රතිලාභියාගේ ස්ත්‍රී පුරුෂ භාවය',
         address: 'ලිපිනය',
         addressRequired: 'ලිපිනය අවශ්‍ය වේ',
         mobilePhone: 'ජංගම දුරකථන අංකය',
         mobilePhoneRequired: 'ජංගම දුරකථන අංකය අවශ්‍ය වේ',
         telephone: 'දුරකථන (විකල්ප)',
+
+        projectOwnerSameAsBeneficiary: "ව්‍යාපෘති හිමිකරු සහ ප්‍රතිලාභියා එකම පුද්ගලයා වේ",
+        autoFilledFromBeneficiary: "ප්‍රතිලාභියාගේ නමින් ස්වයංක්‍රීයව පුරවනු ලැබේ",
 
         // Project Owner
         projectOwnerName: 'ව්‍යාපෘති හිමිකරුගේ නම',

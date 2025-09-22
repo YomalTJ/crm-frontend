@@ -631,6 +631,45 @@ export const BasicInfoFields: React.FC<Pick<FormFieldProps, 'formData' | 'errors
             <ErrorMessage error={errors.beneficiaryName} />
         </div>
 
+        {formData.beneficiaryName && (
+            <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                <Checkbox
+                    checked={formData.isProjectOwnerSameAsBeneficiary}
+                    onChange={(checked) => {
+                        handlers.handleCheckboxChange('isProjectOwnerSameAsBeneficiary', 'true', checked);
+                        if (checked && formData.beneficiaryName) {
+                            // Copy all beneficiary details to project owner
+                            handlers.handleInputChange({
+                                target: { name: 'projectOwnerName', value: formData.beneficiaryName }
+                            } as React.ChangeEvent<HTMLInputElement>);
+
+                            handlers.handleInputChange({
+                                target: { name: 'projectOwnerAge', value: formData.beneficiaryAge.toString() }
+                            } as React.ChangeEvent<HTMLInputElement>);
+
+                            if (formData.beneficiaryGender) {
+                                handlers.handleRadioChange('projectOwnerGender', formData.beneficiaryGender);
+                            }
+                        } else {
+                            // Reset project owner fields
+                            handlers.handleInputChange({
+                                target: { name: 'projectOwnerName', value: '' }
+                            } as React.ChangeEvent<HTMLInputElement>);
+
+                            handlers.handleInputChange({
+                                target: { name: 'projectOwnerAge', value: '0' }
+                            } as React.ChangeEvent<HTMLInputElement>);
+
+                            handlers.handleRadioChange('projectOwnerGender', '');
+                        }
+                    }}
+                />
+                <Label className="text-sm text-blue-700 dark:text-blue-300">
+                    {t('samurdhiForm.projectOwnerSameAsBeneficiary')}
+                </Label>
+            </div>
+        )}
+
         <div>
             <Label>{t('samurdhiForm.beneficiaryAge')}</Label>
             <Input
@@ -715,8 +754,22 @@ export const ProjectOwnerFields: React.FC<Pick<FormFieldProps, 'formData' | 'for
                 type="text"
                 name="projectOwnerName"
                 value={formData.projectOwnerName || ""}
-                onChange={handlers.handleInputChange}
+                onChange={(e) => {
+                    handlers.handleInputChange(e);
+                    // If user manually types, uncheck the "same as beneficiary" checkbox
+                    if (formData.isProjectOwnerSameAsBeneficiary && e.target.value !== formData.beneficiaryName) {
+                        handlers.handleCheckboxChange('isProjectOwnerSameAsBeneficiary', 'false', false);
+                    }
+                }}
+                className={formData.isProjectOwnerSameAsBeneficiary ? 'bg-gray-100 dark:bg-gray-800' : ''}
+                disabled={formData.isProjectOwnerSameAsBeneficiary}
+                readOnly={formData.isProjectOwnerSameAsBeneficiary}
             />
+            {formData.isProjectOwnerSameAsBeneficiary && (
+                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                    {t('samurdhiForm.autoFilledFromBeneficiary')}
+                </p>
+            )}
         </div>
 
         <div className="flex flex-col gap-4">
@@ -728,8 +781,16 @@ export const ProjectOwnerFields: React.FC<Pick<FormFieldProps, 'formData' | 'for
                     name="projectOwnerGender"
                     value={gender}
                     checked={formData.projectOwnerGender === gender}
-                    onChange={() => handlers.handleRadioChange('projectOwnerGender', gender)}
+                    onChange={() => {
+                        handlers.handleRadioChange('projectOwnerGender', gender);
+                        // If user manually changes gender, uncheck the "same as beneficiary" checkbox
+                        if (formData.isProjectOwnerSameAsBeneficiary && gender !== formData.beneficiaryGender) {
+                            handlers.handleCheckboxChange('isProjectOwnerSameAsBeneficiary', 'false', false);
+                        }
+                    }}
                     label={t(`common.${gender.toLowerCase()}`)}
+                    disabled={formData.isProjectOwnerSameAsBeneficiary}
+                    className={formData.isProjectOwnerSameAsBeneficiary ? 'opacity-50' : ''}
                 />
             ))}
         </div>
@@ -740,10 +801,16 @@ export const ProjectOwnerFields: React.FC<Pick<FormFieldProps, 'formData' | 'for
                 type="number"
                 name="projectOwnerAge"
                 value={formData.projectOwnerAge}
-                onChange={handlers.handleInputChange}
-                className={errors.projectOwnerAge ? 'border-red-500' : ''}
-                disabled={householdLoadedFields.has('projectOwnerAge')}
-                readOnly={householdLoadedFields.has('projectOwnerAge')}
+                onChange={(e) => {
+                    handlers.handleInputChange(e);
+                    // If user manually changes age, uncheck the "same as beneficiary" checkbox
+                    if (formData.isProjectOwnerSameAsBeneficiary && parseInt(e.target.value) !== formData.beneficiaryAge) {
+                        handlers.handleCheckboxChange('isProjectOwnerSameAsBeneficiary', 'false', false);
+                    }
+                }}
+                className={`${errors.projectOwnerAge ? 'border-red-500' : ''} ${formData.isProjectOwnerSameAsBeneficiary ? 'bg-gray-100 dark:bg-gray-800' : ''}`}
+                disabled={householdLoadedFields.has('projectOwnerAge') || formData.isProjectOwnerSameAsBeneficiary}
+                readOnly={householdLoadedFields.has('projectOwnerAge') || formData.isProjectOwnerSameAsBeneficiary}
             />
             <ErrorMessage error={errors.projectOwnerAge} />
         </div>

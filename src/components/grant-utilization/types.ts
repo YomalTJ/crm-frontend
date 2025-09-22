@@ -12,6 +12,9 @@ export interface GrantUtilizationPayload {
     hhNumberOrNic: string;
     amount: number;
     grantDate: string;
+    financialAid?: number | null;
+    interestSubsidizedLoan?: number | null;
+    samurdiBankLoan?: number | null;
     purchaseDate?: string | null; // Made optional to match service
     equipmentPurchased?: string | null; // Made optional to match service
     animalsPurchased?: string | null; // Made optional to match service

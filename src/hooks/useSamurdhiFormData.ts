@@ -41,6 +41,7 @@ const createEmptyFormData = (locationData: Partial<{
     beneficiaryName: null,
     beneficiaryAge: 0,
     beneficiaryGender: null, // RENAMED
+    isProjectOwnerSameAsBeneficiary: false,
     address: null,
     mobilePhone: null, // RENAMED
     telephone: null, // NEW

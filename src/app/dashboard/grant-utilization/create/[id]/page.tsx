@@ -21,6 +21,7 @@ import LocationInfo from '@/components/grant-utilization/LocationInfo';
 import TrainingSection from '@/components/grant-utilization/TrainingSection';
 import { FormErrors } from '@/types/samurdhi-form.types';
 import toast, { Toaster } from 'react-hot-toast';
+import GrantTypeSection from '@/components/grant-utilization/GrantTypeSection';
 
 const GrantUtilizationForm = () => {
     const { theme } = useTheme();
@@ -37,6 +38,9 @@ const GrantUtilizationForm = () => {
         hhNumberOrNic: hhNumberOrNic,
         amount: 0,
         grantDate: '',
+        financialAid: null,
+        interestSubsidizedLoan: null,
+        samurdiBankLoan: null,
         purchaseDate: null,
         equipmentPurchased: null,
         animalsPurchased: null,
@@ -103,6 +107,9 @@ const GrantUtilizationForm = () => {
                             ...prev,
                             amount: latestGrant.amount || 0,
                             grantDate: latestGrant.grantDate ? new Date(latestGrant.grantDate).toISOString().split('T')[0] : '',
+                            financialAid: latestGrant.financialAid || null,
+                            interestSubsidizedLoan: latestGrant.interestSubsidizedLoan || null,
+                            samurdiBankLoan: latestGrant.samurdiBankLoan || null,
                             purchaseDate: latestGrant.purchaseDate ? new Date(latestGrant.purchaseDate).toISOString().split('T')[0] : null,
                             equipmentPurchased: latestGrant.equipmentPurchased || null,
                             animalsPurchased: latestGrant.animalsPurchased || null,
@@ -123,9 +130,19 @@ const GrantUtilizationForm = () => {
 
                         toast.success(t('grantUtilization.existingDataLoaded'));
                     }
+                } else {
+                    setFormData(prev => ({
+                        ...prev,
+                        hhNumberOrNic,
+                        traineeName: beneficiary.childName || null,
+                        traineeAge: beneficiary.childAge || null,
+                        traineeGender: beneficiary.childGender || null
+                    }));
                 }
 
-                setFormData(prev => ({ ...prev, hhNumberOrNic }));
+                if (!exists) {
+                    setFormData(prev => ({ ...prev, hhNumberOrNic }));
+                }
             } catch (err) {
                 const errorMessage = err instanceof Error ? err.message : t('grantUtilization.loadingError');
                 setError(errorMessage);
@@ -169,6 +186,16 @@ const GrantUtilizationForm = () => {
             const grantDate = new Date(formData.grantDate);
             const projectStartDate = new Date(formData.projectStartDate);
             if (projectStartDate < grantDate) errors.projectStartDate = t('grantUtilization.projectAfterGrant');
+        }
+
+        if (formData.financialAid !== null && formData.financialAid !== undefined && formData.financialAid < 0) {
+            errors.financialAid = t('grantUtilization.positiveAmount');
+        }
+        if (formData.interestSubsidizedLoan !== null && formData.interestSubsidizedLoan !== undefined && formData.interestSubsidizedLoan < 0) {
+            errors.interestSubsidizedLoan = t('grantUtilization.positiveAmount');
+        }
+        if (formData.samurdiBankLoan !== null && formData.samurdiBankLoan !== undefined && formData.samurdiBankLoan < 0) {
+            errors.samurdiBankLoan = t('grantUtilization.positiveAmount');
         }
 
         if (formData.courseName && (!formData.courseFee || formData.courseFee <= 0)) {
@@ -355,6 +382,17 @@ const GrantUtilizationForm = () => {
                         getInputBgColor={getInputBgColor}
                         getLabelColor={getLabelColor}
                         CustomDatePicker={CustomDatePicker}
+                    />
+
+                    <GrantTypeSection
+                        formData={formData}
+                        errors={errors}
+                        handleInputChange={handleInputChange}
+                        theme={theme}
+                        t={t}
+                        getBorderColor={getBorderColor}
+                        getInputBgColor={getInputBgColor}
+                        getLabelColor={getLabelColor}
                     />
 
                     <LivelihoodSection

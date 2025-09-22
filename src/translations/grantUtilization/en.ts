@@ -27,6 +27,14 @@ export const translations = {
         samurdhiBank: 'Samurdhi Bank',
         gnDivision: 'GN Division',
 
+        grantTypeBreakdown: "Grant Type Breakdown",
+        financialAid: "Financial Aid",
+        interestSubsidizedLoan: "Interest-Subsidized Loan",
+        samurdiBankLoan: "Samurdhi Bank Loan",
+        "enterFinancialAid": "Enter Financial Aid",
+        "enterSubsidizedLoan": "Enter Interest-Subsidized Loan",
+        "enterBankLoan": "Enter Samurdhi Bank Loan",
+
         // Grant fields
         amount: 'Amount of Assistance/Loan',
         grantDate: 'Date of Grant/Loan',

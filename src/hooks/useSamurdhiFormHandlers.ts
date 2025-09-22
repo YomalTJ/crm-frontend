@@ -190,6 +190,15 @@ export const useSamurdhiFormHandlers = ({
 
     const handleCheckboxChange = (name: string, value: string, isChecked: boolean) => {
         clearError(name);
+
+        if (name === 'isProjectOwnerSameAsBeneficiary') {
+            setFormData(prev => ({
+                ...prev,
+                [name]: isChecked
+            }));
+            return;
+        }
+
         setFormData(prev => {
             const currentArray = prev[name as keyof typeof formData] as string[];
             return {
@@ -405,14 +414,19 @@ export const useSamurdhiFormHandlers = ({
                     nic: null,
                     aswasumaHouseholdNo: selectedHhNumber,
                     beneficiaryName: householdData.household.applicantName || primaryCitizen.name || '',
+                    beneficiaryAge: primaryCitizen.age || 0,
+                    beneficiaryGender: primaryCitizen.gender === 'male' ? 'Male' : 'Female',
                     address: [
                         householdData.household.addressLine1,
                         householdData.household.addressLine2,
                         householdData.household.addressLine3
                     ].filter(line => line && line.trim()).join(', ') || '',
-                    projectOwnerAge: primaryCitizen.age || 0,
-                    beneficiaryGender: primaryCitizen.gender === 'male' ? 'Male' : 'Female',
                     aswesuma_cat_id: getAswasumaIdByLevel(householdData.household.level),
+
+                    isProjectOwnerSameAsBeneficiary: false,
+                    projectOwnerName: null,
+                    projectOwnerAge: 0,
+                    projectOwnerGender: null,
 
                     // reset optional/other fields
                     mobilePhone: null,
@@ -444,7 +458,7 @@ export const useSamurdhiFormHandlers = ({
                     loadedFields.add('address');
                 }
                 if (primaryCitizen.age) {
-                    loadedFields.add('projectOwnerAge');
+                    loadedFields.add('beneficiaryAge');
                 }
                 if (primaryCitizen.gender) {
                     loadedFields.add('beneficiaryGender');

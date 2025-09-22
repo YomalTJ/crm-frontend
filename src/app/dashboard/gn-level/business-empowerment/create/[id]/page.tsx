@@ -142,11 +142,54 @@ const BusinessEmpowerForm = () => {
             name: beneficiary.beneficiaryDetails?.name || '',
             phone: beneficiary.mobilePhone || '',
             address: beneficiary.address || '',
-            district_id: beneficiary.location?.district?.id || '',
-            ds_id: beneficiary.location?.divisionalSecretariat?.id || '',
-            zone_id: beneficiary.location?.samurdhiBank?.id || '',
-            gnd_id: beneficiary.location?.gramaNiladhariDivision?.id || ''
+            district_id: beneficiary.location?.district?.id?.toString() || '',
+            ds_id: beneficiary.location?.divisionalSecretariat?.id?.toString() || '',
+            zone_id: beneficiary.location?.samurdhiBank?.id?.toString() || '',
+            gnd_id: beneficiary.location?.gramaNiladhariDivision?.id?.toString() || ''
           }));
+
+          // NEW: Automatically set project selection based on empowerment dimension
+          const empowermentDimension = beneficiary.empowermentDimension?.nameEnglish;
+
+          if (empowermentDimension) {
+            if (empowermentDimension.includes("Business Opportunities") || empowermentDimension.includes("Self-Employment")) {
+              setProjectSelection('livelihood');
+
+              // Pre-fill livelihood and project type if available
+              if (beneficiary.livelihood?.id) {
+                setFormData(prev => ({
+                  ...prev,
+                  livelihood_id: beneficiary.livelihood.id.toString()
+                }));
+
+                // Load project types for this livelihood
+                try {
+                  const projectTypesData = await getProjectTypesByLivelihood(beneficiary.livelihood.id.toString());
+                  setProjectTypes(projectTypesData);
+
+                  // Pre-fill project type if available
+                  if (beneficiary.projectType?.id) {
+                    setFormData(prev => ({
+                      ...prev,
+                      project_type_id: beneficiary.projectType.id.toString()
+                    }));
+                  }
+                } catch (error) {
+                  console.error('Error loading project types:', error);
+                }
+              }
+            } else if (empowermentDimension.includes("Employment Facilitation")) {
+              setProjectSelection('wage');
+
+              // Pre-fill job field if available
+              if (beneficiary.jobField?.id) {
+                setFormData(prev => ({
+                  ...prev,
+                  job_field_id: beneficiary.jobField.id
+                }));
+              }
+            }
+          }
         }
 
         // Load livelihoods

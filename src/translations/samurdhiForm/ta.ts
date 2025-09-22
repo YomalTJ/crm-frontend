@@ -82,12 +82,15 @@ export const translations = {
         beneficiaryName: 'பயனாளியின் பெயர்',
         beneficiaryAge: 'பயனாளியின் வயது',
         beneficiaryNameRequired: 'பயனாளியின் பெயர் தேவை',
-        gender: 'பாலினம்',
+        gender: 'பயனாளிகள் பாலினம்',
         address: 'முகவரி',
         addressRequired: 'முகவரி தேவை',
         mobilePhone: 'மொபைல் தொலைபேசி எண்',
         mobilePhoneRequired: 'மொபைல் தொலைபேசி எண் தேவை',
         telephone: 'தொலைபேசி (விருப்பமான)',
+
+        projectOwnerSameAsBeneficiary: "திட்ட உரிமையாளர் பயனாளியும் அதே நபர்தான்",
+        autoFilledFromBeneficiary: "பயனாளியின் பெயரிலிருந்து தானாகவே நிரப்பப்படும்",
 
         // Project Owner
         projectOwnerName: 'திட்ட உரிமையாளர் பெயர்',

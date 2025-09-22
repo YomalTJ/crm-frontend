@@ -27,6 +27,14 @@ export const translations = {
         samurdhiBank: 'சமுர்த்தி வங்கி',
         gnDivision: 'கிராம உத்தியோகத்தர் பிரிவு',
 
+        grantTypeBreakdown: "гран்ட் வகை விநியோகம்",
+        financialAid: "நிதி உதவி",
+        interestSubsidizedLoan: "வட்டி தள்ளுபடி கடன்",
+        samurdiBankLoan: "சமுர்தி வங்கி கடன்",
+        "enterFinancialAid": "நிதி உதவியை உள்ளிடவும்",
+        "enterSubsidizedLoan": "வட்டி தள்ளுபடி கடனை உள்ளிடவும்",
+        "enterBankLoan": "சமுர்தி வங்கி கடனை உள்ளிடவும்",
+
         // Grant fields
         amount: 'உதவி/கடன் தொகை',
         grantDate: 'மானியம்/கடன் வழங்கிய தேதி',

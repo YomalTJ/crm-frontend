@@ -11,6 +11,10 @@ export interface GrantUtilizationPayload {
   amount: number;
   grantDate: string;
 
+  financialAid?: number | null;
+  interestSubsidizedLoan?: number | null;
+  samurdiBankLoan?: number | null;
+
   // Livelihood/Self-employment section (nullable optional fields)
   purchaseDate?: string | null;
   equipmentPurchased?: string | null;

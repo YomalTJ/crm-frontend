@@ -25,6 +25,7 @@ export interface FormData {
     beneficiaryName: string | null;
     beneficiaryAge: number;
     beneficiaryGender: string | null;
+    isProjectOwnerSameAsBeneficiary: boolean;
     address: string | null;
     mobilePhone: string | null;
     telephone?: string | null;

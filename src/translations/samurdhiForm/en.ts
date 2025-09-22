@@ -82,12 +82,15 @@ export const translations = {
         beneficiaryName: 'Name of the Beneficiary',
         beneficiaryAge: 'Age of the Beneficiary',
         beneficiaryNameRequired: 'Beneficiary name is required',
-        gender: 'Gender',
+        gender: 'Beneficiary Gender',
         address: 'Address',
         addressRequired: 'Address is required',
         mobilePhone: 'Mobile Phone Number',
         mobilePhoneRequired: 'Mobile phone number is required',
         telephone: 'Telephone (Optional)',
+
+        projectOwnerSameAsBeneficiary: "Project owner is the same person as beneficiary",
+        autoFilledFromBeneficiary: "Automatically filled from beneficiary name",
 
         // Project Owner
         projectOwnerName: 'Project Owner Name',
