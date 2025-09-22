@@ -7,6 +7,11 @@ import { cookies } from "next/headers";
 export interface GrantUtilizationPayload {
   hhNumberOrNic: string; // Required field (not nullable)
 
+  districtId?: string | null;
+  dsId?: string | null;
+  zoneId?: string | null;
+  gndId?: string | null;
+
   // Basic grant information (required fields)
   amount: number;
   grantDate: string;

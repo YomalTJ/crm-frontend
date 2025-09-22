@@ -36,6 +36,10 @@ const GrantUtilizationForm = () => {
     // State for form data
     const [formData, setFormData] = useState<GrantUtilizationPayload>({
         hhNumberOrNic: hhNumberOrNic,
+        districtId: null,
+        dsId: null,
+        zoneId: null,
+        gndId: null,
         amount: 0,
         grantDate: '',
         financialAid: null,
@@ -86,6 +90,20 @@ const GrantUtilizationForm = () => {
                 setBeneficiaryData(beneficiary);
                 toast.success(t('grantUtilization.beneficiaryLoaded'));
 
+                // Extract location IDs from beneficiary data
+                const locationIds = {
+                    districtId: beneficiary.location?.district?.id?.toString() || null,
+                    dsId: beneficiary.location?.divisionalSecretariat?.id?.toString() || null,
+                    zoneId: beneficiary.location?.samurdhiBank?.id?.toString() || null,
+                    gndId: beneficiary.location?.gramaNiladhariDivision?.id || null // This one is already a string
+                };
+
+                // Set location IDs in form data
+                setFormData(prev => ({
+                    ...prev,
+                    ...locationIds
+                }));
+
                 // Load locations
                 const locations = await getAccessibleLocations();
                 setAccessibleLocations(locations);
@@ -102,9 +120,13 @@ const GrantUtilizationForm = () => {
                         const latestGrant = existingData.grantUtilizations[0]; // Get the most recent grant
                         setExistingGrantId(latestGrant.id);
 
-                        // Pre-fill form with existing data
+                        // Pre-fill form with existing data including location IDs
                         setFormData(prev => ({
                             ...prev,
+                            istrictId: latestGrant.districtId || beneficiary.location?.district?.id?.toString() || null,
+                            dsId: latestGrant.dsId || beneficiary.location?.divisionalSecretariat?.id?.toString() || null,
+                            zoneId: latestGrant.zoneId || beneficiary.location?.samurdhiBank?.id?.toString() || null,
+                            gndId: latestGrant.gndId || beneficiary.location?.gramaNiladhariDivision?.id || null,
                             amount: latestGrant.amount || 0,
                             grantDate: latestGrant.grantDate ? new Date(latestGrant.grantDate).toISOString().split('T')[0] : '',
                             financialAid: latestGrant.financialAid || null,
