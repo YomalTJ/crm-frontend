@@ -143,6 +143,7 @@ const ProjectOwnersReport = () => {
     item.ds.ds_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.zone.zone_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.gnd.gnd_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.employmentFacilitation?.english_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.empowermentDimension?.nameEnglish.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.livelihood?.english_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.projectType?.nameEnglish.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -171,6 +172,9 @@ const ProjectOwnersReport = () => {
         'Empowerment Dimension (English)',
         'Empowerment Dimension (Sinhala)',
         'Empowerment Dimension (Tamil)',
+        'Employment Facilitation (English)',
+        'Employment Facilitation (Sinhala)',
+        'Employment Facilitation (Tamil)',
         'Livelihood (English)',
         'Livelihood (Sinhala)',
         'Livelihood (Tamil)',
@@ -201,6 +205,9 @@ const ProjectOwnersReport = () => {
           `"${item.empowermentDimension?.nameEnglish || 'N/A'}"`,
           `"${item.empowermentDimension?.nameSinhala || 'N/A'}"`,
           `"${item.empowermentDimension?.nameTamil || 'N/A'}"`,
+          `"${item.employmentFacilitation?.english_name || 'N/A'}"`,
+          `"${item.employmentFacilitation?.sinhala_name || 'N/A'}"`,
+          `"${item.employmentFacilitation?.tamil_name || 'N/A'}"`,
           `"${item.livelihood?.english_name || 'N/A'}"`,
           `"${item.livelihood?.sinhala_name || 'N/A'}"`,
           `"${item.livelihood?.tamil_name || 'N/A'}"`,

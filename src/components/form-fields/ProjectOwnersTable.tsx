@@ -66,6 +66,9 @@ const ProjectOwnersTable: React.FC<ProjectOwnersTableProps> = ({
                                     Empowerment Way
                                 </th>
                                 <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>
+                                    Job Field
+                                </th>
+                                <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>
                                     Main Program
                                 </th>
                                 <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>
@@ -142,6 +145,12 @@ const ProjectOwnersTable: React.FC<ProjectOwnersTableProps> = ({
                                     <td className="px-6 py-4">
                                         <div className={`text-sm ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'}`}>
                                             <div className="font-medium">{item.empowermentDimension?.nameEnglish}</div>
+                                        </div>
+                                    </td>
+
+                                    <td className="px-6 py-4">
+                                        <div className={`text-sm ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'}`}>
+                                            <div className="font-medium">{item.employmentFacilitation?.english_name}</div>
                                         </div>
                                     </td>
 

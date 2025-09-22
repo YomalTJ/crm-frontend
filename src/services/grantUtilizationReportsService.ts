@@ -3,66 +3,46 @@
 import axiosInstance from "@/lib/axios";
 import { cookies } from 'next/headers';
 
-// Project Owner Response Interface
-export interface ProjectOwnerItem {
-    district: {
-        district_id: string;
-        district_name: string;
+// Grant Utilization Response Interface
+export interface GrantUtilizationData {
+    location?: {
+        district?: {
+            district_id: string;
+            district_name: string;
+        };
+        ds?: {
+            ds_id: string;
+            ds_name: string;
+        };
+        zone?: {
+            zone_id: string;
+            zone_name: string;
+        };
+        gnd?: {
+            gnd_id: string;
+            gnd_name: string;
+        };
     };
-    ds: {
-        ds_id: string;
-        ds_name: string;
+    financialAid: {
+        totalProjects: number;
+        totalAmount: number;
     };
-    zone: {
-        zone_id: string;
-        zone_name: string;
+    interestSubsidizedLoan: {
+        totalProjects: number;
+        totalAmount: number;
     };
-    gnd: {
-        gnd_id: string;
-        gnd_name: string;
+    samurdiBankLoan: {
+        totalProjects: number;
+        totalAmount: number;
     };
-    mainProgram: 'NP' | 'ADB' | 'WB';
-    beneficiaryName: string;
-    address: string;
-    mobilePhone: string;
-    telephone: string;
-    projectOwnerName: string;
-    projectOwnerAge: number;
-    projectOwnerGender: string;
-    empowermentDimension: {
-        empowerment_dimension_id: string;
-        nameEnglish: string;
-        nameSinhala: string;
-        nameTamil: string;
-    };
-    employmentFacilitation: {
-        id: string;
-        english_name: string;
-        sinhala_name: string;
-        tamil_name: string;
-    };
-    livelihood: {
-        id: number;
-        english_name: string;
-        sinhala_name: string;
-        tamil_name: string;
-    };
-    projectType: {
-        project_type_id: string;
-        nameEnglish: string;
-        nameSinhala: string;
-        nameTamil: string;
-    };
-    beneficiaryType: {
-        beneficiary_type_id: string;
-        nameEnglish: string;
-        nameSinhala: string;
-        nameTamil: string;
+    overallTotal: {
+        totalProjects: number;
+        totalAmount: number;
     };
 }
 
-// Filter interface for project owners
-export interface ProjectOwnerFilters {
+// Filter interface for grant utilization
+export interface GrantUtilizationFilters {
     district_id?: string;
     ds_id?: string;
     zone_id?: string;
@@ -71,7 +51,6 @@ export interface ProjectOwnerFilters {
     beneficiary_type_id?: string;
 }
 
-// Beneficiary Type interface
 export interface BeneficiaryType {
     beneficiary_type_id: string;
     nameEnglish: string;
@@ -94,7 +73,7 @@ export interface BeneficiaryType {
     createdAt: string;
 }
 
-// AccessibleLocations interface
+// AccessibleLocations interface (reused from area types)
 export interface AccessibleLocations {
     districts: {
         district_id: number;
@@ -148,6 +127,27 @@ export const getUserDetailsFromToken = async () => {
     return null;
 };
 
+export const getBeneficiaryTypes = async (): Promise<BeneficiaryType[]> => {
+    try {
+        const token = (await cookies()).get('staffAccessToken')?.value;
+
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        const response = await axiosInstance.get('/beneficiary-status', {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error('Failed to fetch beneficiary types:', error);
+        throw new Error('Failed to fetch beneficiary types');
+    }
+};
+
 // Get accessible locations based on user role and location
 export const getAccessibleLocations = async (): Promise<AccessibleLocations> => {
     try {
@@ -170,30 +170,8 @@ export const getAccessibleLocations = async (): Promise<AccessibleLocations> => 
     }
 };
 
-// Get beneficiary types
-export const getBeneficiaryTypes = async (): Promise<BeneficiaryType[]> => {
-    try {
-        const token = (await cookies()).get('staffAccessToken')?.value;
-
-        if (!token) {
-            throw new Error('No authentication token found');
-        }
-
-        const response = await axiosInstance.get('/beneficiary-status', {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
-
-        return response.data;
-    } catch (error) {
-        console.error('Failed to fetch beneficiary types:', error);
-        throw new Error('Failed to fetch beneficiary types');
-    }
-};
-
-// Get project owners data with filters
-export const getProjectOwners = async (filters?: ProjectOwnerFilters): Promise<ProjectOwnerItem[]> => {
+// Get grant utilization data with filters
+export const getGrantUtilization = async (filters?: GrantUtilizationFilters): Promise<GrantUtilizationData> => {
     try {
         const token = (await cookies()).get('staffAccessToken')?.value;
 
@@ -211,7 +189,7 @@ export const getProjectOwners = async (filters?: ProjectOwnerFilters): Promise<P
         if (filters?.beneficiary_type_id) queryParams.append('beneficiary_type_id', filters.beneficiary_type_id);
 
         const queryString = queryParams.toString();
-        const url = `/beneficiaries/project-owners${queryString ? `?${queryString}` : ''}`;
+        const url = `/beneficiaries/grant-utilization${queryString ? `?${queryString}` : ''}`;
 
         const response = await axiosInstance.get(url, {
             headers: {
@@ -221,16 +199,15 @@ export const getProjectOwners = async (filters?: ProjectOwnerFilters): Promise<P
 
         return response.data;
     } catch (error) {
-        console.error('Failed to fetch project owners:', error);
-        throw new Error('Failed to fetch project owners');
+        console.error('Failed to fetch grant utilization:', error);
+        throw new Error('Failed to fetch grant utilization data');
     }
 };
 
-// Add this function to projectOwnersService.ts
-export const getUserDefaultLocation = async (): Promise<ProjectOwnerFilters> => {
+export const getUserDefaultLocation = async (): Promise<GrantUtilizationFilters> => {
     try {
         const locations = await getAccessibleLocations();
-        const filters: ProjectOwnerFilters = {};
+        const filters: GrantUtilizationFilters = {};
 
         // If user has access to only one location at each level, use that as default
         if (locations.districts.length === 1) {
