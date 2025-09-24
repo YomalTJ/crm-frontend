@@ -30,24 +30,20 @@ export const getBeneficiaryTypeInfo = (
 
     if (!selectedBeneficiaryType) {
         return {
-            isSamurdhiBeneficiary: false,
+            isPreviousSamurdhiOrLowIncome: false,
             isAswasumaBeneficiary: false,
-            isSamurdhiOrLowIncome: false
+            selectedBeneficiaryType: null
         };
     }
 
-    const isSamurdhiBeneficiary = selectedBeneficiaryType.nameEnglish.includes("Samurdhi beneficiary");
-    const isAswasumaBeneficiary = selectedBeneficiaryType.nameEnglish.includes("Aswasuma beneficiary") &&
-        !selectedBeneficiaryType.nameEnglish.includes("Samurdhi") &&
-        !selectedBeneficiaryType.nameEnglish.includes("low income");
-    const isSamurdhiOrLowIncome = selectedBeneficiaryType.nameEnglish.includes("Samurdhi") ||
-        selectedBeneficiaryType.nameEnglish.includes("low income");
+    // Updated logic based on the exact IDs you provided
+    const isPreviousSamurdhiOrLowIncome = formData.beneficiary_type_id === '77744e4d-48a4-4295-8a5d-38d2100599f9';
+    const isAswasumaBeneficiary = formData.beneficiary_type_id === 'a8625875-41a4-47cf-9cb3-d2d185b7722d';
 
     return {
         selectedBeneficiaryType,
-        isSamurdhiBeneficiary,
-        isAswasumaBeneficiary,
-        isSamurdhiOrLowIncome
+        isPreviousSamurdhiOrLowIncome,
+        isAswasumaBeneficiary
     };
 };
 
@@ -97,30 +93,34 @@ export const shouldShowProjectFields = (
         (showAllFieldsForExistingBeneficiary && formData.project_type_id);
 };
 
+// Updated: NIC field should be available for BOTH beneficiary types
 export const shouldShowNicField = (
     formData: FormData,
     formOptions: FormOptions
 ) => {
-    const { isAswasumaBeneficiary } = getBeneficiaryTypeInfo(formData, formOptions);
-    return formData.beneficiary_type_id && !isAswasumaBeneficiary;
+    const { isPreviousSamurdhiOrLowIncome, isAswasumaBeneficiary } = getBeneficiaryTypeInfo(formData, formOptions);
+    return formData.beneficiary_type_id && (isPreviousSamurdhiOrLowIncome || isAswasumaBeneficiary);
 };
 
+// Updated: Household field should ONLY be available for Aswasuma beneficiary
 export const shouldShowHouseholdField = (
     formData: FormData,
     formOptions: FormOptions
 ) => {
-    const { isSamurdhiOrLowIncome } = getBeneficiaryTypeInfo(formData, formOptions);
-    return formData.beneficiary_type_id && !isSamurdhiOrLowIncome;
+    const { isAswasumaBeneficiary } = getBeneficiaryTypeInfo(formData, formOptions);
+    return formData.beneficiary_type_id && isAswasumaBeneficiary;
 };
 
+// Updated: NIC is required for Previous Samurdhi/Low income earner
 export const isNicRequired = (
     formData: FormData,
     formOptions: FormOptions
 ) => {
-    const { isSamurdhiBeneficiary } = getBeneficiaryTypeInfo(formData, formOptions);
-    return isSamurdhiBeneficiary;
+    const { isPreviousSamurdhiOrLowIncome } = getBeneficiaryTypeInfo(formData, formOptions);
+    return isPreviousSamurdhiOrLowIncome;
 };
 
+// Updated: Household number is required for Aswasuma beneficiary
 export const isHouseholdRequired = (
     formData: FormData,
     formOptions: FormOptions

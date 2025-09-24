@@ -60,6 +60,46 @@ export const useSamurdhiFormHandlers = ({
         setHouseholdLoadedFields(new Set());
     };
 
+    const clearSubsequentFields = () => {
+        setFormData(prev => ({
+            ...prev,
+            // Keep everything up to consent fields, clear everything after
+            empowerment_dimension_id: null,
+            selectedLivelihood: null,
+            livelihood_id: null,
+            project_type_id: null,
+            otherProject: null,
+            childName: null,
+            childAge: 0,
+            childGender: null,
+            job_field_id: null,
+            otherJobField: null,
+            resource_id: [],
+            monthlySaving: false,
+            savingAmount: 0,
+            health_indicator_id: [],
+            domestic_dynamic_id: [],
+            community_participation_id: [],
+            housing_service_id: [],
+            commercialBankAccountName: null,
+            commercialBankAccountNumber: null,
+            commercialBankName: null,
+            commercialBankBranch: null,
+            samurdhiBankAccountName: null,
+            samurdhiBankAccountNumber: null,
+            samurdhiBankName: null,
+            samurdhiBankAccountType: null,
+            wantsAswesumaBankTransfer: false,
+            otherBankName: null,
+            otherBankBranch: null,
+            otherBankAccountHolder: null,
+            otherBankAccountNumber: null,
+            hasOtherGovernmentSubsidy: false,
+            otherGovernmentInstitution: null,
+            otherSubsidyAmount: null
+        }));
+    };
+
     const handleLivelihoodChange = async (livelihoodId: string) => {
         clearError('selectedLivelihood');
         clearError('livelihood_id');
@@ -87,6 +127,32 @@ export const useSamurdhiFormHandlers = ({
         } else {
             setProjectTypesByLivelihood([]);
         }
+    };
+
+    const clearEmpowermentFields = (keepEmploymentFields = false, keepBusinessFields = false) => {
+        const fieldsToUpdate: Partial<SamurdhiFormData> = {};
+
+        if (!keepEmploymentFields) {
+            // Clear Employment Facilitation fields
+            fieldsToUpdate.job_field_id = null;
+            fieldsToUpdate.otherJobField = null;
+            fieldsToUpdate.childName = null;
+            fieldsToUpdate.childAge = 0;
+            fieldsToUpdate.childGender = null;
+        }
+
+        if (!keepBusinessFields) {
+            // Clear Business Opportunities fields
+            fieldsToUpdate.selectedLivelihood = null;
+            fieldsToUpdate.livelihood_id = null;
+            fieldsToUpdate.project_type_id = null;
+            fieldsToUpdate.otherProject = null;
+        }
+
+        setFormData(prev => ({
+            ...prev,
+            ...fieldsToUpdate
+        }));
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -180,6 +246,100 @@ export const useSamurdhiFormHandlers = ({
         if (name === 'beneficiary_type_id') {
             clearHouseholdLoadedFields();
             setIsAswasumaHouseholdDisabled(false);
+
+            // Clear beneficiary type specific fields when switching
+            const isAswasumaSelected = value === 'a8625875-41a4-47cf-9cb3-d2d185b7722d';
+            const isPreviousSamurdhiSelected = value === '77744e4d-48a4-4295-8a5d-38d2100599f9';
+
+            if (isAswasumaSelected) {
+                // Clear Previous Samurdhi/Low income related fields, keep NIC available
+                setFormData(prev => ({
+                    ...prev,
+                    // Keep NIC field available for both types
+                    // Clear household number when switching to Aswasuma (will be selected from dropdown)
+                    aswasumaHouseholdNo: null,
+                    // Clear auto-filled data from previous selections
+                    beneficiaryName: null,
+                    beneficiaryAge: 0,
+                    beneficiaryGender: null,
+                    address: null,
+                    mobilePhone: null,
+                    telephone: null,
+                    projectOwnerName: null,
+                    projectOwnerAge: 0,
+                    projectOwnerGender: null,
+                    // Clear household member counts
+                    maleBelow16: 0,
+                    femaleBelow16: 0,
+                    male16To24: 0,
+                    female16To24: 0,
+                    male25To45: 0,
+                    female25To45: 0,
+                    male46To60: 0,
+                    female46To60: 0,
+                    maleAbove60: 0,
+                    femaleAbove60: 0,
+                    // Clear benefits
+                    aswesuma_cat_id: null,
+                    // Reset project owner checkbox
+                    isProjectOwnerSameAsBeneficiary: false
+                }));
+            } else if (isPreviousSamurdhiSelected) {
+                // Clear Aswasuma related fields, keep NIC available
+                setFormData(prev => ({
+                    ...prev,
+                    // Keep NIC field available for both types
+                    // Clear household number (not applicable for Previous Samurdhi)
+                    aswasumaHouseholdNo: null,
+                    // Clear auto-filled data from household selection
+                    beneficiaryName: null,
+                    beneficiaryAge: 0,
+                    beneficiaryGender: null,
+                    address: null,
+                    mobilePhone: null,
+                    telephone: null,
+                    projectOwnerName: null,
+                    projectOwnerAge: 0,
+                    projectOwnerGender: null,
+                    // Clear household member counts
+                    maleBelow16: 0,
+                    femaleBelow16: 0,
+                    male16To24: 0,
+                    female16To24: 0,
+                    male25To45: 0,
+                    female25To45: 0,
+                    male46To60: 0,
+                    female46To60: 0,
+                    maleAbove60: 0,
+                    femaleAbove60: 0,
+                    // Clear benefits
+                    aswesuma_cat_id: null,
+                    // Reset project owner checkbox
+                    isProjectOwnerSameAsBeneficiary: false
+                }));
+                // Disable household selection for Previous Samurdhi
+                setIsAswasumaHouseholdDisabled(true);
+            }
+        }
+
+        if (name === 'empowerment_dimension_id') {
+            const selectedDimension = formOptions.empowermentDimensions.find(
+                dim => dim.empowerment_dimension_id === value
+            );
+
+            if (selectedDimension) {
+                const isEmploymentFacilitation = selectedDimension.nameEnglish.includes("Employment Facilitation");
+                const isBusinessOpportunities = selectedDimension.nameEnglish.includes("Business Opportunities") ||
+                    selectedDimension.nameEnglish.includes("Self-Employment");
+
+                if (isEmploymentFacilitation) {
+                    // Clear business-related fields, keep employment fields
+                    clearEmpowermentFields(true, false);
+                } else if (isBusinessOpportunities) {
+                    // Clear employment-related fields, keep business fields
+                    clearEmpowermentFields(false, true);
+                }
+            }
         }
 
         setFormData(prev => ({
@@ -806,6 +966,7 @@ export const useSamurdhiFormHandlers = ({
         handleNicLookup,
         handleHouseholdSelection,
         setSelectedFile,
-        handleSubmit
+        handleSubmit,
+        clearSubsequentFields
     };
 };

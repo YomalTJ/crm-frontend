@@ -110,6 +110,11 @@ export const translations = {
         age46To60: 'වයස 46-60',
         ageAbove60: 'වයස 60ට ඉහල',
 
+        pleaseSpecifyOtherJobField: "කරුණාකර වෙනත් රැකියා ක්ෂේත්‍රය සඳහන් කරන්න",
+        enterOtherJobField: "වෙනත් රැකියා ක්ෂේත්‍රය ඇතුළත් කරන්න",
+        pleaseSpecifyOtherProject: "කරුණාකර වෙනත් ව්‍යාපෘති වර්ගය සඳහන් කරන්න",
+        enterOtherProject: "වෙනත් ව්‍යාපෘති වර්ගය ඇතුළත් කරන්න",
+
         // Employment
         currentEmployment: 'වත්මන් රැකියාව',
         employmentRequired: 'වත්මන් රැකියාව අවශ්‍ය වේ',

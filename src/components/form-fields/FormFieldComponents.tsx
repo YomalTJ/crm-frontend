@@ -5,7 +5,6 @@ import Input from '../form/input/InputField';
 import Select from '../form/Select';
 import Radio from '../form/input/Radio';
 import Checkbox from '../form/input/Checkbox';
-import Button from '../ui/button/Button';
 import LoadingSpinner from '../loading/LoadingSpinner';
 import { ChevronDownIcon } from '@/icons';
 import { FormData, FormOptions, FormErrors } from '@/types/samurdhi-form.types';
@@ -41,6 +40,7 @@ interface FormFieldProps {
         handleHouseholdSelection: (value: string) => void;
         handleFileChange?: (file: File | null) => void;
         clearHouseholdLoadedFields?: () => void
+        clearSubsequentFields?: () => void;
     };
 }
 
@@ -190,6 +190,9 @@ export const ConsentFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOpti
                             handlers.handleInputChange({
                                 target: { name: 'consentGivenAt', value: '' }
                             } as React.ChangeEvent<HTMLInputElement>);
+                            if (handlers.clearSubsequentFields) {
+                                handlers.clearSubsequentFields();
+                            }
                         }}
                         label={t('common.no')}
                     />
@@ -572,7 +575,6 @@ export const NicField: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' 
     formData,
     formOptions,
     errors,
-    isFetching,
     handlers,
     t
 }) => {
@@ -594,16 +596,6 @@ export const NicField: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' 
                 />
                 <ErrorMessage error={errors.nic} />
             </div>
-            <Button
-                size="sm"
-                variant="secondary"
-                onClick={handlers.handleNicLookup}
-                disabled={isFetching}
-                className="h-11 w-full md:w-auto flex items-center gap-2"
-            >
-                {isFetching && <LoadingSpinner size="sm" color="white" />}
-                {isFetching ? t('samurdhiForm.fetching') : t('samurdhiForm.getDetails')}
-            </Button>
         </div>
     );
 };
@@ -630,45 +622,6 @@ export const BasicInfoFields: React.FC<Pick<FormFieldProps, 'formData' | 'errors
             />
             <ErrorMessage error={errors.beneficiaryName} />
         </div>
-
-        {formData.beneficiaryName && (
-            <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
-                <Checkbox
-                    checked={formData.isProjectOwnerSameAsBeneficiary}
-                    onChange={(checked) => {
-                        handlers.handleCheckboxChange('isProjectOwnerSameAsBeneficiary', 'true', checked);
-                        if (checked && formData.beneficiaryName) {
-                            // Copy all beneficiary details to project owner
-                            handlers.handleInputChange({
-                                target: { name: 'projectOwnerName', value: formData.beneficiaryName }
-                            } as React.ChangeEvent<HTMLInputElement>);
-
-                            handlers.handleInputChange({
-                                target: { name: 'projectOwnerAge', value: formData.beneficiaryAge.toString() }
-                            } as React.ChangeEvent<HTMLInputElement>);
-
-                            if (formData.beneficiaryGender) {
-                                handlers.handleRadioChange('projectOwnerGender', formData.beneficiaryGender);
-                            }
-                        } else {
-                            // Reset project owner fields
-                            handlers.handleInputChange({
-                                target: { name: 'projectOwnerName', value: '' }
-                            } as React.ChangeEvent<HTMLInputElement>);
-
-                            handlers.handleInputChange({
-                                target: { name: 'projectOwnerAge', value: '0' }
-                            } as React.ChangeEvent<HTMLInputElement>);
-
-                            handlers.handleRadioChange('projectOwnerGender', '');
-                        }
-                    }}
-                />
-                <Label className="text-sm text-blue-700 dark:text-blue-300">
-                    {t('samurdhiForm.projectOwnerSameAsBeneficiary')}
-                </Label>
-            </div>
-        )}
 
         <div>
             <Label>{t('samurdhiForm.beneficiaryAge')}</Label>
@@ -735,6 +688,45 @@ export const BasicInfoFields: React.FC<Pick<FormFieldProps, 'formData' | 'errors
                 onChange={handlers.handleInputChange}
             />
         </div>
+
+        {formData.beneficiaryName && (
+            <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                <Checkbox
+                    checked={formData.isProjectOwnerSameAsBeneficiary}
+                    onChange={(checked) => {
+                        handlers.handleCheckboxChange('isProjectOwnerSameAsBeneficiary', 'true', checked);
+                        if (checked && formData.beneficiaryName) {
+                            // Copy all beneficiary details to project owner
+                            handlers.handleInputChange({
+                                target: { name: 'projectOwnerName', value: formData.beneficiaryName }
+                            } as React.ChangeEvent<HTMLInputElement>);
+
+                            handlers.handleInputChange({
+                                target: { name: 'projectOwnerAge', value: formData.beneficiaryAge.toString() }
+                            } as React.ChangeEvent<HTMLInputElement>);
+
+                            if (formData.beneficiaryGender) {
+                                handlers.handleRadioChange('projectOwnerGender', formData.beneficiaryGender);
+                            }
+                        } else {
+                            // Reset project owner fields
+                            handlers.handleInputChange({
+                                target: { name: 'projectOwnerName', value: '' }
+                            } as React.ChangeEvent<HTMLInputElement>);
+
+                            handlers.handleInputChange({
+                                target: { name: 'projectOwnerAge', value: '0' }
+                            } as React.ChangeEvent<HTMLInputElement>);
+
+                            handlers.handleRadioChange('projectOwnerGender', '');
+                        }
+                    }}
+                />
+                <Label className="text-sm text-blue-700 dark:text-blue-300">
+                    {t('samurdhiForm.projectOwnerSameAsBeneficiary')}
+                </Label>
+            </div>
+        )}
     </>
 );
 
@@ -1142,7 +1134,39 @@ export const EmpowermentField: React.FC<Pick<FormFieldProps, 'formData' | 'formO
                     name="empowerment_dimension_id"
                     value={dimension.empowerment_dimension_id}
                     checked={formData.empowerment_dimension_id === dimension.empowerment_dimension_id}
-                    onChange={() => handlers.handleRadioChange('empowerment_dimension_id', dimension.empowerment_dimension_id)}
+                    onChange={() => {
+                        const isEmploymentFacilitation = dimension.nameEnglish.includes("Employment Facilitation");
+                        const isBusinessOpportunities = dimension.nameEnglish.includes("Business Opportunities") ||
+                            dimension.nameEnglish.includes("Self-Employment");
+
+                        // Clear Employment Facilitation related fields if switching to Business Opportunities
+                        if (isBusinessOpportunities) {
+                            handlers.handleSelectChange('job_field_id', '');
+                            handlers.handleInputChange({
+                                target: { name: 'otherJobField', value: '' }
+                            } as React.ChangeEvent<HTMLInputElement>);
+                            handlers.handleInputChange({
+                                target: { name: 'childName', value: '' }
+                            } as React.ChangeEvent<HTMLInputElement>);
+                            handlers.handleInputChange({
+                                target: { name: 'childAge', value: '0' }
+                            } as React.ChangeEvent<HTMLInputElement>);
+                            handlers.handleRadioChange('childGender', '');
+                        }
+
+                        // Clear Business Opportunities related fields if switching to Employment Facilitation
+                        if (isEmploymentFacilitation) {
+                            handlers.handleSelectChange('selectedLivelihood', '');
+                            handlers.handleSelectChange('livelihood_id', '');
+                            handlers.handleSelectChange('project_type_id', '');
+                            handlers.handleInputChange({
+                                target: { name: 'otherProject', value: '' }
+                            } as React.ChangeEvent<HTMLInputElement>);
+                        }
+
+                        // Set the new empowerment dimension
+                        handlers.handleRadioChange('empowerment_dimension_id', dimension.empowerment_dimension_id);
+                    }}
                     label={
                         <div className="flex flex-col text-sm sm:text-base">
                             <span className="font-sinhala">{dimension.nameSinhala}</span>
@@ -1175,6 +1199,14 @@ export const ProjectTypeField: React.FC<Pick<FormFieldProps, 'formData' | 'formO
 }) => {
         if (!shouldShowProjectFields(formData, formOptions, showAllFieldsForExistingBeneficiary)) return null;
 
+        // const selectedLivelihood = formOptions.livelihoods?.find(l => l.id.toString() === formData.selectedLivelihood);
+        // const isOtherLivelihoodSelected = selectedLivelihood?.english_name === 'Other';
+
+        const selectedProjectType = projectTypesByLivelihood.find(pt => pt.project_type_id.toString() === formData.project_type_id);
+        const isOtherProjectTypeSelected = selectedProjectType?.nameEnglish === 'Other';
+
+
+
         return (
             <div className="space-y-4">
                 {/* Livelihood Dropdown */}
@@ -1192,6 +1224,12 @@ export const ProjectTypeField: React.FC<Pick<FormFieldProps, 'formData' | 'formO
                                 handlers.handleSelectChange('selectedLivelihood', value);
                                 handlers.handleSelectChange('livelihood_id', value);
                                 onLivelihoodChange(value);
+
+                                // Clear project type when livelihood changes
+                                handlers.handleSelectChange('project_type_id', '');
+                                handlers.handleInputChange({
+                                    target: { name: 'otherProject', value: '' }
+                                } as React.ChangeEvent<HTMLInputElement>);
                             }}
                             className={`dark:bg-dark-900 ${errors.selectedLivelihood ? 'border-red-500' : ''}`}
                             value={formData.selectedLivelihood || ''}
@@ -1215,7 +1253,18 @@ export const ProjectTypeField: React.FC<Pick<FormFieldProps, 'formData' | 'formO
                                         label: `${project.nameSinhala} - ${project.nameTamil} - ${project.nameEnglish}`
                                     }))}
                                     placeholder={isLoadingProjectTypes ? t('common.loading') : t('samurdhiForm.selectProjectType')}
-                                    onChange={(value) => handlers.handleSelectChange('project_type_id', value)}
+                                    onChange={(value) => {
+                                        handlers.handleSelectChange('project_type_id', value);
+                                        // Clear other project when changing selection
+                                        if (value) {
+                                            const selected = projectTypesByLivelihood.find(pt => pt.project_type_id.toString() === value);
+                                            if (selected?.nameEnglish !== 'Other') {
+                                                handlers.handleInputChange({
+                                                    target: { name: 'otherProject', value: '' }
+                                                } as React.ChangeEvent<HTMLInputElement>);
+                                            }
+                                        }
+                                    }}
                                     className={`dark:bg-dark-900 ${errors.project_type_id ? 'border-red-500' : ''}`}
                                     value={formData.project_type_id || ''}
                                     disabled={isLoadingProjectTypes}
@@ -1232,22 +1281,21 @@ export const ProjectTypeField: React.FC<Pick<FormFieldProps, 'formData' | 'formO
                             <ErrorMessage error={errors.project_type_id} />
                         </div>
 
-                        {/* Other Project Field */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {t('samurdhiForm.otherProject')}
-                            </label>
-                            <input
-                                type="text"
-                                name="otherProject"
-                                value={formData.otherProject || ""}
-                                onChange={(e) => handlers.handleInputChange(e)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm 
-                                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
-                                       dark:bg-gray-900 dark:border-gray-600 dark:text-white"
-                            />
-                            <ErrorMessage error={errors.otherProject} />
-                        </div>
+                        {/* Show "Other Project" input only when "Other" is selected in project type */}
+                        {isOtherProjectTypeSelected && (
+                            <div>
+                                <Label>{t('samurdhiForm.pleaseSpecifyOtherProject')} <span className="text-red-500">*</span></Label>
+                                <Input
+                                    type="text"
+                                    name="otherProject"
+                                    value={formData.otherProject || ""}
+                                    onChange={handlers.handleInputChange}
+                                    placeholder={t('samurdhiForm.enterOtherProject')}
+                                    className={errors.otherProject ? 'border-red-500' : ''}
+                                />
+                                <ErrorMessage error={errors.otherProject} />
+                            </div>
+                        )}
                     </>
                 )}
             </div>
@@ -1266,6 +1314,9 @@ export const ChildDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'for
 }) => {
     if (!shouldShowChildFields(formData, formOptions, showAllFieldsForExistingBeneficiary)) return null;
 
+    const selectedJobField = formOptions.jobFields.find(jf => jf.job_field_id === formData.job_field_id);
+    const isOtherJobFieldSelected = selectedJobField?.nameEnglish === 'Other';
+
     return (
         <>
             <div>
@@ -1277,7 +1328,18 @@ export const ChildDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'for
                             label: `${jobField.nameSinhala} - ${jobField.nameTamil} - ${jobField.nameEnglish}`
                         }))}
                         placeholder={t('samurdhiForm.selectJobField')}
-                        onChange={(value) => handlers.handleSelectChange('job_field_id', value)}
+                        onChange={(value) => {
+                            handlers.handleSelectChange('job_field_id', value);
+                            // Clear other job field when changing selection
+                            if (value) {
+                                const selected = formOptions.jobFields.find(jf => jf.job_field_id === value);
+                                if (selected?.nameEnglish !== 'Other') {
+                                    handlers.handleInputChange({
+                                        target: { name: 'otherJobField', value: '' }
+                                    } as React.ChangeEvent<HTMLInputElement>);
+                                }
+                            }
+                        }}
                         className={`dark:bg-dark-900 ${errors.job_field_id ? 'border-red-500' : ''}`}
                         value={formData.job_field_id || ''}
                     />
@@ -1287,6 +1349,22 @@ export const ChildDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'for
                 </div>
                 <ErrorMessage error={errors.job_field_id} />
             </div>
+
+            {/* Show "Other Job Field" input only when "Other" is selected */}
+            {isOtherJobFieldSelected && (
+                <div>
+                    <Label>{t('samurdhiForm.pleaseSpecifyOtherJobField')} <span className="text-red-500">*</span></Label>
+                    <Input
+                        type="text"
+                        name="otherJobField"
+                        value={formData.otherJobField || ""}
+                        onChange={handlers.handleInputChange}
+                        placeholder={t('samurdhiForm.enterOtherJobField')}
+                        className={errors.otherJobField ? 'border-red-500' : ''}
+                    />
+                    <ErrorMessage error={errors.otherJobField} />
+                </div>
+            )}
 
             <div>
                 <Label>{t('samurdhiForm.childName')}</Label>
@@ -1325,17 +1403,6 @@ export const ChildDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'for
                         label={t(`common.${gender.toLowerCase()}`)}
                     />
                 ))}
-            </div>
-
-
-            <div>
-                <Label>{t('samurdhiForm.otherJobField')}</Label>
-                <Input
-                    type="text"
-                    name="otherJobField"
-                    value={formData.otherJobField || ""}
-                    onChange={handlers.handleInputChange}
-                />
             </div>
         </>
     );

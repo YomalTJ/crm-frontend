@@ -176,7 +176,8 @@ const SamurdhiFamilyForm: React.FC<SamurdhiFamilyFormProps> = ({
         handleNicLookup,
         handleHouseholdSelection,
         handleFileChange,
-        handleSubmit
+        handleSubmit,
+        clearSubsequentFields
     } = useSamurdhiFormHandlers({
         formData,
         setFormData,
@@ -199,7 +200,8 @@ const SamurdhiFamilyForm: React.FC<SamurdhiFamilyFormProps> = ({
         handleNicLookup,
         handleHouseholdSelection,
         handleFileChange,
-        clearHouseholdLoadedFields
+        clearHouseholdLoadedFields,
+        clearSubsequentFields
     };
 
     useEffect(() => {
@@ -382,24 +384,6 @@ const SamurdhiFamilyForm: React.FC<SamurdhiFamilyFormProps> = ({
                                 t={t}
                             />
 
-                            {/* Consent Fields */}
-                            <ConsentFields
-                                formData={formData}
-                                formOptions={formOptions}
-                                errors={errors}
-                                handlers={handlers}
-                                t={t}
-                            />
-
-                            {/* Consent Letter Upload */}
-                            <ConsentLetterUpload
-                                formData={formData}
-                                errors={errors}
-                                handlers={{ handleFileChange: handleFileChange }}
-                                selectedFile={selectedFile}
-                                t={t}
-                            />
-
                             {/* Area Classification */}
                             <AreaClassificationField
                                 formData={formData}
@@ -482,8 +466,8 @@ const SamurdhiFamilyForm: React.FC<SamurdhiFamilyFormProps> = ({
                                 t={t}
                             />
 
-                            {/* Empowerment Dimension */}
-                            <EmpowermentField
+                            {/* Consent Fields */}
+                            <ConsentFields
                                 formData={formData}
                                 formOptions={formOptions}
                                 errors={errors}
@@ -491,53 +475,75 @@ const SamurdhiFamilyForm: React.FC<SamurdhiFamilyFormProps> = ({
                                 t={t}
                             />
 
-                            {/* Project Type Field (conditional) */}
-                            <ProjectTypeField
-                                formData={formData}
-                                formOptions={formOptions}
-                                errors={errors}
-                                showAllFieldsForExistingBeneficiary={showAllFieldsForExistingBeneficiary}
-                                handlers={handlers}
-                                projectTypesByLivelihood={projectTypesByLivelihood}
-                                isLoadingProjectTypes={isLoadingProjectTypes}
-                                onLivelihoodChange={handleLivelihoodChange}
-                                t={t}
-                            />
-
-                            {/* Child Details Fields (conditional) */}
-                            <ChildDetailsFields
-                                formData={formData}
-                                formOptions={formOptions}
-                                errors={errors}
-                                showAllFieldsForExistingBeneficiary={showAllFieldsForExistingBeneficiary}
-                                handlers={handlers}
-                                t={t}
-                            />
-
-
-                            {/* Monthly Saving Field */}
-                            <MonthlySavingField
+                            {/* Consent Letter Upload */}
+                            <ConsentLetterUpload
                                 formData={formData}
                                 errors={errors}
-                                handlers={handlers}
+                                handlers={{ handleFileChange: handleFileChange }}
+                                selectedFile={selectedFile}
                                 t={t}
                             />
 
-                            {/* Checkbox Sections */}
-                            <CheckboxSections
-                                formData={formData}
-                                formOptions={formOptions}
-                                errors={errors}
-                                handlers={handlers}
-                                t={t}
-                            />
+                            {/* Only show remaining fields if consent is not explicitly false */}
+                            {formData.hasConsentedToEmpowerment !== false && (
+                                <>
+                                    {/* Empowerment Dimension */}
+                                    <EmpowermentField
+                                        formData={formData}
+                                        formOptions={formOptions}
+                                        errors={errors}
+                                        handlers={handlers}
+                                        t={t}
+                                    />
 
-                            {/* Banking Details */}
-                            <BankingDetailsFields
-                                formData={formData}
-                                handlers={handlers}
-                                t={t}
-                            />
+                                    {/* Project Type Field (conditional) */}
+                                    <ProjectTypeField
+                                        formData={formData}
+                                        formOptions={formOptions}
+                                        errors={errors}
+                                        showAllFieldsForExistingBeneficiary={showAllFieldsForExistingBeneficiary}
+                                        handlers={handlers}
+                                        projectTypesByLivelihood={projectTypesByLivelihood}
+                                        isLoadingProjectTypes={isLoadingProjectTypes}
+                                        onLivelihoodChange={handleLivelihoodChange}
+                                        t={t}
+                                    />
+
+                                    {/* Child Details Fields (conditional) */}
+                                    <ChildDetailsFields
+                                        formData={formData}
+                                        formOptions={formOptions}
+                                        errors={errors}
+                                        showAllFieldsForExistingBeneficiary={showAllFieldsForExistingBeneficiary}
+                                        handlers={handlers}
+                                        t={t}
+                                    />
+
+                                    {/* Monthly Saving Field */}
+                                    <MonthlySavingField
+                                        formData={formData}
+                                        errors={errors}
+                                        handlers={handlers}
+                                        t={t}
+                                    />
+
+                                    {/* Checkbox Sections */}
+                                    <CheckboxSections
+                                        formData={formData}
+                                        formOptions={formOptions}
+                                        errors={errors}
+                                        handlers={handlers}
+                                        t={t}
+                                    />
+
+                                    {/* Banking Details */}
+                                    <BankingDetailsFields
+                                        formData={formData}
+                                        handlers={handlers}
+                                        t={t}
+                                    />
+                                </>
+                            )}
 
                             {/* Form Actions */}
                             <div className="flex items-center gap-5">

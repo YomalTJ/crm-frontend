@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
     });
     return config;
   },
+
+  // Add this for Next.js 14+ (stable server actions)
+  serverActions: {
+    bodySizeLimit: '10mb', // Increase from default 1MB to 10MB
+  },
 };
 
 export default nextConfig;

@@ -102,6 +102,12 @@ export const translations = {
         disabilityTypeRequired: 'குறைபாடு தேர்ந்தெடுக்கும்போது குறைபாட்டின் வகை தேவை',
         selectDisabilityType: 'குறைபாட்டின் வகையை தேர்ந்தெடுக்கவும்',
 
+        pleaseSpecifyOtherJobField: "தயவு செய்து வேறு தொழில் துறையை குறிப்பிடவும்",
+        enterOtherJobField: "வேறு தொழில் துறையை உள்ளிடவும்",
+        pleaseSpecifyOtherProject: "தயவு செய்து வேறு திட்ட வகையை குறிப்பிடவும்",
+        enterOtherProject: "வேறு திட்ட வகையை உள்ளிடவும்",
+
+
         // Household Members
         householdMembers: 'வயது மற்றும் பாலினம் அடிப்படையில் வீட்டு உறுப்பினர்களின் எண்ணிக்கை',
         ageBelow16: '16 வயதுக்கு கீழ்',

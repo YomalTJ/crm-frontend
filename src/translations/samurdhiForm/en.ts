@@ -121,6 +121,11 @@ export const translations = {
         aswasumaCategory: 'Aswasuma category',
         selectAswasumaCategory: 'Select Aswasuma Category',
 
+        pleaseSpecifyOtherJobField: "Please specify Other employment field",
+        enterOtherJobField: "Enter other employment field",
+        pleaseSpecifyOtherProject: "Please specify Other project type",
+        enterOtherProject: "Enter other project type",
+
         // Empowerment
         empowermentDimension: 'What is Empowerment Dimension',
         empowermentDimensionRequired: 'Empowerment dimension is required',

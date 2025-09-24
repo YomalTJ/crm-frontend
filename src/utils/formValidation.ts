@@ -36,10 +36,51 @@ export const validateSamurdhiForm = (
         newErrors.hasConsentedToEmpowerment = 'Please select consent to empowerment program';
     }
 
-    // Consent date validation
+    // Consent date validation - only required when consent is true
     if (formData.hasConsentedToEmpowerment === true && !formData.consentGivenAt) {
         newErrors.consentGivenAt = 'Please select a consent date';
     }
+
+    // Refusal reason validation - only required when consent is false
+    if (formData.hasConsentedToEmpowerment === false && !formData.refusal_reason_id) {
+        newErrors.refusal_reason_id = 'Please select a refusal reason';
+    }
+
+    // File upload validation for rejection - only required when consent is false
+    if (formData.hasConsentedToEmpowerment === false && !selectedFile) {
+        newErrors.consentLetter = 'Please upload the consent letter PDF';
+    }
+
+    // File type and size validation - only check if file exists and consent is false
+    if (formData.hasConsentedToEmpowerment === false && selectedFile) {
+        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
+
+        if (!allowedTypes.includes(selectedFile.type)) {
+            newErrors.consentLetter = 'Only PDF or image files (JPG, JPEG, PNG, GIF, WEBP, BMP) are allowed';
+        } else if (selectedFile.size > 5 * 1024 * 1024) { // 5MB limit
+            newErrors.consentLetter = 'File size must be less than 5MB';
+        }
+    }
+
+    // SKIP ALL REMAINING VALIDATIONS IF CONSENT IS FALSE
+    if (formData.hasConsentedToEmpowerment === false) {
+        if (Object.keys(newErrors).length > 0) {
+            console.log('=== VALIDATION ERRORS (Consent False) ===');
+            console.log('Total errors:', Object.keys(newErrors).length);
+            console.log('Errors object:', newErrors);
+            Object.entries(newErrors).forEach(([field, error]) => {
+                console.log(`${field}: ${error}`);
+            });
+            console.log('=========================================');
+        }
+
+        return {
+            isValid: Object.keys(newErrors).length === 0,
+            errors: newErrors
+        };
+    }
+
+    // Continue with remaining validations only if consent is true or null/undefined
 
     // Area Classification - required for certain beneficiary types
     if (formData.beneficiary_type_id && !formData.areaClassification) {
@@ -56,16 +97,27 @@ export const validateSamurdhiForm = (
         newErrors.empowerment_dimension_id = 'Empowerment dimension is required when consent is given';
     }
 
-    // Refusal reason validation
-    if (formData.hasConsentedToEmpowerment === false && !formData.refusal_reason_id) {
-        newErrors.refusal_reason_id = 'Please select a refusal reason';
-    }
-
     // NIC validation for non-pure Aswasuma beneficiaries
     if (!formData.nic || formData.nic.trim() === '') {
         newErrors.nic = 'NIC number is required';
     } else if (formData.nic.length < 10) {
         newErrors.nic = 'NIC must be at least 10 characters';
+    }
+
+    if (formData.job_field_id) {
+        const selectedJobField = formOptions.jobFields.find(jf => jf.job_field_id === formData.job_field_id);
+        if (selectedJobField?.nameEnglish === 'Other' && (!formData.otherJobField || formData.otherJobField.trim() === '')) {
+            newErrors.otherJobField = 'Please specify other job field';
+        }
+    }
+
+    if (formData.project_type_id) {
+        // You'll need to pass projectTypesByLivelihood to this function or find another way to get the selected project type
+        // For now, assuming you can access it somehow
+        const isOtherProjectType = formData.project_type_id === '30'; // Based on your example, "Other" has project_type_id: '30'
+        if (isOtherProjectType && (!formData.otherProject || formData.otherProject.trim() === '')) {
+            newErrors.otherProject = 'Please specify other project type';
+        }
     }
 
     // Basic required fields
@@ -113,9 +165,17 @@ export const validateSamurdhiForm = (
         }
     });
 
-    // Saving amount validation
-    if (formData.monthlySaving && (!formData.savingAmount || formData.savingAmount <= 0)) {
-        newErrors.savingAmount = 'Please enter a valid saving amount';
+    // Monthly saving validation
+    if (formData.monthlySaving === null || formData.monthlySaving === undefined) {
+        newErrors.monthlySaving = 'Please select monthly saving status';
+    }
+
+    if (formData.monthlySaving === true) {
+        if (!formData.savingAmount || formData.savingAmount <= 0) {
+            newErrors.savingAmount = 'Please enter a valid saving amount';
+        } else if (formData.savingAmount > 1000000) {
+            newErrors.savingAmount = 'Saving amount seems too high. Please verify.';
+        }
     }
 
     // Employment Facilitation validation
@@ -138,53 +198,6 @@ export const validateSamurdhiForm = (
         }
     }
 
-    if (formData.monthlySaving === null || formData.monthlySaving === undefined) {
-        newErrors.monthlySaving = 'Please select monthly saving status';
-    }
-
-    if (formData.monthlySaving === true) {
-        if (!formData.savingAmount || formData.savingAmount <= 0) {
-            newErrors.savingAmount = 'Please enter a valid saving amount';
-        } else if (formData.savingAmount > 1000000) {
-            newErrors.savingAmount = 'Saving amount seems too high. Please verify.';
-        }
-    }
-
-    if (formData.hasConsentedToEmpowerment === false &&
-        !selectedFile) {
-        newErrors.consentLetter = 'Please upload the consent letter PDF';
-    }
-
-    if (selectedFile) {
-        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
-
-        if (!allowedTypes.includes(selectedFile.type)) {
-            newErrors.consentLetter = 'Only PDF or image files (JPG, JPEG, PNG, GIF, WEBP, BMP) are allowed';
-        } else if (selectedFile.size > 5 * 1024 * 1024) { // 5MB limit
-            newErrors.consentLetter = 'File size must be less than 5MB';
-        }
-    }
-
-
-    if (formData.wantsAswesumaBankTransfer) {
-        if (!formData.otherBankName?.trim()) {
-            newErrors.otherBankName = 'Bank name is required when requesting transfer';
-        }
-        if (!formData.otherBankAccountNumber?.trim()) {
-            newErrors.otherBankAccountNumber = 'Account number is required when requesting transfer';
-        }
-    }
-
-    // Validate government subsidy details
-    if (formData.hasOtherGovernmentSubsidy) {
-        if (!formData.otherGovernmentInstitution?.trim()) {
-            newErrors.otherGovernmentInstitution = 'Institution name is required';
-        }
-        if (!formData.otherSubsidyAmount || formData.otherSubsidyAmount <= 0) {
-            newErrors.otherSubsidyAmount = 'Subsidy amount must be greater than 0';
-        }
-    }
-
     // Business Opportunities validation
     const hasBusinessOpportunities = formData.empowerment_dimension_id && (() => {
         const dimension = formOptions.empowermentDimensions.find(
@@ -200,16 +213,34 @@ export const validateSamurdhiForm = (
         }
     }
 
+    // Bank transfer validation
+    if (formData.wantsAswesumaBankTransfer) {
+        if (!formData.otherBankName?.trim()) {
+            newErrors.otherBankName = 'Bank name is required when requesting transfer';
+        }
+        if (!formData.otherBankAccountNumber?.trim()) {
+            newErrors.otherBankAccountNumber = 'Account number is required when requesting transfer';
+        }
+    }
+
+    // Government subsidy validation
+    if (formData.hasOtherGovernmentSubsidy) {
+        if (!formData.otherGovernmentInstitution?.trim()) {
+            newErrors.otherGovernmentInstitution = 'Institution name is required';
+        }
+        if (!formData.otherSubsidyAmount || formData.otherSubsidyAmount <= 0) {
+            newErrors.otherSubsidyAmount = 'Subsidy amount must be greater than 0';
+        }
+    }
+
     if (Object.keys(newErrors).length > 0) {
-        console.log('=== VALIDATION ERRORS ===');
+        console.log('=== VALIDATION ERRORS (Consent True/Null) ===');
         console.log('Total errors:', Object.keys(newErrors).length);
         console.log('Errors object:', newErrors);
-
-        // Log each error in a readable format
         Object.entries(newErrors).forEach(([field, error]) => {
             console.log(`${field}: ${error}`);
         });
-        console.log('=========================');
+        console.log('=============================================');
     }
 
     return {
