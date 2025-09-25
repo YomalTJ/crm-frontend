@@ -472,7 +472,7 @@ export const getHouseholdDetailsByReference = async (hhReference: string) => {
   }
 };
 
-export const checkExistingBeneficiary = async (identifier: string, type: 'nic' | 'household'): Promise<{ exists: boolean; message?: string }> => {
+export const checkExistingBeneficiary = async (identifier: string, type: 'nic' | 'household'): Promise<{ exists: boolean; message?: string; beneficiaryName?: string }> => {
   try {
     const token = (await cookies()).get('accessToken')?.value ||
       (await cookies()).get('staffAccessToken')?.value;

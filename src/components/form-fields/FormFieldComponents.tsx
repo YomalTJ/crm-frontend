@@ -566,6 +566,9 @@ export const HouseholdNumberField: React.FC<Pick<FormFieldProps, 'formData' | 'f
                 )}
             </div>
             <ErrorMessage error={errors.aswasumaHouseholdNo} />
+            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                {t('samurdhiForm.householdSelectionNote') || 'The system will check if this household number is already registered.'}
+            </p>
         </div>
     );
 };

@@ -7,7 +7,8 @@ import {
     updateSamurdhiFamily,
     SamurdhiFamilyPayload,
     getBeneficiaryByIdentifier, // Add this import
-    getProjectTypesByLivelihood
+    getProjectTypesByLivelihood,
+    checkExistingBeneficiary
 } from '@/services/samurdhiService';
 import { validateSamurdhiForm, convertEmptyToNull, getAswasumaIdByLevel } from '@/utils/formValidation';
 import toast from 'react-hot-toast';
@@ -559,6 +560,34 @@ export const useSamurdhiFormHandlers = ({
                 femaleAbove60: 0,
                 aswesuma_cat_id: null
             }));
+            return;
+        }
+
+        try {
+            const existsCheck = await checkExistingBeneficiary(selectedHhNumber, 'household');
+            if (existsCheck.exists) {
+                toast.error(
+                    `This household number is already registered for beneficiary: ${existsCheck.beneficiaryName || 'Unknown'}. Please select a different household number.`,
+                    { duration: 6000 }
+                );
+
+                // Clear the selection immediately
+                setFormData(prev => ({
+                    ...prev,
+                    aswasumaHouseholdNo: null,
+                    beneficiaryName: null,
+                    beneficiaryAge: 0,
+                    beneficiaryGender: null,
+                    address: null,
+                    aswesuma_cat_id: null
+                }));
+                setHouseholdLoadedFields(new Set());
+                return;
+            }
+        } catch (error) {
+            console.error('Error checking existing beneficiary:', error);
+            toast.error('Failed to verify household number availability. Please try again.');
+            setFormData(prev => ({ ...prev, aswasumaHouseholdNo: null }));
             return;
         }
 
