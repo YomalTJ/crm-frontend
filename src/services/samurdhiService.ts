@@ -472,6 +472,30 @@ export const getHouseholdDetailsByReference = async (hhReference: string) => {
   }
 };
 
+export const checkExistingBeneficiary = async (identifier: string, type: 'nic' | 'household'): Promise<{ exists: boolean; message?: string }> => {
+  try {
+    const token = (await cookies()).get('accessToken')?.value ||
+      (await cookies()).get('staffAccessToken')?.value;
+
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await axiosInstance.get(`/samurdhi-family/check-exists?${type}=${encodeURIComponent(identifier)}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      return { exists: false };
+    }
+    throw new Error(error.response?.data?.message || 'Failed to check existing beneficiary');
+  }
+};
+
 export const getLivelihoods = async (): Promise<any[]> => {
   try {
     const token = (await cookies()).get('accessToken')?.value ||
