@@ -18,7 +18,8 @@ export const loginUser = async ({ username, password }: LoginPayload) => {
       type: "staff",
       success: data.success,
       roleName: data.roleName,
-      locationDetails: data.locationDetails
+      locationDetails: data.locationDetails,
+      wbbPassword: data.wbbPassword
     };
 
     throw new Error(data.error || "Login failed");

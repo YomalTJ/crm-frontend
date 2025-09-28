@@ -212,8 +212,9 @@ export const translations = {
 
         livelihood: 'ජීවනෝපාය',
         selectLivelihood: 'ජීවනෝපාය තෝරන්න',
-        selectProjectType: 'ව්‍යාපාර වර්ගය තෝරන්න'
+        selectProjectType: 'ව්‍යාපාර වර්ගය තෝරන්න',
 
+        householdSelectionNote: "කරුණාකර ගෘහස්ථය තෝරන්න"
     }
 
 };

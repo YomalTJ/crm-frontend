@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
 import { useTheme } from '@/context/ThemeContext'
 import React, { useState, useEffect } from 'react'
 import { getSamurdhiFamilyCountWithLocations, SamurdhiFamilyCountResult, SamurdhiFamilyCountParams } from '@/services/reportsService'
 import { getAccessibleLocations, AccessibleLocations } from '@/services/projectDetailReportService'
+import LocationDropdowns from '@/components/form-fields/LocationDropdowns'
 
 const MAIN_PROGRAMS = [
   { value: 'NP', label: 'National Program' },
@@ -63,12 +65,35 @@ const BeneficiariesCountReports = () => {
     }
   }
 
-  const handleFilterChange = (key: keyof SamurdhiFamilyCountParams, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value || undefined
-    }))
-  }
+  const updateFilter = (key: string, value: string) => {
+    const newFilters = { ...filters };
+
+    if (value === '') {
+      delete newFilters[key as keyof SamurdhiFamilyCountParams];
+    } else {
+      if (key === 'mainProgram') {
+        if (value === 'NP' || value === 'ADB' || value === 'WB') {
+          newFilters[key as keyof SamurdhiFamilyCountParams] = value as any;
+        }
+      } else {
+        newFilters[key as keyof SamurdhiFamilyCountParams] = value as any;
+      }
+    }
+
+    // Clear dependent filters when parent changes
+    if (key === 'district_id') {
+      delete newFilters.ds_id;
+      delete newFilters.zone_id;
+      delete newFilters.gnd_id;
+    } else if (key === 'ds_id') {
+      delete newFilters.zone_id;
+      delete newFilters.gnd_id;
+    } else if (key === 'zone_id') {
+      delete newFilters.gnd_id;
+    }
+
+    setFilters(newFilters);
+  };
 
   const clearFilters = () => {
     setFilters({})
@@ -122,45 +147,6 @@ const BeneficiariesCountReports = () => {
     return 'Total beneficiaries is'
   }
 
-  // Get filtered locations based on selected filters
-  const getFilteredLocations = () => {
-    if (!accessibleLocations) return { districts: [], dss: [], zones: [], gnds: [] }
-
-    let availableDS = accessibleLocations.dss
-    let availableZones = accessibleLocations.zones
-    let availableGNDs = accessibleLocations.gndDivisions
-
-    // Filter DS divisions based on selected district
-    if (filters.district_id) {
-      availableDS = accessibleLocations.dss.filter(ds =>
-        ds.district_id?.toString() === filters.district_id
-      )
-    }
-
-    // Filter zones based on selected DS
-    if (filters.ds_id) {
-      availableZones = accessibleLocations.zones.filter(zone =>
-        zone.ds_id?.toString() === filters.ds_id
-      )
-    }
-
-    // Filter GNDs based on selected zone
-    if (filters.zone_id) {
-      availableGNDs = accessibleLocations.gndDivisions.filter(gnd =>
-        gnd.zone_id?.toString() === filters.zone_id
-      )
-    }
-
-    return {
-      districts: accessibleLocations.districts,
-      dss: availableDS,
-      zones: availableZones,
-      gnds: availableGNDs
-    }
-  }
-
-  const filteredLocations = getFilteredLocations()
-
   const isDark = theme === 'dark'
   const cardBg = isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
   const textPrimary = isDark ? 'text-white' : 'text-gray-900'
@@ -200,94 +186,24 @@ const BeneficiariesCountReports = () => {
             <h2 className={`text-lg font-semibold ${textPrimary}`}>Filters</h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-            {/* District */}
-            <div>
-              <label className={`block text-sm font-medium ${textSecondary} mb-1`}>
-                District
-              </label>
-              <select
-                value={filters.district_id || ''}
-                onChange={(e) => handleFilterChange('district_id', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${inputBg} ${textPrimary}`}
-              >
-                <option value="">All Districts</option>
-                {filteredLocations.districts.map(district => (
-                  <option key={district.district_id} value={district.district_id.toString()}>
-                    {district.district_name}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {/* Location Filter Cards */}
+          {accessibleLocations && (
+            <LocationDropdowns
+              accessibleLocations={accessibleLocations}
+              filters={filters}
+              updateFilter={updateFilter}
+            />
+          )}
 
-            {/* DS */}
-            <div>
-              <label className={`block text-sm font-medium ${textSecondary} mb-1`}>
-                Divisional Secretariat
-              </label>
-              <select
-                value={filters.ds_id || ''}
-                onChange={(e) => handleFilterChange('ds_id', e.target.value)}
-                disabled={!filters.district_id}
-                className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${inputBg} ${textPrimary} disabled:opacity-50`}
-              >
-                <option value="">All DS</option>
-                {filteredLocations.dss.map(ds => (
-                  <option key={ds.ds_id} value={ds.ds_id.toString()}>
-                    {ds.ds_name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Zone */}
-            <div>
-              <label className={`block text-sm font-medium ${textSecondary} mb-1`}>
-                Zone
-              </label>
-              <select
-                value={filters.zone_id || ''}
-                onChange={(e) => handleFilterChange('zone_id', e.target.value)}
-                disabled={!filters.ds_id}
-                className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${inputBg} ${textPrimary} disabled:opacity-50`}
-              >
-                <option value="">All Zones</option>
-                {filteredLocations.zones.map(zone => (
-                  <option key={zone.zone_id} value={zone.zone_id.toString()}>
-                    {zone.zone_name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* GND */}
-            <div>
-              <label className={`block text-sm font-medium ${textSecondary} mb-1`}>
-                GND Division
-              </label>
-              <select
-                value={filters.gnd_id || ''}
-                onChange={(e) => handleFilterChange('gnd_id', e.target.value)}
-                disabled={!filters.zone_id}
-                className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${inputBg} ${textPrimary} disabled:opacity-50`}
-              >
-                <option value="">All GNDs</option>
-                {filteredLocations.gnds.map(gnd => (
-                  <option key={gnd.gnd_id} value={gnd.gnd_id}>
-                    {gnd.gnd_name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Main Program */}
+          {/* Program Filter and Clear Filters */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
             <div>
               <label className={`block text-sm font-medium ${textSecondary} mb-1`}>
                 Main Program
               </label>
               <select
                 value={filters.mainProgram || ''}
-                onChange={(e) => handleFilterChange('mainProgram', e.target.value)}
+                onChange={(e) => updateFilter('mainProgram', e.target.value)}
                 className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${inputBg} ${textPrimary}`}
               >
                 <option value="">All Programs</option>
@@ -299,7 +215,6 @@ const BeneficiariesCountReports = () => {
               </select>
             </div>
 
-            {/* Clear Filters */}
             <div className="flex items-end">
               <button
                 onClick={clearFilters}

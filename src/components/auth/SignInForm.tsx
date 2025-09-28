@@ -24,16 +24,22 @@ export default function SignInForm() {
 
       if (result.type === "staff") {
         console.log("Location details:", result.locationDetails);
+        console.log("WBB Password:", result.wbbPassword);
 
         if (result.locationDetails) {
           localStorage.setItem('staffLocation', JSON.stringify(result.locationDetails));
         }
 
-        // Store login credentials for API testing (in sessionStorage for security)
+        // Store login credentials for API testing - use WBB password instead of regular password
         sessionStorage.setItem('loginCredentials', JSON.stringify({
           username,
-          password
+          password: result.wbbPassword || password // Use WBB password if available, otherwise fallback to regular
         }));
+
+        // Also store WBB password separately for reference
+        if (result.wbbPassword) {
+          sessionStorage.setItem('wbbPassword', result.wbbPassword);
+        }
 
         // Get token from cookie
         const res = await fetch("/api/auth/get-staff-token");

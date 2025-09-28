@@ -55,17 +55,17 @@ const LocationDropdowns: React.FC<LocationDropdownsProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             {/* District Selection */}
             {filteredLocations.districts.length > 0 && (
-                <div className={`p-3 rounded-lg ${theme === 'dark' ? 'bg-blue-900' : 'bg-blue-50'}`}>
-                    <p className={`text-xs mb-1 ${theme === 'dark' ? 'text-blue-200' : 'text-gray-500'}`}>District</p>
+                <div className={`p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                    <p className={`text-xs mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>District</p>
                     {filteredLocations.districts.length === 1 ? (
-                        <p className={`font-medium ${theme === 'dark' ? 'text-blue-100' : 'text-blue-900'}`}>
+                        <p className={`font-medium ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>
                             {filteredLocations.districts[0].district_name}
                         </p>
                     ) : (
                         <select
                             value={filters.district_id || ''}
                             onChange={(e) => updateFilter('district_id', e.target.value)}
-                            className={`w-full text-sm border-0 rounded focus:ring-1 focus:ring-blue-500 ${theme === 'dark' ? 'bg-blue-800 text-blue-100' : 'bg-white text-blue-900'}`}
+                            className={`w-full text-sm border-0 rounded focus:ring-1 focus:ring-blue-500 ${theme === 'dark' ? 'bg-gray-700 text-gray-100' : 'bg-white text-gray-900'}`}
                         >
                             <option value="">All Districts</option>
                             {filteredLocations.districts.map((district) => (
@@ -80,17 +80,17 @@ const LocationDropdowns: React.FC<LocationDropdownsProps> = ({
 
             {/* DS Division Selection */}
             {filteredLocations.dss.length > 0 && (
-                <div className={`p-3 rounded-lg ${theme === 'dark' ? 'bg-green-900' : 'bg-green-50'}`}>
-                    <p className={`text-xs mb-1 ${theme === 'dark' ? 'text-green-200' : 'text-gray-500'}`}>DS Division</p>
+                <div className={`p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                    <p className={`text-xs mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>DS Division</p>
                     {filteredLocations.dss.length === 1 ? (
-                        <p className={`font-medium ${theme === 'dark' ? 'text-green-100' : 'text-green-900'}`}>
+                        <p className={`font-medium ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>
                             {filteredLocations.dss[0].ds_name}
                         </p>
                     ) : (
                         <select
                             value={filters.ds_id || ''}
                             onChange={(e) => updateFilter('ds_id', e.target.value)}
-                            className={`w-full text-sm border-0 rounded focus:ring-1 focus:ring-green-500 ${theme === 'dark' ? 'bg-green-800 text-green-100' : 'bg-white text-green-900'}`}
+                            className={`w-full text-sm border-0 rounded focus:ring-1 focus:ring-blue-500 ${theme === 'dark' ? 'bg-gray-700 text-gray-100' : 'bg-white text-gray-900'}`}
                         >
                             <option value="">All DS Divisions</option>
                             {filteredLocations.dss.map((ds) => (
@@ -105,17 +105,17 @@ const LocationDropdowns: React.FC<LocationDropdownsProps> = ({
 
             {/* Zone Selection */}
             {filteredLocations.zones.length > 0 && (
-                <div className={`p-3 rounded-lg ${theme === 'dark' ? 'bg-purple-900' : 'bg-purple-50'}`}>
-                    <p className={`text-xs mb-1 ${theme === 'dark' ? 'text-purple-200' : 'text-gray-500'}`}>Zone</p>
+                <div className={`p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                    <p className={`text-xs mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>Zone</p>
                     {filteredLocations.zones.length === 1 ? (
-                        <p className={`font-medium ${theme === 'dark' ? 'text-purple-100' : 'text-purple-900'}`}>
+                        <p className={`font-medium ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>
                             {filteredLocations.zones[0].zone_name}
                         </p>
                     ) : (
                         <select
                             value={filters.zone_id || ''}
                             onChange={(e) => updateFilter('zone_id', e.target.value)}
-                            className={`w-full text-sm border-0 rounded focus:ring-1 focus:ring-purple-500 ${theme === 'dark' ? 'bg-purple-800 text-purple-100' : 'bg-white text-purple-900'}`}
+                            className={`w-full text-sm border-0 rounded focus:ring-1 focus:ring-blue-500 ${theme === 'dark' ? 'bg-gray-700 text-gray-100' : 'bg-white text-gray-900'}`}
                         >
                             <option value="">All Zones</option>
                             {filteredLocations.zones.map((zone) => (
@@ -130,17 +130,17 @@ const LocationDropdowns: React.FC<LocationDropdownsProps> = ({
 
             {/* GND Selection */}
             {filteredLocations.gnds.length > 0 && (
-                <div className={`p-3 rounded-lg ${theme === 'dark' ? 'bg-orange-900' : 'bg-orange-50'}`}>
-                    <p className={`text-xs mb-1 ${theme === 'dark' ? 'text-orange-200' : 'text-gray-500'}`}>GND</p>
+                <div className={`p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                    <p className={`text-xs mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>GND</p>
                     {filteredLocations.gnds.length === 1 ? (
-                        <p className={`font-medium ${theme === 'dark' ? 'text-orange-100' : 'text-orange-900'}`}>
+                        <p className={`font-medium ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>
                             {filteredLocations.gnds[0].gnd_name}
                         </p>
                     ) : (
                         <select
                             value={filters.gnd_id || ''}
                             onChange={(e) => updateFilter('gnd_id', e.target.value)}
-                            className={`w-full text-sm border-0 rounded focus:ring-1 focus:ring-orange-500 ${theme === 'dark' ? 'bg-orange-800 text-orange-100' : 'bg-white text-orange-900'}`}
+                            className={`w-full text-sm border-0 rounded focus:ring-1 focus:ring-blue-500 ${theme === 'dark' ? 'bg-gray-700 text-gray-100' : 'bg-white text-gray-900'}`}
                         >
                             <option value="">All GNDs</option>
                             {filteredLocations.gnds.map((gnd) => (
@@ -153,6 +153,7 @@ const LocationDropdowns: React.FC<LocationDropdownsProps> = ({
                 </div>
             )}
         </div>
+
     );
 };
 

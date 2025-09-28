@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
 
     const staffToken = res.data.staffAccessToken;
     const locationDetails = res.data.locationDetails;
+    const wbbPassword = res.data.wbbPassword; // Get WBB password from response
 
     // Decode role from JWT payload
     const decoded: any = JSON.parse(
@@ -34,7 +35,8 @@ export async function POST(req: NextRequest) {
       success: true,
       roleName,
       type: "staff",
-      locationDetails
+      locationDetails,
+      wbbPassword // Return WBB password to frontend
     });
   } catch (error: any) {
     return NextResponse.json(

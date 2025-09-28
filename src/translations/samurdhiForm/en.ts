@@ -212,6 +212,8 @@ export const translations = {
 
         livelihood: 'Livelihood',
         selectLivelihood: 'Select Livelihood',
-        selectProjectType: 'Select Project Type'
+        selectProjectType: 'Select Project Type',
+
+        householdSelectionNote: "Please select a household"
     }
 };

@@ -48,7 +48,7 @@ const ApiStatus = () => {
     const [autoRefresh, setAutoRefresh] = useState(false)
     const [refreshInterval, setRefreshInterval] = useState(30) // seconds
     const [authToken, setAuthToken] = useState<string | null>(null)
-    const [userCredentials, setUserCredentials] = useState<{username: string, password: string} | null>(null)
+    const [userCredentials, setUserCredentials] = useState<{ username: string, password: string } | null>(null)
     const [locationCode, setLocationCode] = useState<string | null>(null)
 
     // Get user credentials from login form (stored in sessionStorage or passed as props)
@@ -59,10 +59,10 @@ const ApiStatus = () => {
                 if (stored) {
                     const creds = JSON.parse(stored)
                     setUserCredentials(creds)
-                    
+
                     // Update the login endpoint payload
-                    setEndpoints(prev => prev.map(ep => 
-                        ep.name === 'User Login' 
+                    setEndpoints(prev => prev.map(ep =>
+                        ep.name === 'User Login'
                             ? { ...ep, testPayload: { username: creds.username, password: creds.password } }
                             : ep
                     ))
@@ -84,16 +84,16 @@ const ApiStatus = () => {
                     const result = await response.json()
                     if (result.success) {
                         setLocationCode(result.locationCode)
-                        
+
                         // Update the GetByGn endpoint with location code
-                        setEndpoints(prev => prev.map(ep => 
+                        setEndpoints(prev => prev.map(ep =>
                             ep.name === 'Get Household Details'
-                                ? { 
-                                    ...ep, 
-                                    queryParams: { 
-                                        gn_code: result.locationCode, 
-                                        level: 2 
-                                    } 
+                                ? {
+                                    ...ep,
+                                    queryParams: {
+                                        gn_code: result.locationCode,
+                                        level: 2
+                                    }
                                 }
                                 : ep
                         ))
@@ -110,27 +110,35 @@ const ApiStatus = () => {
     }, [])
 
     // Function to get auth token from login endpoint
+    // In the getAuthToken function, update the request body:
     const getAuthToken = async (): Promise<string | null> => {
         try {
+            // Get WBB password from sessionStorage if available
+            const wbbPassword = sessionStorage.getItem('wbbPassword');
+            const credentials = userCredentials ? {
+                username: userCredentials.username,
+                password: wbbPassword || userCredentials.password // Use WBB password first
+            } : {};
+
             const response = await fetch('/api/get-auth-token', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(userCredentials || {})
-            })
+                body: JSON.stringify(credentials)
+            });
 
             if (response.ok) {
-                const result = await response.json()
+                const result = await response.json();
                 if (result.success && result.accessToken) {
-                    setAuthToken(result.accessToken)
-                    return result.accessToken
+                    setAuthToken(result.accessToken);
+                    return result.accessToken;
                 }
             }
-            return null
+            return null;
         } catch (error) {
-            console.error('Failed to get auth token:', error)
-            return null
+            console.error('Failed to get auth token:', error);
+            return null;
         }
     }
 
@@ -476,7 +484,7 @@ const ApiStatus = () => {
                                     <p className={`text-xs sm:text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} mb-3 break-all`}>
                                         {endpoint.url}
                                     </p>
-                                    
+
                                     {/* Show current payload/query params */}
                                     {(endpoint.testPayload || endpoint.queryParams) && (
                                         <div className={`mb-3 p-2 rounded text-xs ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`}>
@@ -488,7 +496,7 @@ const ApiStatus = () => {
                                             </pre>
                                         </div>
                                     )}
-                                    
+
                                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-xs sm:text-sm">
                                         <div>
                                             <span className={`block font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>

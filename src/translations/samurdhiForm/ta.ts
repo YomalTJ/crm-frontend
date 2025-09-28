@@ -213,6 +213,8 @@ export const translations = {
 
         livelihood: 'வாழ்வாதாரம்',
         selectLivelihood: 'வாழ்வாதாரத்தைத் தேர்ந்தெடுக்கவும்',
-        selectProjectType: 'திட்ட வகையைத் தேர்ந்தெடுக்கவும்'
+        selectProjectType: 'திட்ட வகையைத் தேர்ந்தெடுக்கவும்',
+
+        householdSelectionNote: "தயவு செய்து குடும்பத்தைத் தேர்ந்தெடுக்கவும்"
     }
 };

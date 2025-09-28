@@ -2,8 +2,8 @@
 
 import { useTheme } from '@/context/ThemeContext'
 import React, { useState, useEffect } from 'react'
-import { Search, Plus, Edit, Filter, ChevronLeft, ChevronRight } from 'lucide-react'
-import { Beneficiary, BeneficiaryFilters, getBeneficiaries } from '@/services/benficiaryService'
+import { Plus, Edit, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Beneficiary, getBeneficiaries } from '@/services/benficiaryService'
 import { useRouter } from 'next/navigation'
 
 const ViewBeneficiaries = () => {
@@ -16,43 +16,20 @@ const ViewBeneficiaries = () => {
   const [totalRecords, setTotalRecords] = useState(0)
   const router = useRouter()
 
-  // Filter states
-  const [filters, setFilters] = useState<BeneficiaryFilters>({
-    page: 1,
-    limit: 10
-  })
-  const [searchTerm, setSearchTerm] = useState('')
-  const [showFilters, setShowFilters] = useState(false)
-  const [mainProgramFilter, setMainProgramFilter] = useState<'NP' | 'ADB' | 'WB' | ''>('');
-  const [fromDate, setFromDate] = useState('')
-  const [toDate, setToDate] = useState('')
+  const limit = 10
 
   const fetchBeneficiaries = async () => {
     setLoading(true)
     setError(null)
     try {
-      // First, get all data without mainProgram filter (since backend ignores it)
       const response = await getBeneficiaries({
-        page: filters.page,
-        limit: filters.limit,
-        search: filters.search,
-        fromDate: filters.fromDate,
-        toDate: filters.toDate,
-        // Don't send mainProgram to backend since it's not working
+        page: currentPage,
+        limit: limit
       })
 
-      // Client-side filtering for mainProgram
-      let filteredData = response.data;
-
-      if (filters.mainProgram) {
-        filteredData = filteredData.filter(beneficiary =>
-          beneficiary.mainProgram === filters.mainProgram
-        )
-      }
-
-      setBeneficiaries(filteredData)
-      setTotalPages(Math.ceil(filteredData.length / (filters.limit || 10)))
-      setTotalRecords(filteredData.length)
+      setBeneficiaries(response.data)
+      setTotalPages(response.meta.last_page)
+      setTotalRecords(response.meta.total)
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch beneficiaries')
@@ -63,65 +40,23 @@ const ViewBeneficiaries = () => {
 
   useEffect(() => {
     fetchBeneficiaries()
-  }, [filters])
-
-  const handleSearch = () => {
-    setFilters(prev => ({
-      ...prev,
-      page: 1,
-      search: searchTerm.trim() || undefined,
-      mainProgram: undefined,
-      fromDate: undefined,
-      toDate: undefined
-    }));
-  }
-
-  const handleFilterApply = () => {
-    setFilters(prev => ({
-      ...prev,
-      page: 1,
-      mainProgram: mainProgramFilter || undefined,
-      fromDate: fromDate || undefined,
-      toDate: toDate || undefined,
-      search: undefined
-    }));
-    setShowFilters(false);
-  }
-
-  const handleClearFilters = () => {
-    setSearchTerm('')
-    setMainProgramFilter('')
-    setFromDate('')
-    setToDate('')
-    setFilters({ page: 1, limit: 10 })
-    setShowFilters(false)
-  }
+  }, [currentPage])
 
   const handlePageChange = (page: number) => {
-    setFilters(prev => ({ ...prev, page }))
-    setCurrentPage(page)
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page)
+    }
   }
 
   const handleEdit = (beneficiary: Beneficiary) => {
     const identifier = beneficiary.nic || beneficiary.aswasumaHouseholdNo
-
     if (identifier) {
       router.push(`/dashboard/gn-level/view-benficiaries/edit-data/${encodeURIComponent(identifier)}`)
-    } else {
-      // toast.error('No valid identifier found for this beneficiary')
     }
   }
 
   const handleAddNew = () => {
     router.push("/dashboard/gn-level/form")
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
   }
 
   const getProgramBadgeColor = (program: string) => {
@@ -150,8 +85,9 @@ const ViewBeneficiaries = () => {
           onClick={() => handlePageChange(i)}
           className={`px-3 py-1 mx-1 rounded ${i === currentPage
             ? 'bg-blue-500 text-white'
-            : `${theme === 'dark' ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`
-            }`}
+            : `${theme === 'dark'
+              ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}`}
         >
           {i}
         </button>
@@ -165,8 +101,9 @@ const ViewBeneficiaries = () => {
           disabled={currentPage === 1}
           className={`px-3 py-1 mx-1 rounded flex items-center ${currentPage === 1
             ? 'opacity-50 cursor-not-allowed'
-            : `${theme === 'dark' ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`
-            }`}
+            : `${theme === 'dark'
+              ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}`}
         >
           <ChevronLeft size={16} />
         </button>
@@ -176,8 +113,9 @@ const ViewBeneficiaries = () => {
           disabled={currentPage === totalPages}
           className={`px-3 py-1 mx-1 rounded flex items-center ${currentPage === totalPages
             ? 'opacity-50 cursor-not-allowed'
-            : `${theme === 'dark' ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`
-            }`}
+            : `${theme === 'dark'
+              ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}`}
         >
           <ChevronRight size={16} />
         </button>
@@ -189,133 +127,17 @@ const ViewBeneficiaries = () => {
     <div className={`p-6 ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'} min-h-screen`}>
       <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm`}>
         {/* Header */}
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className={`text-2xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
-              View All Beneficiaries
-            </h1>
-            <button
-              onClick={handleAddNew}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors"
-            >
-              <Plus size={20} />
-              Add New Beneficiary
-            </button>
-          </div>
-
-          {/* Search and Filters */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                <input
-                  type="text"
-                  placeholder="Search by name, NIC, or phone..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  className={`w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === 'dark'
-                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                    }`}
-                />
-              </div>
-              <button
-                onClick={handleSearch}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors"
-              >
-                Search
-              </button>
-            </div>
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`px-4 py-2 rounded-md flex items-center gap-2 transition-colors ${theme === 'dark'
-                ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                }`}
-            >
-              <Filter size={20} />
-              Filters
-            </button>
-          </div>
-
-          {/* Advanced Filters */}
-          {showFilters && (
-            <div className={`mt-4 p-4 border rounded-md ${theme === 'dark' ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-gray-50'
-              }`}>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                    Main Program
-                  </label>
-                  <select
-                    value={mainProgramFilter}
-                    onChange={(e) => setMainProgramFilter(e.target.value as 'NP' | 'ADB' | 'WB' | '')}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === 'dark'
-                      ? 'bg-gray-600 border-gray-500 text-white'
-                      : 'bg-white border-gray-300 text-gray-900'
-                      }`}
-                  >
-                    <option value="">All Programs</option>
-                    <option value="NP">NP</option>
-                    <option value="ADB">ADB</option>
-                    <option value="WB">WB</option>
-                  </select>
-                </div>
-
-                {/* Add date filters if needed */}
-                <div>
-                  <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                    From Date
-                  </label>
-                  <input
-                    type="date"
-                    value={fromDate}
-                    onChange={(e) => setFromDate(e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === 'dark'
-                      ? 'bg-gray-600 border-gray-500 text-white'
-                      : 'bg-white border-gray-300 text-gray-900'
-                      }`}
-                  />
-                </div>
-
-                <div>
-                  <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                    To Date
-                  </label>
-                  <input
-                    type="date"
-                    value={toDate}
-                    onChange={(e) => setToDate(e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === 'dark'
-                      ? 'bg-gray-600 border-gray-500 text-white'
-                      : 'bg-white border-gray-300 text-gray-900'
-                      }`}
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2 mt-4">
-                <button
-                  onClick={handleFilterApply}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors"
-                >
-                  Apply Filters
-                </button>
-                <button
-                  onClick={handleClearFilters}
-                  className={`px-4 py-2 rounded-md transition-colors ${theme === 'dark'
-                    ? 'bg-gray-600 hover:bg-gray-500 text-gray-300'
-                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                    }`}
-                >
-                  Clear All
-                </button>
-              </div>
-            </div>
-          )}
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+          <h1 className={`text-2xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
+            View All Beneficiaries
+          </h1>
+          <button
+            onClick={handleAddNew}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors"
+          >
+            <Plus size={20} />
+            Add New Beneficiary
+          </button>
         </div>
 
         {/* Content */}
@@ -370,9 +192,6 @@ const ViewBeneficiaries = () => {
                       <th className={`text-left py-3 px-4 font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                         Program
                       </th>
-                      <th className={`text-left py-3 px-4 font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Created
-                      </th>
                       <th className={`text-center py-3 px-4 font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                         Actions
                       </th>
@@ -382,7 +201,9 @@ const ViewBeneficiaries = () => {
                     {beneficiaries.map((beneficiary) => (
                       <tr
                         key={beneficiary.id}
-                        className={`border-b ${theme === 'dark' ? 'border-gray-700 hover:bg-gray-700' : 'border-gray-100 hover:bg-gray-50'} transition-colors`}
+                        className={`border-b ${theme === 'dark'
+                          ? 'border-gray-700 hover:bg-gray-700'
+                          : 'border-gray-100 hover:bg-gray-50'} transition-colors`}
                       >
                         <td className={`py-3 px-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                           <div>
@@ -395,9 +216,7 @@ const ViewBeneficiaries = () => {
                           </div>
                         </td>
                         <td className={`py-3 px-4 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                          <div className="text-sm">
-                            <div>{beneficiary.phone}</div>
-                          </div>
+                          <div className="text-sm">{beneficiary.mobilePhone}</div>
                         </td>
                         <td className={`py-3 px-4 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
                           <div className="text-sm max-w-xs truncate" title={beneficiary.address}>
@@ -415,20 +234,13 @@ const ViewBeneficiaries = () => {
                             {beneficiary.mainProgram}
                           </span>
                         </td>
-                        <td className={`py-3 px-4 text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                          <div>{formatDate(beneficiary.createdAt)}</div>
-                          <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                            by {beneficiary.createdBy}
-                          </div>
-                        </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center justify-center gap-2">
                             <button
                               onClick={() => handleEdit(beneficiary)}
                               className={`p-2 rounded-md transition-colors ${theme === 'dark'
                                 ? 'text-blue-400 hover:bg-gray-600'
-                                : 'text-blue-600 hover:bg-blue-50'
-                                }`}
+                                : 'text-blue-600 hover:bg-blue-50'}`}
                               title="Edit beneficiary"
                             >
                               <Edit size={16} />

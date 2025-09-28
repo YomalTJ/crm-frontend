@@ -18,7 +18,7 @@ export interface Beneficiary {
     id: string;
     beneficiaryName: string;
     nic: string | null;
-    phone: string;
+    mobilePhone: string;
     address: string;
     district: string;
     ds: string;
