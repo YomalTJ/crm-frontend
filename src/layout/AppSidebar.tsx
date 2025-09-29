@@ -7,7 +7,6 @@ import { useSidebar } from "../context/SidebarContext";
 import {
   BoltIcon,
   ChevronDownIcon,
-  DocsIcon,
   DollarLineIcon,
   EyeIcon,
   GroupIcon,
@@ -17,7 +16,12 @@ import {
   PlusIcon,
   TableIcon,
   UserCircleIcon,
-  ShootingStarIcon
+  ShootingStarIcon,
+  BoxCubeIcon,
+  FileIcon,
+  FolderIcon,
+  TaskIcon,
+  UserIcon
 } from "../icons/index";
 import { getCookie } from "@/utils/cookies";
 import { useLanguage } from "@/context/LanguageContext"; // Import the language context
@@ -86,7 +90,7 @@ const getDashboardPath = (userRole: string | null): string => {
 // Define navigation items with translation keys instead of hardcoded text
 const navItems: (NavItem & { translationKey: string })[] = [
   {
-    icon: <PieChartIcon />,
+    icon: <PieChartIcon />, // Dashboard can stay PieChartIcon
     name: "Dashboard",
     translationKey: "sidebar.dashboard",
     path: "", // Will be set dynamically based on user role
@@ -107,14 +111,14 @@ const navItems: (NavItem & { translationKey: string })[] = [
     allowedRoles: ["GN Level User"],
   },
   {
-    icon: <DocsIcon />,
+    icon: <FolderIcon />, // Household Details
     name: "Fetch Household Details",
     translationKey: "sidebar.householdDetails",
     path: "/dashboard/household-details",
     allowedRoles: ["GN Level User"],
   },
   {
-    icon: <GroupIcon />,
+    icon: <GroupIcon />, // Beneficiary Management
     name: "Beneficiary Management",
     translationKey: "sidebar.beneficiaryManagement",
     allowedRoles: ["GN Level User"],
@@ -134,7 +138,7 @@ const navItems: (NavItem & { translationKey: string })[] = [
     ],
   },
   {
-    icon: <PieChartIcon />,
+    icon: <TableIcon />, // Reports
     name: "Reports",
     translationKey: "sidebar.reports",
     allowedRoles: [
@@ -146,68 +150,32 @@ const navItems: (NavItem & { translationKey: string })[] = [
     ],
     subItems: [
       {
-        icon: <TableIcon />,
+        icon: <ListIcon />,
         name: "Count Reports",
         translationKey: "sidebar.countReports",
         subSubItems: [
-          {
-            name: "Beneficiaries Count",
-            translationKey: "sidebar.beneficiariesCount",
-            path: "/dashboard/reports/count/beneficiaries",
-          },
-          {
-            name: "Way of Graduation Count",
-            translationKey: "sidebar.wayOfGraduationCount",
-            path: "/dashboard/reports/count/way-of-graduation",
-          },
-          {
-            name: "Area types Count",
-            translationKey: "sidebar.areaTypes",
-            path: "/dashboard/reports/count/area-types",
-          },
-          {
-            name: "Grant Utilization Count",
-            translationKey: "sidebar.grantUtilization",
-            path: "/dashboard/reports/count/grant-utilization",
-          },
+          { name: "Beneficiaries Count", translationKey: "sidebar.beneficiariesCount", path: "/dashboard/reports/count/beneficiaries" },
+          { name: "Way of Graduation Count", translationKey: "sidebar.wayOfGraduationCount", path: "/dashboard/reports/count/way-of-graduation" },
+          { name: "Area types Count", translationKey: "sidebar.areaTypes", path: "/dashboard/reports/count/area-types" },
+          { name: "Grant Utilization Count", translationKey: "sidebar.grantUtilization", path: "/dashboard/reports/count/grant-utilization" },
         ],
       },
       {
-        icon: <ListIcon />,
+        icon: <FileIcon />,
         name: "Detail Reports",
         translationKey: "sidebar.detailReports",
         subSubItems: [
-          {
-            name: "Project Details",
-            translationKey: "sidebar.projectDetails",
-            path: "/dashboard/reports/detail/project-detail",
-          },
-          {
-            name: "Owner Demographics",
-            translationKey: "sidebar.ownerDemographics",
-            path: "/dashboard/reports/detail/owner-demographics",
-          },
-          {
-            name: "Family Age Groups",
-            translationKey: "sidebar.familyAgeGroups",
-            path: "/dashboard/reports/detail/family-age-groups",
-          },
-          {
-            name: "Owner Details",
-            translationKey: "sidebar.ownerDetails",
-            path: "/dashboard/reports/detail/owner-details",
-          },
-          {
-            name: "Empowerment Program Refusing Reasons",
-            translationKey: "sidebar.refusalReasons",
-            path: "/dashboard/reports/detail/refusal-reasons",
-          },
+          { name: "Project Details", translationKey: "sidebar.projectDetails", path: "/dashboard/reports/detail/project-detail" },
+          { name: "Owner Demographics", translationKey: "sidebar.ownerDemographics", path: "/dashboard/reports/detail/owner-demographics" },
+          { name: "Family Age Groups", translationKey: "sidebar.familyAgeGroups", path: "/dashboard/reports/detail/family-age-groups" },
+          { name: "Owner Details", translationKey: "sidebar.ownerDetails", path: "/dashboard/reports/detail/owner-details" },
+          { name: "Empowerment Program Refusing Reasons", translationKey: "sidebar.refusalReasons", path: "/dashboard/reports/detail/refusal-reasons" },
         ],
       },
     ],
   },
   {
-    icon: <DollarLineIcon />,
+    icon: <DollarLineIcon />, // Grant Utilization
     name: "Grant Utilization",
     translationKey: "sidebar.grantUtilization",
     path: "/dashboard/grant-utilization",
@@ -228,7 +196,7 @@ const navItems: (NavItem & { translationKey: string })[] = [
     ],
   },
   {
-    icon: <GroupIcon />,
+    icon: <BoxCubeIcon />, // Business Opportunities
     name: "Business Opportunities Management",
     translationKey: "sidebar.businessOpportunityManagement",
     allowedRoles: ["National Level User"],
@@ -248,7 +216,7 @@ const navItems: (NavItem & { translationKey: string })[] = [
     ],
   },
   {
-    icon: <ShootingStarIcon />,
+    icon: <ShootingStarIcon />, // Business Empowerment Plan
     name: "Business Empowerment Plan",
     translationKey: "sidebar.businessEmpowers",
     allowedRoles: ["GN Level User"],
@@ -262,7 +230,7 @@ const navItems: (NavItem & { translationKey: string })[] = [
     ],
   },
   {
-    icon: <ShootingStarIcon />,
+    icon: <TaskIcon />, // Beneficiary Training
     name: "Beneficiary Training",
     translationKey: "sidebar.beneficiaryTraining",
     allowedRoles: ["GN Level User"],
@@ -275,7 +243,15 @@ const navItems: (NavItem & { translationKey: string })[] = [
       },
     ],
   },
+  {
+    icon: <UserIcon />, // Beneficiaries Profiles
+    name: "Beneficiaries Profiles",
+    translationKey: "sidebar.beneficiariesProfiles",
+    path: "/dashboard/national-level/beneficiaries-profiles",
+    allowedRoles: ["National Level User"],
+  },
 ];
+
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered, closeMobileSidebar } = useSidebar();

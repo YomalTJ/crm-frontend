@@ -30,6 +30,7 @@ export const translations = {
         areaTypes: "ප්‍රදේශ වර්ග",
         dashboard: "පුවරුව",
         refusalReasons: "ප්‍රතික්ෂේප හේතු",
+        beneficiariesProfiles: "ලාභගැන්නුවන්ගේ පැතිකඩ"
     }
 
 }

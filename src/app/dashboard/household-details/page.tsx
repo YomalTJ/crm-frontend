@@ -41,6 +41,13 @@ interface StaffLocation {
   }
 }
 
+const levelNames: { [key: number]: string } = {
+  1: 'Poor',
+  2: 'Severely Poor',
+  3: 'Transient',
+  4: 'Vulnerable'
+}
+
 const HouseholdDetails = () => {
   const { theme } = useTheme()
   const [households, setHouseholds] = useState<HouseholdData[]>([])
@@ -70,7 +77,6 @@ const HouseholdDetails = () => {
       setError('Staff location not found in localStorage')
     }
   }, [])
-
 
   const fetchHouseholdData = async () => {
     if (!gnCode) {
@@ -144,6 +150,9 @@ const HouseholdDetails = () => {
       setLoading(false)
     }
   }
+
+  // Get the current level name for display
+  const currentLevelName = levelNames[level] || `Level ${level}`
 
   return (
     <div>
@@ -236,7 +245,7 @@ const HouseholdDetails = () => {
                 : 'bg-blue-600 hover:bg-blue-700'
                 } text-white`}
             >
-              {loading ? 'Fetching...' : `Fetch Level ${level} Data`}
+              {loading ? 'Fetching...' : `Fetch ${currentLevelName} Data`}
             </button>
 
             <button
@@ -270,7 +279,7 @@ const HouseholdDetails = () => {
       {households.length > 0 && (
         <div className="space-y-4">
           <h2 className={`text-xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-            Fetched Household Data - Level {level} ({households.length} households)
+            Fetched Household Data - {currentLevelName} ({households.length} households)
           </h2>
 
           {households.map((household) => (
@@ -304,7 +313,7 @@ const HouseholdDetails = () => {
                   </span>
                   <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                     <p>Single Mother: {household.single_Mother}</p>
-                    <p>Level: {household.level}</p>
+                    <p>Level: {levelNames[household.level] || household.level}</p>
                     <p>Citizens: {household.citizens.length}</p>
                   </div>
                 </div>
