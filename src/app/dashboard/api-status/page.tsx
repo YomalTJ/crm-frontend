@@ -109,16 +109,12 @@ const ApiStatus = () => {
         getLocationCode()
     }, [])
 
-    // Function to get auth token from login endpoint
-    // In the getAuthToken function, update the request body:
+    // In the getAuthToken function, ensure it uses the stored credentials correctly
     const getAuthToken = async (): Promise<string | null> => {
         try {
-            // Get WBB password from sessionStorage if available
-            const wbbPassword = sessionStorage.getItem('wbbPassword');
-            const credentials = userCredentials ? {
-                username: userCredentials.username,
-                password: wbbPassword || userCredentials.password // Use WBB password first
-            } : {};
+            // Get stored credentials which now contain NIC as username
+            const storedCredentials = sessionStorage.getItem('loginCredentials');
+            const credentials = storedCredentials ? JSON.parse(storedCredentials) : {};
 
             const response = await fetch('/api/get-auth-token', {
                 method: 'POST',

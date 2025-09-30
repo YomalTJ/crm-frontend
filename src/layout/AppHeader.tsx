@@ -169,7 +169,6 @@ const AppHeader: React.FC = () => {
             <ThemeToggleButton />
 
            {/* <NotificationDropdown />  */}
-            {/* Notification Menu Area */}
           </div>
           {/* User Area */}
           <UserDropdown /> 

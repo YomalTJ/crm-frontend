@@ -198,6 +198,18 @@ export const validateSamurdhiForm = (
         }
     }
 
+    if (hasEmploymentFacilitation) {
+        if (!formData.childName || formData.childName.trim() === '') {
+            newErrors.childName = 'Child name is required for Employment Facilitation';
+        }
+        if (!formData.childAge || formData.childAge <= 0) {
+            newErrors.childAge = 'Valid child age is required for Employment Facilitation';
+        }
+        if (!formData.job_field_id) {
+            newErrors.job_field_id = 'Job field is required for Employment Facilitation';
+        }
+    }
+
     // Business Opportunities validation
     const hasBusinessOpportunities = formData.empowerment_dimension_id && (() => {
         const dimension = formOptions.empowermentDimensions.find(

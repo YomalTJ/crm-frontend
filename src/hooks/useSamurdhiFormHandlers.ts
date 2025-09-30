@@ -736,6 +736,13 @@ export const useSamurdhiFormHandlers = ({
         }
     };
 
+    const hasEmploymentFacilitation = formData.empowerment_dimension_id && (() => {
+        const dimension = formOptions.empowermentDimensions.find(
+            dim => dim.empowerment_dimension_id === formData.empowerment_dimension_id
+        );
+        return dimension?.nameEnglish.includes("Employment Facilitation");
+    })();
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -806,9 +813,9 @@ export const useSamurdhiFormHandlers = ({
                 livelihood_id: convertEmptyToNull(formData.livelihood_id),
                 project_type_id: convertEmptyToNull(formData.project_type_id),
                 otherProject: convertEmptyToNull(formData.otherProject),
-                childName: convertEmptyToNull(formData.childName),
-                childAge: formData.childAge || 0,
-                childGender: convertEmptyToNull(formData.childGender) || "Male",
+                childName: hasEmploymentFacilitation ? convertEmptyToNull(formData.childName) : null,
+                childAge: hasEmploymentFacilitation ? (formData.childAge || 0) : null,
+                childGender: hasEmploymentFacilitation ? (convertEmptyToNull(formData.childGender) || "Male") : null,
                 job_field_id: convertEmptyToNull(formData.job_field_id),
                 otherJobField: convertEmptyToNull(formData.otherJobField),
                 resource_id: formData.resource_id || [],

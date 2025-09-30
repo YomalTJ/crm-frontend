@@ -57,8 +57,8 @@ export interface SamurdhiFamilyPayload {
   project_type_id: string | null;
   otherProject: string | null;
   childName: string | null;
-  childAge: number;
-  childGender: string;
+  childAge: number | null;
+  childGender: string | null;
   job_field_id: string | null;
   otherJobField: string | null;
   resource_id: string[];

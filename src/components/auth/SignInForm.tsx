@@ -25,20 +25,24 @@ export default function SignInForm() {
       if (result.type === "staff") {
         console.log("Location details:", result.locationDetails);
         console.log("WBB Password:", result.wbbPassword);
+        console.log("NIC:", result.nic); // NIC is now available
 
         if (result.locationDetails) {
           localStorage.setItem('staffLocation', JSON.stringify(result.locationDetails));
         }
 
-        // Store login credentials for API testing - use WBB password instead of regular password
+        // Store login credentials for API testing - use NIC instead of username
         sessionStorage.setItem('loginCredentials', JSON.stringify({
-          username,
-          password: result.wbbPassword || password // Use WBB password if available, otherwise fallback to regular
+          username: result.nic, // Use NIC instead of username
+          password: result.wbbPassword || password // Use WBB password if available
         }));
 
-        // Also store WBB password separately for reference
+        // Also store WBB password and NIC separately for reference
         if (result.wbbPassword) {
           sessionStorage.setItem('wbbPassword', result.wbbPassword);
+        }
+        if (result.nic) {
+          sessionStorage.setItem('userNIC', result.nic);
         }
 
         // Get token from cookie

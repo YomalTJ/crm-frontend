@@ -108,5 +108,8 @@ export const translations = {
         existingDataLoaded: "Existing data loaded successfully",
         updateSuccess: "Grant utilization record updated successfully",
 
+        employmentFacilitationMode: "Employment Facilitation mode: Training section is enabled, Livelihood section is disabled",
+        livelihoodMode: "Livelihood/Self-Employment mode: Livelihood section is enabled, Training section is disabled",
+        bothSectionsMode: "Both sections are available for data entry"
     },
 };

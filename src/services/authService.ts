@@ -19,7 +19,8 @@ export const loginUser = async ({ username, password }: LoginPayload) => {
       success: data.success,
       roleName: data.roleName,
       locationDetails: data.locationDetails,
-      wbbPassword: data.wbbPassword
+      wbbPassword: data.wbbPassword,
+      nic: data.nic // Add NIC to response
     };
 
     throw new Error(data.error || "Login failed");
@@ -32,6 +33,7 @@ export const logoutUser = async () => {
   try {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('staffLocation');
+      sessionStorage.removeItem('userNIC');
     }
 
     const res = await fetch("/api/auth/logout", {

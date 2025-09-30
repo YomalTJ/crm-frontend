@@ -33,6 +33,10 @@ const GrantUtilizationForm = () => {
     const [isUpdateMode, setIsUpdateMode] = useState(false);
     const [existingGrantId, setExistingGrantId] = useState<string | null>(null);
 
+    // NEW: State to track which sections to show/hide
+    const [showLivelihoodSection, setShowLivelihoodSection] = useState(true);
+    const [showTrainingSection, setShowTrainingSection] = useState(true);
+
     // State for form data
     const [formData, setFormData] = useState<GrantUtilizationPayload>({
         hhNumberOrNic: hhNumberOrNic,
@@ -78,6 +82,61 @@ const GrantUtilizationForm = () => {
     const getBorderColor = () => theme === 'dark' ? 'border-gray-600' : 'border-gray-300';
     const getLabelColor = () => theme === 'dark' ? 'text-gray-200' : 'text-gray-700';
 
+    // NEW: Function to determine which sections to show based on beneficiary data
+    const determineSectionsVisibility = (beneficiary: BeneficiaryDetailsResponse) => {
+        // Check if beneficiary has Livelihood/Self-employment data
+        const hasLivelihoodData =
+            beneficiary.selectedLivelihood &&
+            beneficiary.selectedLivelihood.trim() !== '' &&
+            beneficiary.selectedLivelihood !== 'Employment Facilitation';
+
+        // Check if beneficiary has Employment Facilitation data
+        const hasEmploymentFacilitation =
+            beneficiary.selectedLivelihood === 'Employment Facilitation' ||
+            (beneficiary.jobField && beneficiary.jobField.id) ||
+            beneficiary.otherJobField;
+
+        if (hasLivelihoodData) {
+            // Show only Livelihood section, hide Training section
+            setShowLivelihoodSection(true);
+            setShowTrainingSection(false);
+
+            // Clear training-related fields
+            setFormData(prev => ({
+                ...prev,
+                traineeName: null,
+                traineeAge: null,
+                traineeGender: null,
+                courseName: null,
+                institutionName: null,
+                courseFee: null,
+                courseDuration: null,
+                courseStartDate: null,
+                courseEndDate: null
+            }));
+        } else if (hasEmploymentFacilitation) {
+            // Show only Training section, hide Livelihood section
+            setShowLivelihoodSection(false);
+            setShowTrainingSection(true);
+
+            // Clear livelihood-related fields
+            setFormData(prev => ({
+                ...prev,
+                purchaseDate: null,
+                equipmentPurchased: null,
+                animalsPurchased: null,
+                plantsPurchased: null,
+                othersPurchased: null,
+                projectStartDate: null,
+                employmentOpportunities: null
+            }));
+        } else {
+            // Default: show both sections (for new beneficiaries or unclear cases)
+            setShowLivelihoodSection(true);
+            setShowTrainingSection(true);
+        }
+    };
+
     // Load initial data and check if record exists
     useEffect(() => {
         const loadInitialData = async () => {
@@ -88,6 +147,10 @@ const GrantUtilizationForm = () => {
                 // Load beneficiary data
                 const beneficiary = await getBeneficiaryByIdentifier(hhNumberOrNic);
                 setBeneficiaryData(beneficiary);
+
+                // NEW: Determine which sections to show based on beneficiary data
+                determineSectionsVisibility(beneficiary);
+
                 toast.success(t('grantUtilization.beneficiaryLoaded'));
 
                 // Extract location IDs from beneficiary data
@@ -123,7 +186,7 @@ const GrantUtilizationForm = () => {
                         // Pre-fill form with existing data including location IDs
                         setFormData(prev => ({
                             ...prev,
-                            districtIdistrictId: latestGrant.districtId || beneficiary.location?.district?.id?.toString() || null,
+                            districtId: latestGrant.districtId || beneficiary.location?.district?.id?.toString() || null,
                             dsId: latestGrant.dsId || beneficiary.location?.divisionalSecretariat?.id?.toString() || null,
                             zoneId: latestGrant.zoneId || beneficiary.location?.samurdhiBank?.id?.toString() || null,
                             gndId: latestGrant.gndId || beneficiary.location?.gramaNiladhariDivision?.id || null,
@@ -186,19 +249,31 @@ const GrantUtilizationForm = () => {
         }));
     };
 
-    // Validation function
+    // Validation function - UPDATED to conditionally validate sections
     const validateGrantUtilizationForm = (formData: GrantUtilizationPayload): FormErrors => {
         const errors: FormErrors = {};
         if (!formData.amount || formData.amount <= 0) errors.amount = t('grantUtilization.validAmount');
         if (!formData.grantDate) errors.grantDate = t('grantUtilization.grantDateRequired');
 
-        if (formData.courseStartDate && formData.courseEndDate) {
-            const startDate = new Date(formData.courseStartDate);
-            const endDate = new Date(formData.courseEndDate);
-            if (endDate < startDate) errors.courseEndDate = t('grantUtilization.endDateAfterStart');
+        // Only validate training section if it's visible
+        if (showTrainingSection) {
+            if (formData.courseStartDate && formData.courseEndDate) {
+                const startDate = new Date(formData.courseStartDate);
+                const endDate = new Date(formData.courseEndDate);
+                if (endDate < startDate) errors.courseEndDate = t('grantUtilization.endDateAfterStart');
+            }
+
+            if (formData.courseName && (!formData.courseFee || formData.courseFee <= 0)) {
+                errors.courseFee = t('grantUtilization.validCourseFee');
+            }
+
+            if (formData.traineeName && (!formData.traineeAge || formData.traineeAge <= 0)) {
+                errors.traineeAge = t('grantUtilization.validAge');
+            }
         }
 
-        if (formData.purchaseDate) {
+        // Only validate purchase date if livelihood section is visible
+        if (showLivelihoodSection && formData.purchaseDate) {
             const purchaseDate = new Date(formData.purchaseDate);
             const today = new Date();
             if (purchaseDate > today) errors.purchaseDate = t('grantUtilization.purchaseDateFuture');
@@ -220,18 +295,10 @@ const GrantUtilizationForm = () => {
             errors.samurdiBankLoan = t('grantUtilization.positiveAmount');
         }
 
-        if (formData.courseName && (!formData.courseFee || formData.courseFee <= 0)) {
-            errors.courseFee = t('grantUtilization.validCourseFee');
-        }
-
-        if (formData.traineeName && (!formData.traineeAge || formData.traineeAge <= 0)) {
-            errors.traineeAge = t('grantUtilization.validAge');
-        }
-
         return errors;
     };
 
-    // Handle form submission - UPDATED VERSION
+    // Handle form submission
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -249,14 +316,41 @@ const GrantUtilizationForm = () => {
             setSubmitting(true);
             setError(null);
 
+            // Prepare final data - ensure hidden sections have null values
+            const finalFormData = { ...formData };
+
+            // If livelihood section is hidden, clear livelihood fields
+            if (!showLivelihoodSection) {
+                finalFormData.purchaseDate = null;
+                finalFormData.equipmentPurchased = null;
+                finalFormData.animalsPurchased = null;
+                finalFormData.plantsPurchased = null;
+                finalFormData.othersPurchased = null;
+                finalFormData.projectStartDate = null;
+                finalFormData.employmentOpportunities = null;
+            }
+
+            // If training section is hidden, clear training fields
+            if (!showTrainingSection) {
+                finalFormData.traineeName = null;
+                finalFormData.traineeAge = null;
+                finalFormData.traineeGender = null;
+                finalFormData.courseName = null;
+                finalFormData.institutionName = null;
+                finalFormData.courseFee = null;
+                finalFormData.courseDuration = null;
+                finalFormData.courseStartDate = null;
+                finalFormData.courseEndDate = null;
+            }
+
             if (isUpdateMode && existingGrantId) {
                 // Update existing record
-                await updateGrantUtilization(existingGrantId, formData);
+                await updateGrantUtilization(existingGrantId, finalFormData);
                 toast.success(t('grantUtilization.updateSuccess'));
             } else {
                 // Create new record
                 console.log('Creating new grant utilization');
-                await createGrantUtilization(formData);
+                await createGrantUtilization(finalFormData);
                 toast.success(t('grantUtilization.createSuccess'));
             }
 
@@ -378,6 +472,18 @@ const GrantUtilizationForm = () => {
                         />
                     )}
 
+                    {/* NEW: Display section visibility info */}
+                    <div className={`mt-4 p-3 rounded-md ${theme === 'dark' ? 'bg-blue-900/20 border border-blue-700' : 'bg-blue-50 border border-blue-200'}`}>
+                        <p className={`text-sm ${theme === 'dark' ? 'text-blue-200' : 'text-blue-700'}`}>
+                            {!showLivelihoodSection && showTrainingSection &&
+                                t('grantUtilization.employmentFacilitationMode')}
+                            {showLivelihoodSection && !showTrainingSection &&
+                                t('grantUtilization.livelihoodMode')}
+                            {showLivelihoodSection && showTrainingSection &&
+                                t('grantUtilization.bothSectionsMode')}
+                        </p>
+                    </div>
+
                     {error && (
                         <div className={`bg-red-50 dark:bg-red-900/20 p-4 rounded-lg mb-4 ${getBorderColor()} border border-red-300 dark:border-red-700`}>
                             <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
@@ -417,29 +523,35 @@ const GrantUtilizationForm = () => {
                         getLabelColor={getLabelColor}
                     />
 
-                    <LivelihoodSection
-                        formData={formData}
-                        errors={errors}
-                        handleInputChange={handleInputChange}
-                        theme={theme}
-                        t={t}
-                        getBorderColor={getBorderColor}
-                        getInputBgColor={getInputBgColor}
-                        getLabelColor={getLabelColor}
-                        CustomDatePicker={CustomDatePicker}
-                    />
+                    {/* Conditionally render LivelihoodSection */}
+                    {showLivelihoodSection && (
+                        <LivelihoodSection
+                            formData={formData}
+                            errors={errors}
+                            handleInputChange={handleInputChange}
+                            theme={theme}
+                            t={t}
+                            getBorderColor={getBorderColor}
+                            getInputBgColor={getInputBgColor}
+                            getLabelColor={getLabelColor}
+                            CustomDatePicker={CustomDatePicker}
+                        />
+                    )}
 
-                    <TrainingSection
-                        formData={formData}
-                        errors={errors}
-                        handleInputChange={handleInputChange}
-                        theme={theme}
-                        t={t}
-                        getBorderColor={getBorderColor}
-                        getInputBgColor={getInputBgColor}
-                        getLabelColor={getLabelColor}
-                        CustomDatePicker={CustomDatePicker}
-                    />
+                    {/* Conditionally render TrainingSection */}
+                    {showTrainingSection && (
+                        <TrainingSection
+                            formData={formData}
+                            errors={errors}
+                            handleInputChange={handleInputChange}
+                            theme={theme}
+                            t={t}
+                            getBorderColor={getBorderColor}
+                            getInputBgColor={getInputBgColor}
+                            getLabelColor={getLabelColor}
+                            CustomDatePicker={CustomDatePicker}
+                        />
+                    )}
 
                     <div className="flex flex-col sm:flex-row gap-4 justify-end pt-6 border-t border-gray-200 dark:border-gray-600">
                         <button

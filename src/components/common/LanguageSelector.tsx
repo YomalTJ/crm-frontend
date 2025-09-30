@@ -87,7 +87,7 @@ export const LanguageSelector: React.FC = () => {
           className={`absolute mt-2 w-48 rounded-lg shadow-lg border z-50 ${theme === 'dark'
             ? 'bg-gray-800 border-gray-600'
             : 'bg-white border-gray-300'
-            } right-0`}
+            } lg:right-0`}
           role="menu"
           aria-orientation="vertical"
           aria-labelledby="language-selector-button"
