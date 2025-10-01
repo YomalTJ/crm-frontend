@@ -32,6 +32,27 @@ const WayOfGraduationCountReports = () => {
   // Filter states
   const [filters, setFilters] = useState<EmpowermentDimensionCountParams>({})
 
+  // Get user's default location filters based on accessible locations
+  const getUserDefaultLocation = (locations: AccessibleLocations): EmpowermentDimensionCountParams => {
+    const defaultFilters: EmpowermentDimensionCountParams = {};
+
+    // If user has access to only one location at each level, use that as default
+    if (locations.districts.length === 1) {
+      defaultFilters.district_id = locations.districts[0].district_id.toString();
+    }
+    if (locations.dss.length === 1) {
+      defaultFilters.ds_id = locations.dss[0].ds_id.toString();
+    }
+    if (locations.zones.length === 1) {
+      defaultFilters.zone_id = locations.zones[0].zone_id.toString();
+    }
+    if (locations.gndDivisions.length === 1) {
+      defaultFilters.gnd_id = locations.gndDivisions[0].gnd_id;
+    }
+
+    return defaultFilters;
+  };
+
   // Load initial data
   useEffect(() => {
     const loadInitialData = async () => {
@@ -43,6 +64,10 @@ const WayOfGraduationCountReports = () => {
         ])
         setAccessibleLocations(locations)
         setEmpowermentDimensions(dimensions)
+
+        // Set initial filters based on user's accessible locations
+        const defaultFilters = getUserDefaultLocation(locations)
+        setFilters(defaultFilters)
       } catch (err) {
         setError('Failed to load initial data')
         console.error('Error loading initial data:', err)
@@ -108,7 +133,13 @@ const WayOfGraduationCountReports = () => {
   };
 
   const clearFilters = () => {
-    setFilters({})
+    // Instead of clearing all filters, reset to user's default location
+    if (accessibleLocations) {
+      const defaultFilters = getUserDefaultLocation(accessibleLocations)
+      setFilters(defaultFilters)
+    } else {
+      setFilters({})
+    }
   }
 
   const exportData = () => {
