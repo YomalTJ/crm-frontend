@@ -12,7 +12,7 @@ import React, { useState, useEffect, useRef } from "react";
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
 
-  const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
+  const { isMobileOpen, toggleSidebar, toggleMobileSidebar, closeMobileSidebar } = useSidebar();
 
   const handleToggle = () => {
     if (window.innerWidth >= 1024) {
@@ -24,7 +24,19 @@ const AppHeader: React.FC = () => {
 
   const toggleApplicationMenu = () => {
     setApplicationMenuOpen(!isApplicationMenuOpen);
+    // Close mobile sidebar when opening application menu on mobile
+    if (window.innerWidth < 1024 && !isApplicationMenuOpen) {
+      closeMobileSidebar();
+    }
   };
+
+  useEffect(() => {
+    if (isMobileOpen && isApplicationMenuOpen) {
+      setApplicationMenuOpen(false);
+    }
+  }, [isMobileOpen, isApplicationMenuOpen]);
+
+  // Rest of your existing code remains the same...
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -86,14 +98,14 @@ const AppHeader: React.FC = () => {
 
           <Link href="/" className="lg:hidden">
             <Image
-              width={154}
+              width={120}
               height={32}
               className="dark:hidden"
               src="/images/logo/samurdi_logo.jpg"
               alt="Logo"
             />
             <Image
-              width={154}
+              width={120}
               height={32}
               className="hidden dark:block"
               src="/images/logo/samurdi_logo.jpg"
@@ -157,22 +169,21 @@ const AppHeader: React.FC = () => {
           </div>
         </div>
         <div
-          className={`${
-            isApplicationMenuOpen ? "flex" : "hidden"
-          } items-center justify-between w-full gap-4 px-5 py-4 lg:flex shadow-theme-md lg:justify-end lg:px-0 lg:shadow-none`}
+          className={`${isApplicationMenuOpen ? "flex" : "hidden"
+            } items-center justify-between w-full gap-4 px-5 py-4 lg:flex shadow-theme-md lg:justify-end lg:px-0 lg:shadow-none`}
         >
           <div className="flex items-center gap-2 2xsm:gap-3">
             {/* Language Selector */}
             <LanguageSelector />
-            
+
             {/* Dark Mode Toggler */}
             <ThemeToggleButton />
 
-           {/* <NotificationDropdown />  */}
+            {/* <NotificationDropdown />  */}
           </div>
           {/* User Area */}
-          <UserDropdown /> 
-    
+          <UserDropdown />
+
         </div>
       </div>
     </header>

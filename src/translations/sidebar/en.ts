@@ -30,7 +30,8 @@ export const translations = {
         areaTypes: "Area Types",
         dashboard: "Dashboard",
         refusalReasons: "Refusal Reasons",
-        beneficiariesProfiles: "Beneficiaries' Profiles"
+        beneficiariesProfiles: "Beneficiaries' Profiles",
+        departmentUsers: "Department Users"
     }
 
 }

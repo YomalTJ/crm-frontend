@@ -30,7 +30,8 @@ export const translations = {
         areaTypes: "பகுதி வகைகள்",
         dashboard: "தகவல் பலகை",
         refusalReasons: "மறுப்பின் காரணங்கள்",
-        beneficiariesProfiles: "பயனாளிகளின் சுயவிவரங்கள்"
+        beneficiariesProfiles: "பயனாளிகளின் சுயவிவரங்கள்",
+        departmentUsers: "துறை பயனர்கள்"
     }
 
 }

@@ -17,7 +17,7 @@ export default function AuthLayout({
           <div className="lg:hidden w-full py-6 flex items-center justify-center">
             <div className="flex flex-col items-center max-w-xs">
               <Image
-                width={231}
+                width={180}
                 height={48}
                 src="/images/logo/samurdi_logo.jpg"
                 alt="Logo"

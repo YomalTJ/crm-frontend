@@ -250,6 +250,13 @@ const navItems: (NavItem & { translationKey: string })[] = [
     path: "/dashboard/national-level/beneficiaries-profiles",
     allowedRoles: ["National Level User"],
   },
+  {
+    icon: <UserIcon />,
+    name: "Department Users",
+    translationKey: "sidebar.departmentUsers",
+    path: "/dashboard/district-level/department-users",
+    allowedRoles: ["District Level User"],
+  },
 ];
 
 
@@ -303,7 +310,7 @@ const AppSidebar: React.FC = () => {
 
   const handleNavigationClick = () => {
     // Close sidebar on mobile after navigation
-    if (window.innerWidth < 768) {
+    if (window.innerWidth < 1024) {
       closeMobileSidebar();
     }
   };
@@ -438,8 +445,27 @@ const AppSidebar: React.FC = () => {
           [parentIndex]: subMenuRefs.current[parentIndex]?.scrollHeight || 0,
         }));
       }
-    }, 300); // Wait for animation to complete
+    }, 300);
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isMobileOpen && window.innerWidth < 1024) {
+        const sidebar = document.querySelector('aside');
+        const headerToggle = document.querySelector('header button[aria-label="Toggle Sidebar"]');
+
+        if (sidebar && !sidebar.contains(event.target as Node) &&
+          headerToggle && !headerToggle.contains(event.target as Node)) {
+          closeMobileSidebar();
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMobileOpen, closeMobileSidebar]);
 
   const renderMenuItems = (items: NavItem[]) => (
     <ul className="flex flex-col gap-4">

@@ -124,20 +124,41 @@ const ViewBeneficiaries = () => {
   }
 
   return (
-    <div className={`p-6 ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'} min-h-screen`}>
+    <div className={`px-0 py-2 ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'} min-h-screen`}>
       <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm`}>
         {/* Header */}
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex flex-col gap-4 lg:gap-0 lg:flex-row justify-between items-center">
-          <h1 className={`text-2xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
-            View All Beneficiaries
-          </h1>
-          <button
-            onClick={handleAddNew}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors w-full lg:w-auto justify-center"
-          >
-            <Plus size={20} />
-            Add New Beneficiary
-          </button>
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="block lg:hidden">
+            <div className="flex justify-between items-center mb-4">
+              <div className="w-6"></div>
+              <button
+                onClick={handleAddNew}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors justify-center"
+              >
+                <Plus size={20} />
+                Add New
+              </button>
+            </div>
+            <div className="flex">
+              <h1 className={`text-2xl font-semibold text-center ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
+                View All Beneficiaries
+              </h1>
+            </div>
+          </div>
+
+          {/* Desktop Layout - Original horizontal layout */}
+          <div className="hidden lg:flex flex-col gap-4 lg:gap-0 lg:flex-row justify-between items-center">
+            <h1 className={`text-2xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
+              View All Beneficiaries
+            </h1>
+            <button
+              onClick={handleAddNew}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors w-full lg:w-auto justify-center"
+            >
+              <Plus size={20} />
+              Add New Beneficiary
+            </button>
+          </div>
         </div>
 
         {/* Content */}
