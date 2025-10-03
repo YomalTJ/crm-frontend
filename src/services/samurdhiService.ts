@@ -63,7 +63,7 @@ export interface SamurdhiFamilyPayload {
   otherJobField: string | null;
   resource_id: string[];
   monthlySaving: boolean;
-  savingAmount: number;
+  savingAmount: number | null;
   health_indicator_id: string[];
   domestic_dynamic_id: string[];
   community_participation_id: string[];

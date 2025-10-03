@@ -1076,48 +1076,56 @@ export const BenefitsFields: React.FC<Pick<FormFieldProps, 'formData' | 'formOpt
     handlers,
     householdLoadedFields,
     t
-}) => (
-    <>
-        <div>
-            <Label>{t('samurdhiForm.samurdhiSubsidy')}</Label>
-            <div className="relative">
-                <Select
-                    options={formOptions.subsidyOptions.map(option => ({
-                        value: option.subsisdy_id,
-                        label: formatAmount(option.amount)
-                    }))}
-                    placeholder={t('samurdhiForm.selectSubsidyAmount')}
-                    onChange={(value) => handlers.handleSelectChange('subsisdy_id', value)}
-                    className="dark:bg-dark-900"
-                    value={formData.subsisdy_id || ""}
-                />
-                <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
-                    <ChevronDownIcon />
-                </span>
-            </div>
-        </div>
+}) => {
+    // Hide Samurdhi subsidy for Aswasuma beneficiaries
+    const isAswasumaBeneficiary = formData.beneficiary_type_id === 'a8625875-41a4-47cf-9cb3-d2d185b7722d';
 
-        <div>
-            <Label>{t('samurdhiForm.aswasumaCategory')}</Label>
-            <div className="relative">
-                <Select
-                    options={formOptions.aswasumaCategories.map(category => ({
-                        value: category.aswesuma_cat_id,
-                        label: formatCategoryLabel(category)
-                    }))}
-                    placeholder={t('samurdhiForm.selectAswasumaCategory')}
-                    onChange={(value) => handlers.handleSelectChange('aswesuma_cat_id', value)}
-                    className="dark:bg-dark-900"
-                    value={formData.aswesuma_cat_id || ""}
-                    disabled={householdLoadedFields.has('aswesuma_cat_id')}
-                />
-                <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
-                    <ChevronDownIcon />
-                </span>
+    return (
+        <>
+            {/* Hide Samurdhi subsidy for Aswasuma beneficiaries */}
+            {!isAswasumaBeneficiary && (
+                <div>
+                    <Label>{t('samurdhiForm.samurdhiSubsidy')}</Label>
+                    <div className="relative">
+                        <Select
+                            options={formOptions.subsidyOptions.map(option => ({
+                                value: option.subsisdy_id,
+                                label: formatAmount(option.amount)
+                            }))}
+                            placeholder={t('samurdhiForm.selectSubsidyAmount')}
+                            onChange={(value) => handlers.handleSelectChange('subsisdy_id', value)}
+                            className="dark:bg-dark-900"
+                            value={formData.subsisdy_id || ""}
+                        />
+                        <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                            <ChevronDownIcon />
+                        </span>
+                    </div>
+                </div>
+            )}
+
+            <div>
+                <Label>{t('samurdhiForm.aswasumaCategory')}</Label>
+                <div className="relative">
+                    <Select
+                        options={formOptions.aswasumaCategories.map(category => ({
+                            value: category.aswesuma_cat_id,
+                            label: formatCategoryLabel(category)
+                        }))}
+                        placeholder={t('samurdhiForm.selectAswasumaCategory')}
+                        onChange={(value) => handlers.handleSelectChange('aswesuma_cat_id', value)}
+                        className="dark:bg-dark-900"
+                        value={formData.aswesuma_cat_id || ""}
+                        disabled={householdLoadedFields.has('aswesuma_cat_id')}
+                    />
+                    <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                        <ChevronDownIcon />
+                    </span>
+                </div>
             </div>
-        </div>
-    </>
-);
+        </>
+    );
+};
 
 // Update EmpowermentField component
 export const EmpowermentField: React.FC<Pick<FormFieldProps, 'formData' | 'formOptions' | 'errors' | 'handlers' | 't'>> = ({
@@ -1438,7 +1446,7 @@ export const MonthlySavingField: React.FC<Pick<FormFieldProps, 'formData' | 'err
                 onChange={() => {
                     handlers.handleRadioChange('monthlySaving', 'false');
                     handlers.handleInputChange({
-                        target: { name: 'savingAmount', value: '0' }
+                        target: { name: 'savingAmount', value: '' }
                     } as React.ChangeEvent<HTMLInputElement>);
                 }}
                 label={t('common.no')}

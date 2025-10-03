@@ -10,7 +10,7 @@ import {
     getProjectTypesByLivelihood,
     checkExistingBeneficiary
 } from '@/services/samurdhiService';
-import { validateSamurdhiForm, convertEmptyToNull, getAswasumaIdByLevel } from '@/utils/formValidation';
+import { validateSamurdhiForm, convertEmptyToNull, getAswasumaIdByLevel, convertEmptyToNullForNumber } from '@/utils/formValidation';
 import toast from 'react-hot-toast';
 import { validateFile } from '@/utils/fileValidation';
 
@@ -280,6 +280,7 @@ export const useSamurdhiFormHandlers = ({
                     female46To60: 0,
                     maleAbove60: 0,
                     femaleAbove60: 0,
+                    subsisdy_id: null,
                     // Clear benefits
                     aswesuma_cat_id: null,
                     // Reset project owner checkbox
@@ -652,8 +653,9 @@ export const useSamurdhiFormHandlers = ({
                 if (primaryCitizen.gender) {
                     loadedFields.add('beneficiaryGender');
                 }
-                if (householdData.household.level) {
+                if (householdData.household.level !== undefined && householdData.household.level !== null) {
                     loadedFields.add('aswesuma_cat_id');
+                    console.log('Added aswesuma_cat_id to loadedFields, level:', householdData.household.level);
                 }
 
                 // Calculate household member counts
@@ -708,6 +710,7 @@ export const useSamurdhiFormHandlers = ({
                 }
 
                 setHouseholdLoadedFields(loadedFields);
+                console.log('Final loadedFields:', Array.from(loadedFields));
             }
         } catch (error: unknown) {
             console.error('Error fetching household details:', error);
@@ -809,22 +812,50 @@ export const useSamurdhiFormHandlers = ({
                 otherOccupation: convertEmptyToNull(formData.otherOccupation),
                 subsisdy_id: convertEmptyToNull(formData.subsisdy_id),
                 aswesuma_cat_id: convertEmptyToNull(formData.aswesuma_cat_id),
-                empowerment_dimension_id: convertEmptyToNull(formData.empowerment_dimension_id),
-                livelihood_id: convertEmptyToNull(formData.livelihood_id),
-                project_type_id: convertEmptyToNull(formData.project_type_id),
-                otherProject: convertEmptyToNull(formData.otherProject),
-                childName: hasEmploymentFacilitation ? convertEmptyToNull(formData.childName) : null,
-                childAge: hasEmploymentFacilitation ? (formData.childAge || 0) : null,
-                childGender: hasEmploymentFacilitation ? (convertEmptyToNull(formData.childGender) || "Male") : null,
-                job_field_id: convertEmptyToNull(formData.job_field_id),
-                otherJobField: convertEmptyToNull(formData.otherJobField),
-                resource_id: formData.resource_id || [],
+                empowerment_dimension_id: (formData.hasConsentedToEmpowerment === true)
+                    ? convertEmptyToNull(formData.empowerment_dimension_id)
+                    : null,
+                livelihood_id: (formData.hasConsentedToEmpowerment === true)
+                    ? convertEmptyToNull(formData.livelihood_id)
+                    : null,
+                project_type_id: (formData.hasConsentedToEmpowerment === true)
+                    ? convertEmptyToNull(formData.project_type_id)
+                    : null,
+                otherProject: (formData.hasConsentedToEmpowerment === true)
+                    ? convertEmptyToNull(formData.otherProject)
+                    : null,
+                childName: (formData.hasConsentedToEmpowerment === true && hasEmploymentFacilitation)
+                    ? convertEmptyToNull(formData.childName)
+                    : null,
+                childAge: (formData.hasConsentedToEmpowerment === true && hasEmploymentFacilitation)
+                    ? convertEmptyToNullForNumber(formData.childAge)
+                    : null,
+                childGender: (formData.hasConsentedToEmpowerment === true && hasEmploymentFacilitation)
+                    ? convertEmptyToNull(formData.childGender)
+                    : null,
+                job_field_id: (formData.hasConsentedToEmpowerment === true)
+                    ? convertEmptyToNull(formData.job_field_id)
+                    : null,
+                otherJobField: (formData.hasConsentedToEmpowerment === true)
+                    ? convertEmptyToNull(formData.otherJobField)
+                    : null,
+                resource_id: (formData.hasConsentedToEmpowerment === true)
+                    ? (formData.resource_id || [])
+                    : [],
                 monthlySaving: formData.monthlySaving,
-                savingAmount: formData.savingAmount || 0,
-                health_indicator_id: formData.health_indicator_id || [],
-                domestic_dynamic_id: formData.domestic_dynamic_id || [],
-                community_participation_id: formData.community_participation_id || [],
-                housing_service_id: formData.housing_service_id || [],
+                savingAmount: formData.monthlySaving ? (formData.savingAmount || 0) : null,
+                health_indicator_id: (formData.hasConsentedToEmpowerment === true)
+                    ? (formData.health_indicator_id || [])
+                    : [],
+                domestic_dynamic_id: (formData.hasConsentedToEmpowerment === true)
+                    ? (formData.domestic_dynamic_id || [])
+                    : [],
+                community_participation_id: (formData.hasConsentedToEmpowerment === true)
+                    ? (formData.community_participation_id || [])
+                    : [],
+                housing_service_id: (formData.hasConsentedToEmpowerment === true)
+                    ? (formData.housing_service_id || [])
+                    : [],
                 commercialBankAccountName: convertEmptyToNull(formData.commercialBankAccountName),
                 commercialBankAccountNumber: convertEmptyToNull(formData.commercialBankAccountNumber),
                 commercialBankName: convertEmptyToNull(formData.commercialBankName),
@@ -848,16 +879,30 @@ export const useSamurdhiFormHandlers = ({
 
             // Add JSON payload
             Object.entries(payload).forEach(([key, value]) => {
+                // Skip null and undefined values entirely
+                if (value === null || value === undefined) {
+                    return;
+                }
+
                 if (Array.isArray(value)) {
                     submitFormData.append(key, JSON.stringify(value));
+                } else if (typeof value === 'number') {
+                    submitFormData.append(key, value.toString());
+                } else if (typeof value === 'boolean') {
+                    submitFormData.append(key, value.toString());
                 } else {
-                    submitFormData.append(key, value?.toString() || '');
+                    submitFormData.append(key, value);
                 }
             });
 
             // Add file if selected
             if (selectedFile) {
                 submitFormData.append('consentLetter', selectedFile);
+            }
+
+            console.log("FormData contents:");
+            for (const pair of submitFormData.entries()) {
+                console.log(pair[0] + ': ' + pair[1]);
             }
 
             let response;

@@ -171,7 +171,7 @@ export const validateSamurdhiForm = (
     }
 
     if (formData.monthlySaving === true) {
-        if (!formData.savingAmount || formData.savingAmount <= 0) {
+        if (formData.savingAmount === null || formData.savingAmount === undefined || formData.savingAmount <= 0) {
             newErrors.savingAmount = 'Please enter a valid saving amount';
         } else if (formData.savingAmount > 1000000) {
             newErrors.savingAmount = 'Saving amount seems too high. Please verify.';
@@ -269,13 +269,31 @@ export const convertEmptyToNull = (value: string | null | undefined): string | n
     return value;
 };
 
+export const convertEmptyToNullNumber = (value: number | null | undefined): number | null => {
+    if (value === undefined || value === null || value === 0) {
+        return null;
+    }
+    return value;
+};
+
 export const getAswasumaIdByLevel = (level: number): string => {
     const levelToIdMap: { [key: number]: string } = {
-        1: '5563333f-1ac4-450f-ae77-aee6907fff6d',
-        2: 'd934f9b8-b849-4195-acac-a421d367eef8',
-        3: '598eed9f-4b0a-457c-98d4-9c70498c8a50',
-        4: '8091882c-a474-4982-91fe-3ba9b5f78200',
+        1: '1',
+        2: '2',
+        3: '3',
+        4: '4',
     };
 
     return levelToIdMap[level] || '';
+};
+
+export const convertEmptyToNullForNumber = (value: number | null | undefined | string): number | null => {
+    if (value === undefined || value === null || value === '' || value === 0) {
+        return null;
+    }
+    if (typeof value === 'string') {
+        const parsed = parseInt(value);
+        return isNaN(parsed) ? null : parsed;
+    }
+    return value;
 };

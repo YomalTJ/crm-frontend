@@ -110,7 +110,7 @@ const createEmptyFormData = (locationData: Partial<{
         otherJobField: null,
         resource_id: [],
         monthlySaving: false,
-        savingAmount: 0,
+        savingAmount: null,
         health_indicator_id: [],
         domestic_dynamic_id: [],
         community_participation_id: [],
