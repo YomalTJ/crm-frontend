@@ -31,7 +31,8 @@ export const translations = {
         dashboard: "Dashboard",
         refusalReasons: "Refusal Reasons",
         beneficiariesProfiles: "Beneficiaries' Profiles",
-        departmentUsers: "Department Users"
+        departmentUsers: "Department Users",
+        bankAccDetails: "Bank Account Details"
     }
 
 }

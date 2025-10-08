@@ -228,9 +228,13 @@ export const useSamurdhiFormHandlers = ({
     const handleSelectChange = (name: string, value: string) => {
         clearError(name);
 
-        let processedValue: string | null;
+        let processedValue: string | number | null;
+
         if (!value || value === '' || value === 'null' || value === 'undefined') {
             processedValue = null;
+        } else if (name === 'samurdhiBankAccountType') {
+            // Convert to number for account type
+            processedValue = parseInt(value);
         } else {
             processedValue = value;
         }
@@ -863,7 +867,12 @@ export const useSamurdhiFormHandlers = ({
                 samurdhiBankAccountName: convertEmptyToNull(formData.samurdhiBankAccountName),
                 samurdhiBankAccountNumber: convertEmptyToNull(formData.samurdhiBankAccountNumber),
                 samurdhiBankName: convertEmptyToNull(formData.samurdhiBankName),
-                samurdhiBankAccountType: convertEmptyToNull(formData.samurdhiBankAccountType),
+                samurdhiBankAccountType:
+                    formData.samurdhiBankAccountType !== null &&
+                    formData.samurdhiBankAccountType !== undefined &&
+                    (typeof formData.samurdhiBankAccountType !== 'string' || formData.samurdhiBankAccountType !== '')
+                        ? Number(formData.samurdhiBankAccountType)
+                        : null,
                 wantsAswesumaBankTransfer: formData.wantsAswesumaBankTransfer,
                 otherBankName: convertEmptyToNull(formData.otherBankName),
                 otherBankBranch: convertEmptyToNull(formData.otherBankBranch),

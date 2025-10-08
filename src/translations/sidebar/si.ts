@@ -31,7 +31,8 @@ export const translations = {
         dashboard: "පුවරුව",
         refusalReasons: "ප්‍රතික්ෂේප හේතු",
         beneficiariesProfiles: "ලාභගැන්නුවන්ගේ පැතිකඩ",
-        departmentUsers: "දෙපාර්තමේන්තු පරිශීලකයන්"
+        departmentUsers: "දෙපාර්තමේන්තු පරිශීලකයන්",
+        bankAccDetails: "බැංකු ගිණුම් විස්තර"
     }
 
 }

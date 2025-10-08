@@ -14,24 +14,31 @@ import { translations as businessEmpowerEn } from './businessEmpowerment/en';
 import { translations as businessEmpowerSi } from './businessEmpowerment/si';
 import { translations as businessEmpowerTa } from './businessEmpowerment/ta';
 
+import { translations as dashboardEn } from './dashboard/en';
+import { translations as dashboardSi } from './dashboard/si';
+import { translations as dashboardTa } from './dashboard/ta';
+
 export const translations = {
     en: {
         ...en,
         ...samurdhiFormEn,
         ...sidebarEn,
-        ...businessEmpowerEn
+        ...businessEmpowerEn,
+        ...dashboardEn
     },
     si: {
         ...si,
         ...samurdhiFormSi,
         ...sidebarSi,
-        ...businessEmpowerSi
+        ...businessEmpowerSi,
+        ...dashboardSi
     },
     ta: {
         ...ta,
         ...samurdhiFormTa,
         ...sidebarTa,
-        ...businessEmpowerTa
+        ...businessEmpowerTa,
+        ...dashboardTa
     }
 };
 
@@ -39,9 +46,11 @@ export type TranslationKey =
     | keyof typeof en
     | keyof typeof en.grantUtilization
     | keyof typeof en.common
-    | keyof typeof businessEmpowerEn.businessEmpower;
+    | keyof typeof businessEmpowerEn.businessEmpower
+    | keyof typeof dashboardEn.dashboard;
 
 export type NestedTranslationKey =
     | keyof typeof en.grantUtilization
     | keyof typeof en.common
-    | keyof typeof businessEmpowerEn.businessEmpower;
+    | keyof typeof businessEmpowerEn.businessEmpower
+    | keyof typeof dashboardEn.dashboard;

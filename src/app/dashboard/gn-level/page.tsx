@@ -2,6 +2,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { useTheme } from '@/context/ThemeContext';
+import { useLanguage } from '@/context/LanguageContext'; // ADD THIS IMPORT
 import BeneficiaryCountTable from '@/components/dashboard/BeneficiaryCountTable';
 import BeneficiaryTypeTable from '@/components/dashboard/BeneficiaryTypeTable';
 import {
@@ -9,16 +10,21 @@ import {
   getBeneficiaryTypeCounts,
   getLocationDisplayName,
   BeneficiaryCountResponseDto,
-  BeneficiaryTypeCountResponseDto
+  BeneficiaryTypeCountResponseDto,
+  EmpowermentDimensionCountResponseDto,
+  getEmpowermentDimensionCounts
 } from '@/services/dashboardService';
+import EmpowermentDimensionTable from '@/components/dashboard/EmpowermentDimensionTable';
 
 const GndOfficerDashboard = () => {
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const [beneficiaryData, setBeneficiaryData] = useState<BeneficiaryCountResponseDto | null>(null);
   const [beneficiaryTypeData, setBeneficiaryTypeData] = useState<BeneficiaryTypeCountResponseDto | null>(null);
   const [locationName, setLocationName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [empowermentData, setEmpowermentData] = useState<EmpowermentDimensionCountResponseDto | null>(null);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -27,25 +33,27 @@ const GndOfficerDashboard = () => {
         setError(null);
 
         // Fetch all data in parallel
-        const [countData, typeData, location] = await Promise.all([
+        const [countData, typeData, location, empowermentData] = await Promise.all([
           getBeneficiaryCountByYear(),
           getBeneficiaryTypeCounts(),
-          getLocationDisplayName()
+          getLocationDisplayName(),
+          getEmpowermentDimensionCounts(),
         ]);
 
         setBeneficiaryData(countData);
         setBeneficiaryTypeData(typeData);
         setLocationName(location);
+        setEmpowermentData(empowermentData)
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
-        setError('Failed to load dashboard data. Please try again.');
+        setError(t('dashboard.failedToLoadData'));
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchDashboardData();
-  }, []);
+  }, [t]);
 
   if (error) {
     return (
@@ -61,7 +69,7 @@ const GndOfficerDashboard = () => {
     <div className="min-h-screen p-6 space-y-6">
       <div className="mb-6">
         <h1 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-          GND Officer Dashboard
+          {t('dashboard.gndOfficerDashboard')}
         </h1>
         <p className={`text-lg mt-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
           {locationName}
@@ -74,7 +82,7 @@ const GndOfficerDashboard = () => {
         {beneficiaryData && (
           <BeneficiaryCountTable
             data={beneficiaryData}
-            title="GND Beneficiary Count by Year"
+            title={t('dashboard.gndBeneficiaryCountByYear')}
             locationDisplayName={locationName}
             isLoading={isLoading}
           />
@@ -84,7 +92,17 @@ const GndOfficerDashboard = () => {
         {beneficiaryTypeData && (
           <BeneficiaryTypeTable
             data={beneficiaryTypeData}
-            title="GND Beneficiary Count by Type"
+            title={t('dashboard.gndBeneficiaryCountByType')}
+            locationDisplayName={locationName}
+            isLoading={isLoading}
+          />
+        )}
+
+        {/* Empowerment Dimension Table */}
+        {empowermentData && (
+          <EmpowermentDimensionTable
+            data={empowermentData}
+            title={t('dashboard.empowermentDimensionCounts')}
             locationDisplayName={locationName}
             isLoading={isLoading}
           />

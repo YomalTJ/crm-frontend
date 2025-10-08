@@ -83,7 +83,7 @@ export interface FormData {
     samurdhiBankAccountName: string | null;
     samurdhiBankAccountNumber: string | null;
     samurdhiBankName: string | null;
-    samurdhiBankAccountType: string | null;
+    samurdhiBankAccountType: number | null;
 
     // NEW - Additional banking fields
     wantsAswesumaBankTransfer: boolean;
@@ -105,6 +105,11 @@ export interface Livelihood {
     sinhala_name: string;
     tamil_name: string;
     english_name: string;
+}
+
+export interface AccountType {
+    samurdhi_bank_account_type_id: number;
+    name: string;
 }
 
 export interface FormOptions {
@@ -146,6 +151,7 @@ export interface FormOptions {
     housingServices: HousingService[];
     beneficiaryStatuses: BeneficiaryStatus[];
     empowermentDimensions: EmpowermentDimension[];
+    accountTypes: AccountType[];
 }
 
 export interface FormState {

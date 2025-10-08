@@ -250,12 +250,19 @@ const navItems: (NavItem & { translationKey: string })[] = [
     path: "/dashboard/national-level/beneficiaries-profiles",
     allowedRoles: ["National Level User"],
   },
+  // {
+  //   icon: <UserIcon />,
+  //   name: "Department Users",
+  //   translationKey: "sidebar.departmentUsers",
+  //   path: "/dashboard/district-level/department-users",
+  //   allowedRoles: ["District Level User"],
+  // },
   {
-    icon: <UserIcon />,
-    name: "Department Users",
-    translationKey: "sidebar.departmentUsers",
-    path: "/dashboard/district-level/department-users",
-    allowedRoles: ["District Level User"],
+    icon: <UserIcon />, // Beneficiaries Profiles
+    name: "Bank Account Details",
+    translationKey: "sidebar.bankAccDetails",
+    path: "/dashboard/national-level/bank-details",
+    allowedRoles: ["National Level User"],
   },
 ];
 

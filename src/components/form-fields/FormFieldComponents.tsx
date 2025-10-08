@@ -1587,9 +1587,10 @@ export const CheckboxSections: React.FC<Pick<FormFieldProps, 'formData' | 'formO
 );
 
 // Update BankingDetailsFields component
-export const BankingDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'handlers' | 't'>> = ({
+export const BankingDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'handlers' | 'formOptions' | 't'>> = ({
     formData,
     handlers,
+    formOptions,
     t
 }) => (
     <div className="space-y-6 pt-6">
@@ -1685,12 +1686,21 @@ export const BankingDetailsFields: React.FC<Pick<FormFieldProps, 'formData' | 'h
 
                 <div>
                     <Label>{t('samurdhiForm.accountType')}</Label>
-                    <Input
-                        type="text"
-                        name="samurdhiBankAccountType"
-                        value={formData.samurdhiBankAccountType || ""}
-                        onChange={handlers.handleInputChange}
-                    />
+                    <div className="relative">
+                        <Select
+                            options={formOptions.accountTypes.map(type => ({
+                                value: type.samurdhi_bank_account_type_id.toString(),
+                                label: type.name
+                            }))}
+                            placeholder={t('samurdhiForm.selectAccountType')}
+                            onChange={(value) => handlers.handleSelectChange('samurdhiBankAccountType', value)}
+                            className="dark:bg-dark-900"
+                            value={formData.samurdhiBankAccountType?.toString() || ''}
+                        />
+                        <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                            <ChevronDownIcon />
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>

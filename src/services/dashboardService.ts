@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use server'
 
 import axiosInstance from "@/lib/axios";
@@ -115,6 +116,44 @@ export interface AccessibleLocations {
         gnd_name: string;
         zone_id?: string;
     }[];
+}
+
+export interface EmpowermentDimensionCountDto {
+    empowerment_dimension_id: string;
+    nameEnglish: string;
+    nameSinhala: string;
+    nameTamil: string;
+    count: number;
+}
+
+export interface EmpowermentDimensionCountResponseDto {
+    counts: EmpowermentDimensionCountDto[];
+    location?: {
+        district?: {
+            district_id: string;
+            district_name: string;
+        };
+        ds?: {
+            ds_id: string;
+            ds_name: string;
+        };
+        zone?: {
+            zone_id: string;
+            zone_name: string;
+        };
+        gnd?: {
+            gnd_id: string;
+            gnd_name: string;
+        };
+    };
+}
+
+export interface EmpowermentDimensionCountFilterDto {
+    district_id?: string;
+    ds_id?: string;
+    zone_id?: string;
+    gnd_id?: string;
+    mainProgram?: 'NP' | 'ADB' | 'WB';
 }
 
 // Decode JWT token to get user details
@@ -326,5 +365,54 @@ export const getBeneficiaryTypeCounts = async (additionalFilters?: Partial<Benef
     } catch (error) {
         console.error('Failed to fetch beneficiary type counts:', error);
         throw new Error('Failed to fetch beneficiary type counts');
+    }
+};
+
+export const getEmpowermentDimensionCounts = async (additionalFilters?: Partial<EmpowermentDimensionCountFilterDto>): Promise<EmpowermentDimensionCountResponseDto> => {
+    try {
+        const token = (await cookies()).get('staffAccessToken')?.value;
+
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        // Get user's accessible locations to apply automatic filtering
+        const accessibleLocations = await getAccessibleLocations();
+        const filters: EmpowermentDimensionCountFilterDto = { ...additionalFilters };
+
+        // Apply location-based filtering based on user's access level
+        if (accessibleLocations.districts.length === 1) {
+            filters.district_id = accessibleLocations.districts[0].district_id.toString();
+        }
+        if (accessibleLocations.dss.length === 1) {
+            filters.ds_id = accessibleLocations.dss[0].ds_id.toString();
+        }
+        if (accessibleLocations.zones.length === 1) {
+            filters.zone_id = accessibleLocations.zones[0].zone_id.toString();
+        }
+        if (accessibleLocations.gndDivisions.length === 1) {
+        }
+
+        // Build query parameters
+        const queryParams = new URLSearchParams();
+        if (filters.district_id) queryParams.append('district_id', filters.district_id);
+        if (filters.ds_id) queryParams.append('ds_id', filters.ds_id);
+        if (filters.zone_id) queryParams.append('zone_id', filters.zone_id);
+        if (filters.gnd_id) queryParams.append('gnd_id', filters.gnd_id);
+        if (filters.mainProgram) queryParams.append('mainProgram', filters.mainProgram);
+
+        const queryString = queryParams.toString();
+        const url = `/beneficiaries/empowerment-dimension-counts${queryString ? `?${queryString}` : ''}`;
+
+        const response = await axiosInstance.get(url, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        return response.data;
+    } catch (error: any) {
+        console.error('Failed to fetch empowerment dimension counts:', error);
+        throw new Error('Failed to fetch empowerment dimension counts');
     }
 };

@@ -16,6 +16,7 @@ import { getEmpowermentRefusalReasons } from '@/services/empowermentRefusalReaso
 import { getDisabilities } from '@/services/disabilitiesService';
 import { getHouseholdNumbersByGnCode, getLivelihoods } from '@/services/samurdhiService';
 import toast from 'react-hot-toast';
+import { getAccountTypes } from '@/services/accountTypeService';
 
 const createEmptyFormData = (locationData: Partial<{
     district: LocationData;
@@ -126,7 +127,8 @@ export const useSamurdhiFormData = () => {
         communityParticipationOptions: [],
         housingServices: [],
         beneficiaryStatuses: [],
-        empowermentDimensions: []
+        empowermentDimensions: [],
+        accountTypes: []
     });
     const [householdNumbers, setHouseholdNumbers] = useState<string[]>([]);
     const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -190,7 +192,8 @@ export const useSamurdhiFormData = () => {
                     beneficiaryStatusesData,
                     empowermentDimensionsData,
                     refusalReasonsData,
-                    disabilitiesData
+                    disabilitiesData,
+                    accountTypesData
                 ] = await Promise.all([
                     getCurrentEmploymentOptions().catch(() => []),
                     getSamurdhiSubsidyOptions().catch(() => []),
@@ -206,7 +209,8 @@ export const useSamurdhiFormData = () => {
                     getBeneficiaryStatuses().catch(() => []),
                     getEmpowermentDimensions().catch(() => []),
                     getEmpowermentRefusalReasons().catch(() => []),
-                    getDisabilities().catch(() => [])
+                    getDisabilities().catch(() => []),
+                    getAccountTypes().catch(() => [])
                 ]);
 
                 setFormOptions({
@@ -224,7 +228,8 @@ export const useSamurdhiFormData = () => {
                     beneficiaryStatuses: beneficiaryStatusesData,
                     empowermentDimensions: empowermentDimensionsData,
                     refusalReasons: refusalReasonsData,
-                    disabilities: disabilitiesData
+                    disabilities: disabilitiesData,
+                    accountTypes: accountTypesData
                 });
             } catch (error) {
                 console.error('Error initializing form data:', error);

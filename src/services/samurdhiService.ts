@@ -75,7 +75,7 @@ export interface SamurdhiFamilyPayload {
   samurdhiBankAccountName: string | null;
   samurdhiBankAccountNumber: string | null;
   samurdhiBankName: string | null;
-  samurdhiBankAccountType: string | null;
+  samurdhiBankAccountType: number | null;
 
   // NEW fields
   wantsAswesumaBankTransfer: boolean;
@@ -256,7 +256,7 @@ export interface BeneficiaryDetailsResponse {
       accountName: string | null;
       accountNumber: string | null;
       bankName: string | null;
-      accountType: string | null;
+      accountType: number | null;
     };
   };
 }

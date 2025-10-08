@@ -301,7 +301,11 @@ const SamurdhiFamilyForm: React.FC<SamurdhiFamilyFormProps> = ({
                 samurdhiBankAccountName: initialData.location.samurdhiBankDetails.accountName || null,
                 samurdhiBankAccountNumber: initialData.location.samurdhiBankDetails.accountNumber || null,
                 samurdhiBankName: initialData.location.samurdhiBankDetails.bankName || null,
-                samurdhiBankAccountType: initialData.location.samurdhiBankDetails.accountType || null,
+                samurdhiBankAccountType: initialData.location.samurdhiBankDetails.accountType
+                    ? (typeof initialData.location.samurdhiBankDetails.accountType === 'string'
+                        ? parseInt(initialData.location.samurdhiBankDetails.accountType)
+                        : initialData.location.samurdhiBankDetails.accountType)
+                    : null,
                 wantsAswesumaBankTransfer: initialData.bankTransferPreferences.wantsAswesumaBankTransfer || false,
                 otherBankName: initialData.bankTransferPreferences.otherBankDetails.bankName || null,
                 otherBankBranch: initialData.bankTransferPreferences.otherBankDetails.branch || null,
@@ -540,6 +544,7 @@ const SamurdhiFamilyForm: React.FC<SamurdhiFamilyFormProps> = ({
                                     <BankingDetailsFields
                                         formData={formData}
                                         handlers={handlers}
+                                        formOptions={formOptions}
                                         t={t}
                                     />
                                 </>

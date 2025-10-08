@@ -1,21 +1,26 @@
-// /dashboard/bank-zone-level/page.tsx
 'use client';
 import React, { useEffect, useState } from 'react';
 import { useTheme } from '@/context/ThemeContext';
+import { useLanguage } from '@/context/LanguageContext';
 import BeneficiaryCountTable from '@/components/dashboard/BeneficiaryCountTable';
 import BeneficiaryTypeTable from '@/components/dashboard/BeneficiaryTypeTable';
-import { 
-    getBeneficiaryCountByYear, 
+import EmpowermentDimensionTable from '@/components/dashboard/EmpowermentDimensionTable';
+import {
+    getBeneficiaryCountByYear,
     getBeneficiaryTypeCounts,
+    getEmpowermentDimensionCounts,
     getLocationDisplayName,
     BeneficiaryCountResponseDto,
-    BeneficiaryTypeCountResponseDto
+    BeneficiaryTypeCountResponseDto,
+    EmpowermentDimensionCountResponseDto
 } from '@/services/dashboardService';
 
 const ZoneOfficerDashboard = () => {
     const { theme } = useTheme();
+    const { t } = useLanguage();
     const [beneficiaryData, setBeneficiaryData] = useState<BeneficiaryCountResponseDto | null>(null);
     const [beneficiaryTypeData, setBeneficiaryTypeData] = useState<BeneficiaryTypeCountResponseDto | null>(null);
+    const [empowermentData, setEmpowermentData] = useState<EmpowermentDimensionCountResponseDto | null>(null);
     const [locationName, setLocationName] = useState<string>('');
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -27,25 +32,27 @@ const ZoneOfficerDashboard = () => {
                 setError(null);
 
                 // Fetch all data in parallel
-                const [countData, typeData, location] = await Promise.all([
+                const [countData, typeData, empowermentData, location] = await Promise.all([
                     getBeneficiaryCountByYear(),
                     getBeneficiaryTypeCounts(),
+                    getEmpowermentDimensionCounts(),
                     getLocationDisplayName()
                 ]);
 
                 setBeneficiaryData(countData);
                 setBeneficiaryTypeData(typeData);
+                setEmpowermentData(empowermentData);
                 setLocationName(location);
             } catch (error) {
                 console.error('Failed to fetch dashboard data:', error);
-                setError('Failed to load dashboard data. Please try again.');
+                setError(t('dashboard.failedToLoadData'));
             } finally {
                 setIsLoading(false);
             }
         };
 
         fetchDashboardData();
-    }, []);
+    }, [t]);
 
     if (error) {
         return (
@@ -61,7 +68,7 @@ const ZoneOfficerDashboard = () => {
         <div className="min-h-screen p-6 space-y-6">
             <div className="mb-6">
                 <h1 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                    Zone Officer Dashboard
+                    {t('dashboard.zoneOfficerDashboard')}
                 </h1>
                 <p className={`text-lg mt-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                     {locationName}
@@ -74,7 +81,7 @@ const ZoneOfficerDashboard = () => {
                 {beneficiaryData && (
                     <BeneficiaryCountTable
                         data={beneficiaryData}
-                        title="Zone Beneficiary Count by Year"
+                        title={t('dashboard.zoneBeneficiaryCountByYear')}
                         locationDisplayName={locationName}
                         isLoading={isLoading}
                     />
@@ -84,7 +91,17 @@ const ZoneOfficerDashboard = () => {
                 {beneficiaryTypeData && (
                     <BeneficiaryTypeTable
                         data={beneficiaryTypeData}
-                        title="Zone Beneficiary Count by Type"
+                        title={t('dashboard.zoneBeneficiaryCountByType')}
+                        locationDisplayName={locationName}
+                        isLoading={isLoading}
+                    />
+                )}
+
+                {/* Empowerment Dimension Table */}
+                {empowermentData && (
+                    <EmpowermentDimensionTable
+                        data={empowermentData}
+                        title={t('dashboard.empowermentDimensionCounts')}
                         locationDisplayName={locationName}
                         isLoading={isLoading}
                     />
