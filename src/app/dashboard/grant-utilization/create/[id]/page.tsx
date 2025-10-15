@@ -348,8 +348,6 @@ const GrantUtilizationForm = () => {
                 await updateGrantUtilization(existingGrantId, finalFormData);
                 toast.success(t('grantUtilization.updateSuccess'));
             } else {
-                // Create new record
-                console.log('Creating new grant utilization');
                 await createGrantUtilization(finalFormData);
                 toast.success(t('grantUtilization.createSuccess'));
             }

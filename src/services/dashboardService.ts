@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use server'
 
-import axiosInstance from "@/lib/axios";
 import { cookies } from 'next/headers';
 
 // Dashboard Data Interfaces
@@ -193,16 +192,25 @@ export const getAccessibleLocations = async (): Promise<AccessibleLocations> => 
             throw new Error('No authentication token found');
         }
 
-        const response = await axiosInstance.get('/samurdhi-family/accessible-locations', {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        const response = await fetch(`${baseUrl}/api/dashboard/accessible-locations`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
-        console.error('Failed to fetch accessible locations:', error);
-        throw new Error('Failed to fetch accessible locations');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch accessible locations');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to fetch accessible locations');
     }
 };
 
@@ -233,6 +241,8 @@ export const getBeneficiaryCountByYear = async (additionalFilters?: Partial<Bene
             filters.gnd_id = accessibleLocations.gndDivisions[0].gnd_id;
         }
 
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
         // Build query parameters
         const queryParams = new URLSearchParams();
         if (filters.district_id) queryParams.append('district_id', filters.district_id);
@@ -245,18 +255,25 @@ export const getBeneficiaryCountByYear = async (additionalFilters?: Partial<Bene
         }
 
         const queryString = queryParams.toString();
-        const url = `/beneficiaries/count-by-year${queryString ? `?${queryString}` : ''}`;
+        const url = `${baseUrl}/api/dashboard/count-by-year${queryString ? `?${queryString}` : ''}`;
 
-        const response = await axiosInstance.get(url, {
+        const response = await fetch(url, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
-        console.error('Failed to fetch beneficiary count by year:', error);
-        throw new Error('Failed to fetch beneficiary count data');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch beneficiary count data');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to fetch beneficiary count data');
     }
 };
 
@@ -345,6 +362,8 @@ export const getBeneficiaryTypeCounts = async (additionalFilters?: Partial<Benef
             filters.gnd_id = accessibleLocations.gndDivisions[0].gnd_id;
         }
 
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
         // Build query parameters
         const queryParams = new URLSearchParams();
         if (filters.district_id) queryParams.append('district_id', filters.district_id);
@@ -353,18 +372,25 @@ export const getBeneficiaryTypeCounts = async (additionalFilters?: Partial<Benef
         if (filters.gnd_id) queryParams.append('gnd_id', filters.gnd_id);
 
         const queryString = queryParams.toString();
-        const url = `/beneficiaries/type-counts${queryString ? `?${queryString}` : ''}`;
+        const url = `${baseUrl}/api/dashboard/type-counts${queryString ? `?${queryString}` : ''}`;
 
-        const response = await axiosInstance.get(url, {
+        const response = await fetch(url, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
-        console.error('Failed to fetch beneficiary type counts:', error);
-        throw new Error('Failed to fetch beneficiary type counts');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch beneficiary type counts');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to fetch beneficiary type counts');
     }
 };
 
@@ -391,7 +417,10 @@ export const getEmpowermentDimensionCounts = async (additionalFilters?: Partial<
             filters.zone_id = accessibleLocations.zones[0].zone_id.toString();
         }
         if (accessibleLocations.gndDivisions.length === 1) {
+            filters.gnd_id = accessibleLocations.gndDivisions[0].gnd_id;
         }
+
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
         // Build query parameters
         const queryParams = new URLSearchParams();
@@ -402,17 +431,24 @@ export const getEmpowermentDimensionCounts = async (additionalFilters?: Partial<
         if (filters.mainProgram) queryParams.append('mainProgram', filters.mainProgram);
 
         const queryString = queryParams.toString();
-        const url = `/beneficiaries/empowerment-dimension-counts${queryString ? `?${queryString}` : ''}`;
+        const url = `${baseUrl}/api/dashboard/empowerment-dimension-counts${queryString ? `?${queryString}` : ''}`;
 
-        const response = await axiosInstance.get(url, {
+        const response = await fetch(url, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch empowerment dimension counts');
+        }
+
+        return await response.json();
     } catch (error: any) {
-        console.error('Failed to fetch empowerment dimension counts:', error);
-        throw new Error('Failed to fetch empowerment dimension counts');
+        throw new Error(error.message || 'Failed to fetch empowerment dimension counts');
     }
 };

@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 'use server'
 
-import axiosInstance from "@/lib/axios";
 import { cookies } from 'next/headers';
 import { AccessibleLocations } from "./projectDetailReportService";
 
@@ -90,16 +91,25 @@ export const getSamurdhiFamilyCount = async (params: SamurdhiFamilyCountParams):
             }
         });
 
-        const response = await axiosInstance.get(`/samurdhi-family/count?${queryParams.toString()}`, {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const response = await fetch(`${baseUrl}/api/samurdhi-family/count?${queryParams.toString()}`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch samurdhi family count');
+        }
+
+        return await response.json();
+    } catch (error: any) {
         console.error('Failed to fetch samurdhi family count:', error);
-        throw new Error('Failed to fetch samurdhi family count');
+        throw new Error(error.message || 'Failed to fetch samurdhi family count');
     }
 };
 
@@ -111,16 +121,25 @@ export const getEmpowermentDimensions = async (): Promise<EmpowermentDimension[]
             throw new Error('No authentication token found');
         }
 
-        const response = await axiosInstance.get('/empowerment-dimension', {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const response = await fetch(`${baseUrl}/api/empowerment-dimension`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch empowerment dimensions');
+        }
+
+        return await response.json();
+    } catch (error: any) {
         console.error('Failed to fetch empowerment dimensions:', error);
-        throw new Error('Failed to fetch empowerment dimensions');
+        throw new Error(error.message || 'Failed to fetch empowerment dimensions');
     }
 };
 
@@ -140,93 +159,25 @@ export const getEmpowermentDimensionCount = async (params: EmpowermentDimensionC
             }
         });
 
-        const response = await axiosInstance.get(`/samurdhi-family/count/empowerment?${queryParams.toString()}`, {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const response = await fetch(`${baseUrl}/api/samurdhi-family/count/empowerment?${queryParams.toString()}`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch empowerment dimension count');
+        }
+
+        return await response.json();
+    } catch (error: any) {
         console.error('Failed to fetch empowerment dimension count:', error);
-        throw new Error('Failed to fetch empowerment dimension count');
-    }
-};
-
-// Future implementation for getting locations
-export const getDistricts = async () => {
-    try {
-        const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
-
-        if (!token) {
-            throw new Error('No authentication token found');
-        }
-
-        const response = await axiosInstance.get('/districts', {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
-        return response.data;
-    } catch {
-        throw new Error('Failed to fetch districts');
-    }
-};
-
-export const getDivisionalSecretariats = async (districtId: string) => {
-    try {
-        const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
-
-        if (!token) {
-            throw new Error('No authentication token found');
-        }
-
-        const response = await axiosInstance.get(`/divisional-secretariats?district_id=${districtId}`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
-        return response.data;
-    } catch {
-        throw new Error('Failed to fetch divisional secretariats');
-    }
-};
-
-export const getZones = async (dsId: string) => {
-    try {
-        const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
-
-        if (!token) {
-            throw new Error('No authentication token found');
-        }
-
-        const response = await axiosInstance.get(`/zones?ds_id=${dsId}`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
-        return response.data;
-    } catch {
-        throw new Error('Failed to fetch zones');
-    }
-};
-
-export const getGNDs = async (zoneId: string) => {
-    try {
-        const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
-
-        if (!token) {
-            throw new Error('No authentication token found');
-        }
-
-        const response = await axiosInstance.get(`/gnds?zone_id=${zoneId}`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
-        return response.data;
-    } catch {
-        throw new Error('Failed to fetch GNDs');
+        throw new Error(error.message || 'Failed to fetch empowerment dimension count');
     }
 };
 
@@ -248,16 +199,25 @@ export const getSamurdhiFamilyCountWithLocations = async (params: SamurdhiFamily
             }
         });
 
-        const response = await axiosInstance.get(`/samurdhi-family/count-report?${queryParams.toString()}`, {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const response = await fetch(`${baseUrl}/api/samurdhi-family/count-report?${queryParams.toString()}`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch samurdhi family count with locations');
+        }
+
+        return await response.json();
+    } catch (error: any) {
         console.error('Failed to fetch samurdhi family count with locations:', error);
-        throw new Error('Failed to fetch samurdhi family count with locations');
+        throw new Error(error.message || 'Failed to fetch samurdhi family count with locations');
     }
 };
 
@@ -279,15 +239,24 @@ export const getEmpowermentDimensionCountWithLocations = async (params: Empowerm
             }
         });
 
-        const response = await axiosInstance.get(`/samurdhi-family/empowerment-count-report?${queryParams.toString()}`, {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const response = await fetch(`${baseUrl}/api/samurdhi-family/empowerment-count-report?${queryParams.toString()}`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch empowerment dimension count with locations');
+        }
+
+        return await response.json();
+    } catch (error: any) {
         console.error('Failed to fetch empowerment dimension count with locations:', error);
-        throw new Error('Failed to fetch empowerment dimension count with locations');
+        throw new Error(error.message || 'Failed to fetch empowerment dimension count with locations');
     }
 };

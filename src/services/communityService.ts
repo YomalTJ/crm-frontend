@@ -1,23 +1,36 @@
 'use server'
 
-import axiosInstance from "@/lib/axios";
-import { cookies } from 'next/headers';
+import { cookies } from "next/headers";
 
 export const getCommunityParticipation = async () => {
   try {
-    const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
-    
+    const token =
+      (await cookies()).get("accessToken")?.value ||
+      (await cookies()).get("staffAccessToken")?.value;
+
     if (!token) {
-      throw new Error('No authentication token found');
+      throw new Error("No authentication token found");
     }
 
-    const response = await axiosInstance.get('/community-participation', {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+
+    const response = await fetch(`${baseUrl}/api/community-participation`, {
+      method: "GET",
+      cache: "no-store",
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
+        'x-app-key': process.env.APP_AUTH_KEY!
       }
     });
-    return response.data;
-  } catch {
-    throw new Error('Failed to fetch community participation options');
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to fetch community participation options");
+    }
+
+    return await response.json();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    throw new Error(error.message || "Failed to fetch community participation options");
   }
 };

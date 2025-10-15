@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use server'
 
-import axiosInstance from "@/lib/axios";
 import { cookies } from 'next/headers';
 
 export interface Province {
@@ -72,16 +72,25 @@ export const getProvinces = async (): Promise<Province[]> => {
             throw new Error('No authentication token found');
         }
 
-        const response = await axiosInstance.get('/location/provinces', {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        const response = await fetch(`${baseUrl}/api/location/provinces`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
-        console.error('Failed to fetch provinces:', error);
-        throw new Error('Failed to fetch provinces');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch provinces');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to fetch provinces');
     }
 };
 
@@ -93,16 +102,25 @@ export const getDistrictsByProvince = async (provinceId: string): Promise<Distri
             throw new Error('No authentication token found');
         }
 
-        const response = await axiosInstance.get(`/location/districts/${provinceId}`, {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        const response = await fetch(`${baseUrl}/api/location/districts/${provinceId}`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
-        console.error('Failed to fetch districts:', error);
-        throw new Error('Failed to fetch districts');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch districts');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to fetch districts');
     }
 };
 
@@ -114,16 +132,25 @@ export const getDSDivisionsByDistrict = async (districtId: string): Promise<DSDi
             throw new Error('No authentication token found');
         }
 
-        const response = await axiosInstance.get(`/location/ds/${districtId}`, {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        const response = await fetch(`${baseUrl}/api/location/ds/${districtId}`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
-        console.error('Failed to fetch DS divisions:', error);
-        throw new Error('Failed to fetch DS divisions');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch DS divisions');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to fetch DS divisions');
     }
 };
 
@@ -135,16 +162,25 @@ export const getZonesByDSDivision = async (dsId: string): Promise<Zone[]> => {
             throw new Error('No authentication token found');
         }
 
-        const response = await axiosInstance.get(`/location/zones/${dsId}`, {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        const response = await fetch(`${baseUrl}/api/location/zones/${dsId}`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
-        console.error('Failed to fetch zones:', error);
-        throw new Error('Failed to fetch zones');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch zones');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to fetch zones');
     }
 };
 
@@ -156,16 +192,25 @@ export const getGNDsByZone = async (zoneId: string): Promise<GND[]> => {
             throw new Error('No authentication token found');
         }
 
-        const response = await axiosInstance.get(`/location/gnd/${zoneId}`, {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        const response = await fetch(`${baseUrl}/api/location/gnd/${zoneId}`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
-        console.error('Failed to fetch GNDs:', error);
-        throw new Error('Failed to fetch GNDs');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch GNDs');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to fetch GNDs');
     }
 };
 
@@ -181,23 +226,32 @@ export const getLocationHierarchy = async (
             throw new Error('No authentication token found');
         }
 
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
         const params = new URLSearchParams();
         if (districtId) params.append('districtId', districtId);
         if (dsId) params.append('dsId', dsId);
         if (zoneId) params.append('zoneId', zoneId);
 
         const queryString = params.toString();
-        const url = `/location${queryString ? `?${queryString}` : ''}`;
+        const url = `${baseUrl}/api/location${queryString ? `?${queryString}` : ''}`;
 
-        const response = await axiosInstance.get(url, {
+        const response = await fetch(url, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
-        console.error('Failed to fetch location hierarchy:', error);
-        throw new Error('Failed to fetch location hierarchy');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch location hierarchy');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to fetch location hierarchy');
     }
 };

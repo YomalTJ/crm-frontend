@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use server'
 
-import axiosInstance from '@/lib/axios';
 import { cookies } from 'next/headers';
 
 export interface BusinessEmpowermentPayload {
@@ -68,16 +67,29 @@ export const fetchBeneficiaryData = async (nicOrHh: string) => {
     try {
         const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
 
-        const response = await axiosInstance.get(`/samurdhi-family/${nicOrHh}`, {
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        const response = await fetch(`${baseUrl}/api/samurdhi-family/${nicOrHh}`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
-        console.error('Error fetching beneficiary data:', error);
-        throw new Error('Failed to fetch beneficiary data');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch beneficiary data');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to fetch beneficiary data');
     }
 };
 
@@ -86,19 +98,32 @@ export const fetchBusinessEmpowermentByNic = async (nic: string): Promise<Busine
     try {
         const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
 
-        const response = await axiosInstance.get(`/business-empowerment/nic/${nic}`, {
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        const response = await fetch(`${baseUrl}/api/business-empowerment/nic/${nic}`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error: any) {
-        if (error.response?.status === 404) {
-            return null; // No existing record found
+        if (!response.ok) {
+            if (response.status === 404) {
+                return null; // No existing record found
+            }
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch business empowerment data');
         }
-        console.error('Error fetching business empowerment data:', error);
-        throw new Error('Failed to fetch business empowerment data');
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to fetch business empowerment data');
     }
 };
 
@@ -107,15 +132,30 @@ export const createBusinessEmpowerment = async (payload: BusinessEmpowermentPayl
     try {
         const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
 
-        const response = await axiosInstance.post('/business-empowerment', payload, {
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        const response = await fetch(`${baseUrl}/api/business-empowerment`, {
+            method: 'POST',
             headers: {
-                Authorization: `Bearer ${token}`
-            }
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
+            },
+            body: JSON.stringify(payload)
         });
 
-        return response.data;
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to create business empowerment record');
+        }
+
+        return await response.json();
     } catch (error: any) {
-        throw new Error(error.response?.data?.message || 'Failed to create business empowerment record');
+        throw new Error(error.message || 'Failed to create business empowerment record');
     }
 };
 
@@ -124,31 +164,60 @@ export const updateBusinessEmpowermentByNic = async (nic: string, payload: Parti
     try {
         const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
 
-        const response = await axiosInstance.put(`/business-empowerment/nic/${nic}`, payload, {
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        const response = await fetch(`${baseUrl}/api/business-empowerment/nic/${nic}`, {
+            method: 'PUT',
             headers: {
-                Authorization: `Bearer ${token}`
-            }
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
+            },
+            body: JSON.stringify(payload)
         });
 
-        return response.data;
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to update business empowerment record');
+        }
+
+        return await response.json();
     } catch (error: any) {
-        throw new Error(error.response?.data?.message || 'Failed to update business empowerment record');
+        throw new Error(error.message || 'Failed to update business empowerment record');
     }
 };
 
+// Fetch job fields
 export const fetchJobFields = async (): Promise<JobField[]> => {
     try {
         const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
 
-        const response = await axiosInstance.get('/job-field', {
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        const response = await fetch(`${baseUrl}/api/job-field`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
-        console.error('Error fetching job fields:', error);
-        throw new Error('Failed to fetch job fields');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch job fields');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to fetch job fields');
     }
 };

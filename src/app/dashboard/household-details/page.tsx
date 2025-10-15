@@ -60,7 +60,6 @@ const HouseholdDetails = () => {
 
   useEffect(() => {
     const locationData = localStorage.getItem('staffLocation')
-    console.log("Raw staffLocation from localStorage:", locationData)
 
     if (locationData) {
       try {

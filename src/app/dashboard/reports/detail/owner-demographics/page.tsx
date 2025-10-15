@@ -59,12 +59,10 @@ const OwnerDemographicsReport = () => {
 
                 // Get accessible locations based on user's role and location
                 const locations = await getAccessibleLocations();
-                console.log("locations: ", locations);
                 setAccessibleLocations(locations);
 
                 // Get beneficiary types
                 const types = await getBeneficiaryTypes();
-                console.log("beneficiary types: ", types);
                 setBeneficiaryTypes(types);
 
                 // Get user's default location filters

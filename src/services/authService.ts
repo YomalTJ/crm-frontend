@@ -8,8 +8,11 @@ export const loginUser = async ({ username, password }: LoginPayload) => {
   try {
     const res = await fetch("/api/auth/staff-login", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
+      headers: {
+        "Content-Type": "application/json",
+        "x-app-key": process.env.APP_AUTH_KEY!
+      },
+      body: JSON.stringify({ username, password })
     });
 
     const data = await res.json();
@@ -39,6 +42,10 @@ export const logoutUser = async () => {
     const res = await fetch("/api/auth/logout", {
       method: "POST",
       credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-app-key': process.env.APP_AUTH_KEY!
+      }
     });
 
     if (!res.ok) {

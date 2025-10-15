@@ -56,7 +56,6 @@ const AreaTypesReport = () => {
 
                 // Get accessible locations based on user's role and location
                 const locations = await getAccessibleLocations();
-                console.log("locations: ", locations);
                 setAccessibleLocations(locations);
 
                 // Get user's default location filters

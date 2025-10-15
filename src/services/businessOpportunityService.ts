@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use server'
 
-import axiosInstance from "@/lib/axios";
 import { cookies } from 'next/headers';
 
 // Types
@@ -40,15 +39,29 @@ export const getLivelihoods = async (): Promise<Livelihood[]> => {
     try {
         const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
 
-        const response = await axiosInstance.get('/livelihoods', {
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        const response = await fetch(`${baseUrl}/api/livelihoods`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
-        return response.data;
-    } catch (error) {
-        console.error('Error fetching livelihoods:', error);
-        throw new Error('Failed to fetch livelihoods');
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch livelihoods');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to fetch livelihoods');
     }
 };
 
@@ -56,49 +69,61 @@ export const createLivelihood = async (data: CreateLivelihoodDto): Promise<Livel
     try {
         const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
 
-        const response = await axiosInstance.post('/livelihoods', data, {
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        const response = await fetch(`${baseUrl}/api/livelihoods`, {
+            method: 'POST',
             headers: {
+                'Content-Type': 'application/json',
                 Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
+                'x-app-key': process.env.APP_AUTH_KEY!
+            },
+            body: JSON.stringify(data)
         });
-        return response.data;
-    } catch (error) {
-        console.error('Error creating livelihood:', error);
-        throw new Error('Failed to create livelihood');
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to create livelihood');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to create livelihood');
     }
 };
 
 // Project Type Services
-export const getProjectTypes = async (): Promise<ProjectType[]> => {
-    try {
-        const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
-
-        const response = await axiosInstance.get('/project-type', {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
-        return response.data;
-    } catch (error) {
-        console.error('Error fetching project types:', error);
-        throw new Error('Failed to fetch project types');
-    }
-};
-
 export const getProjectTypesByLivelihood = async (livelihoodId: string): Promise<ProjectType[]> => {
     try {
         const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
 
-        const response = await axiosInstance.get(`/project-type/livelihood/${livelihoodId}`, {
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        const response = await fetch(`${baseUrl}/api/project-types/livelihood/${livelihoodId}`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
-        return response.data;
-    } catch (error) {
-        console.error('Error fetching project types by livelihood:', error);
-        throw new Error('Failed to fetch project types by livelihood');
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch project types by livelihood');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to fetch project types by livelihood');
     }
 };
 
@@ -106,15 +131,29 @@ export const createProjectType = async (data: CreateProjectTypeDto): Promise<Pro
     try {
         const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
 
-        const response = await axiosInstance.post('/project-type', data, {
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        const response = await fetch(`${baseUrl}/api/project-type`, {
+            method: 'POST',
             headers: {
+                'Content-Type': 'application/json',
                 Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
+                'x-app-key': process.env.APP_AUTH_KEY!
+            },
+            body: JSON.stringify(data)
         });
-        return response.data;
-    } catch (error) {
-        console.error('Error creating project type:', error);
-        throw new Error('Failed to create project type');
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to create project type');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to create project type');
     }
 };

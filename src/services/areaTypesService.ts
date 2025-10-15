@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 'use server'
 
-import axiosInstance from "@/lib/axios";
 import { cookies } from 'next/headers';
 
 // Area Types Response Interface
@@ -107,20 +108,28 @@ export const getAccessibleLocations = async (): Promise<AccessibleLocations> => 
             throw new Error('No authentication token found');
         }
 
-        const response = await axiosInstance.get('/samurdhi-family/accessible-locations', {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const response = await fetch(`${baseUrl}/api/samurdhi-family/accessible-locations`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch accessible locations');
+        }
+
+        return await response.json();
+    } catch (error: any) {
         console.error('Failed to fetch accessible locations:', error);
-        throw new Error('Failed to fetch accessible locations');
+        throw new Error(error.message || 'Failed to fetch accessible locations');
     }
 };
 
-// Get area types data with filters
 export const getAreaTypes = async (filters?: AreaTypeFilters): Promise<AreaTypeItem[]> => {
     try {
         const token = (await cookies()).get('staffAccessToken')?.value;
@@ -139,18 +148,27 @@ export const getAreaTypes = async (filters?: AreaTypeFilters): Promise<AreaTypeI
         if (filters?.areaClassification) queryParams.append('areaClassification', filters.areaClassification);
 
         const queryString = queryParams.toString();
-        const url = `/beneficiaries/area-types${queryString ? `?${queryString}` : ''}`;
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const url = `${baseUrl}/api/area-types${queryString ? `?${queryString}` : ''}`;
 
-        const response = await axiosInstance.get(url, {
+        const response = await fetch(url, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch area types');
+        }
+
+        return await response.json();
+    } catch (error: any) {
         console.error('Failed to fetch area types:', error);
-        throw new Error('Failed to fetch area types');
+        throw new Error(error.message || 'Failed to fetch area types');
     }
 };
 

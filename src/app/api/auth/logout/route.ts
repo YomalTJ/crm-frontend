@@ -1,13 +1,16 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import axiosInstance from '@/lib/axios';
 
 export async function POST() {
   try {
-    const cookieStore = cookies();
 
-    const staffToken = (await cookieStore).get('staffAccessToken')?.value;
-    const wbbAuthToken = (await cookieStore).get('wbbAuthToken')?.value;
+    const cookieStore = await cookies();
+    const staffToken = cookieStore.get('staffAccessToken')?.value;
+    const wbbAuthToken = cookieStore.get('wbbAuthToken')?.value;
 
+    // 🚪 Case: Both tokens already missing → user effectively logged out
     if (!staffToken && !wbbAuthToken) {
       const res = NextResponse.json({ message: 'Logged out successfully' });
       res.headers.set(
@@ -21,23 +24,25 @@ export async function POST() {
       return res;
     }
 
+    // 🧾 Invalidate staff token in backend if it exists
     if (staffToken) {
-      const backendResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/staff/logout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${staffToken}`,
-          'x-app-key': process.env.NEXT_PUBLIC_APP_AUTH_KEY || '',
-        },
-        credentials: 'include',
-      });
-
-      if (!backendResponse.ok) {
-        const errorData = await backendResponse.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Failed to invalidate staff token on backend');
+      try {
+        await axiosInstance.post(
+          '/staff/logout',
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${staffToken}`,
+            },
+          }
+        );
+      } catch (axiosError: any) {
+        const errorMsg = axiosError?.response?.data?.message || 'Failed to invalidate staff token on backend';
+        throw new Error(errorMsg);
       }
     }
 
+    // ✅ Clear cookies on successful logout
     const res = NextResponse.json({ message: 'Logged out successfully' });
 
     res.headers.set(

@@ -27,7 +27,8 @@ export const getAudits = async (): Promise<AuditEntry[]> => {
 
     const response = await axiosInstance.get('/audit', {
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
+        'x-app-key': process.env.APP_AUTH_KEY!
       }
     });
     return response.data;

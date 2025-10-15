@@ -3,11 +3,11 @@ import { useState, useEffect } from 'react';
 import {
     getProjectDetails,
     getAccessibleLocations,
-    getUserDetailsFromToken,
     ProjectDetailReportItem,
     ProjectDetailReportFilters,
     AccessibleLocations
 } from '@/services/projectDetailReportService';
+import { getUserDetailsFromToken } from '@/lib/api-utils';
 
 interface UserDetails {
     username: string;

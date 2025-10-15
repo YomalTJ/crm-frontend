@@ -56,7 +56,6 @@ const ProjectDetailReport = () => {
 
                 // Get accessible locations based on user's role and location
                 const locations = await getAccessibleLocations();
-                console.log("locations: ", locations);
                 setAccessibleLocations(locations);
 
                 // Load initial project details without filters (will be filtered by user's role on backend)

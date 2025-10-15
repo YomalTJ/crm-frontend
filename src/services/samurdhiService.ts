@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use server"
 
-import axiosInstance from "@/lib/axios";
-import { cookies } from "next/headers";
+import { getAuthToken, getBaseUrl, handleApiResponse } from "@/lib/api-utils";
 
 export interface SamurdhiFamilyPayload {
   district_id: string;
@@ -261,23 +260,14 @@ export interface BeneficiaryDetailsResponse {
   };
 }
 
-// FIXED: Updated createSamurdhiFamily to handle both JSON payload and FormData with files
 export const createSamurdhiFamily = async (payload: SamurdhiFamilyPayload, file?: File) => {
   try {
-    // Get the token from cookies
-    const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
-
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    let response;
+    const token = await getAuthToken();
+    const baseUrl = getBaseUrl();
 
     if (file) {
-      // Create FormData for file upload
       const formData = new FormData();
 
-      // Add all payload fields to FormData
       Object.entries(payload).forEach(([key, value]) => {
         if (Array.isArray(value)) {
           formData.append(key, JSON.stringify(value));
@@ -286,69 +276,64 @@ export const createSamurdhiFamily = async (payload: SamurdhiFamilyPayload, file?
         }
       });
 
-      // Add the file
       formData.append('consentLetter', file);
 
-      response = await axiosInstance.post('/samurdhi-family', formData, {
+      const response = await fetch(`${baseUrl}/api/samurdhi-family`, {
+        method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
+          'x-app-key': process.env.APP_AUTH_KEY!
+        },
+        body: formData
       });
-    } else {
-      // Send JSON payload without file
-      response = await axiosInstance.post('/samurdhi-family', payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-    }
 
-    return response.data;
+      return await handleApiResponse(response);
+    } else {
+      const response = await fetch(`${baseUrl}/api/samurdhi-family`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          'x-app-key': process.env.APP_AUTH_KEY!
+        },
+        body: JSON.stringify(payload)
+      });
+
+      return await handleApiResponse(response);
+    }
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Failed to create Samurdhi family record');
+    throw new Error(error.message || 'Failed to create Samurdhi family record');
   }
 };
 
-// Updated method to handle both NIC and household numbers
 export const getBeneficiaryByIdentifier = async (identifier: string): Promise<BeneficiaryDetailsResponse> => {
   try {
-    const token = (await cookies()).get('accessToken')?.value ||
-      (await cookies()).get('staffAccessToken')?.value;
+    const token = await getAuthToken();
+    const baseUrl = getBaseUrl();
 
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    const response = await axiosInstance.get(`/samurdhi-family/${identifier}`, {
+    const response = await fetch(`${baseUrl}/api/samurdhi-family/${identifier}`, {
+      method: 'GET',
+      cache: 'no-store',
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
+        'x-app-key': process.env.APP_AUTH_KEY!
       }
     });
-    return response.data;
+
+    return await handleApiResponse(response);
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Failed to fetch beneficiary details');
+    throw new Error(error.message || 'Failed to fetch beneficiary details');
   }
 };
 
-// FIXED: Updated updateSamurdhiFamily to handle both JSON payload and FormData with files
-export const updateSamurdhiFamily = async (nic: string, payload: SamurdhiFamilyPayload, file?: File) => {
+export const updateSamurdhiFamily = async (identifier: string, payload: SamurdhiFamilyPayload, file?: File) => {
   try {
-    const token = (await cookies()).get('accessToken')?.value ||
-      (await cookies()).get('staffAccessToken')?.value;
-
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    let response;
+    const token = await getAuthToken();
+    const baseUrl = getBaseUrl();
 
     if (file) {
-      // Create FormData for file upload
       const formData = new FormData();
 
-      // Add all payload fields to FormData
       Object.entries(payload).forEach(([key, value]) => {
         if (Array.isArray(value)) {
           formData.append(key, JSON.stringify(value));
@@ -357,181 +342,128 @@ export const updateSamurdhiFamily = async (nic: string, payload: SamurdhiFamilyP
         }
       });
 
-      // Add the file
       formData.append('consentLetter', file);
 
-      response = await axiosInstance.put(`/samurdhi-family/${nic}`, formData, {
+      const response = await fetch(`${baseUrl}/api/samurdhi-family/${identifier}`, {
+        method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
+          'x-app-key': process.env.APP_AUTH_KEY!
+        },
+        body: formData
       });
+
+      return await handleApiResponse(response);
     } else {
-      // Send JSON payload without file
-      response = await axiosInstance.put(`/samurdhi-family/${nic}`, payload, {
+      const response = await fetch(`${baseUrl}/api/samurdhi-family/${identifier}`, {
+        method: 'PUT',
         headers: {
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          'x-app-key': process.env.APP_AUTH_KEY!
+        },
+        body: JSON.stringify(payload)
       });
-    }
 
-    return response.data;
+      return await handleApiResponse(response);
+    }
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Failed to update Samurdhi family record');
-  }
-};
-
-// Updated method to handle both NIC and household numbers for updates
-export const updateSamurdhiFamilyByIdentifier = async (identifier: string, payload: SamurdhiFamilyPayload, file?: File) => {
-  try {
-    const token = (await cookies()).get('accessToken')?.value ||
-      (await cookies()).get('staffAccessToken')?.value;
-
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    let response;
-
-    if (file) {
-      // Create FormData for file upload
-      const formData = new FormData();
-
-      // Add all payload fields to FormData
-      Object.entries(payload).forEach(([key, value]) => {
-        if (Array.isArray(value)) {
-          formData.append(key, JSON.stringify(value));
-        } else {
-          formData.append(key, value?.toString() || '');
-        }
-      });
-
-      // Add the file
-      formData.append('consentLetter', file);
-
-      response = await axiosInstance.put(`/samurdhi-family/${encodeURIComponent(identifier)}`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-    } else {
-      // Send JSON payload without file
-      response = await axiosInstance.put(`/samurdhi-family/${encodeURIComponent(identifier)}`, payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-    }
-
-    return response.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Failed to update Samurdhi family record');
+    throw new Error(error.message || 'Failed to update Samurdhi family record');
   }
 };
 
 export const getHouseholdNumbersByGnCode = async (gnCode: string) => {
   try {
-    const token = (await cookies()).get('accessToken')?.value ||
-      (await cookies()).get('staffAccessToken')?.value;
+    const token = await getAuthToken();
+    const baseUrl = getBaseUrl();
 
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    const response = await axiosInstance.get(`/household-citizen/by-gn-code/${gnCode}`, {
+    const response = await fetch(`${baseUrl}/api/household-citizen?gnCode=${encodeURIComponent(gnCode)}`, {
+      method: 'GET',
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
+        'x-app-key': process.env.APP_AUTH_KEY!
       }
     });
-    return response.data.hhReferences || [];
+
+    const data = await handleApiResponse(response);
+    return data.hhReferences || [];
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Failed to fetch household numbers');
+    throw new Error(error.message || 'Failed to fetch household numbers');
   }
 };
 
 export const getHouseholdDetailsByReference = async (hhReference: string) => {
   try {
-    const token = (await cookies()).get('accessToken')?.value ||
-      (await cookies()).get('staffAccessToken')?.value;
+    const token = await getAuthToken();
+    const baseUrl = getBaseUrl();
 
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    const response = await axiosInstance.get(`/household-citizen/${hhReference}`, {
+    const response = await fetch(`${baseUrl}/api/household-citizen?hhReference=${encodeURIComponent(hhReference)}`, {
+      method: 'GET',
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
+        'x-app-key': process.env.APP_AUTH_KEY!
       }
     });
-    return response.data;
+
+    return await handleApiResponse(response);
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Failed to fetch household details');
+    throw new Error(error.message || 'Failed to fetch household details');
   }
 };
 
 export const checkExistingBeneficiary = async (identifier: string, type: 'nic' | 'household'): Promise<{ exists: boolean; message?: string; beneficiaryName?: string }> => {
   try {
-    const token = (await cookies()).get('accessToken')?.value ||
-      (await cookies()).get('staffAccessToken')?.value;
+    const token = await getAuthToken();
+    const baseUrl = getBaseUrl();
 
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    const response = await axiosInstance.get(`/samurdhi-family/check-exists?${type}=${encodeURIComponent(identifier)}`, {
+    const response = await fetch(`${baseUrl}/api/samurdhi-family?checkExists=true&type=${type}&identifier=${encodeURIComponent(identifier)}`, {
+      method: 'GET',
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
+        'x-app-key': process.env.APP_AUTH_KEY!
       }
     });
 
-    return response.data;
+    return await handleApiResponse(response);
   } catch (error: any) {
-    if (error.response?.status === 404) {
-      return { exists: false };
-    }
-    throw new Error(error.response?.data?.message || 'Failed to check existing beneficiary');
+    throw new Error(error.message || 'Failed to check existing beneficiary');
   }
 };
 
 export const getLivelihoods = async (): Promise<any[]> => {
   try {
-    const token = (await cookies()).get('accessToken')?.value ||
-      (await cookies()).get('staffAccessToken')?.value;
+    const token = await getAuthToken();
+    const baseUrl = getBaseUrl();
 
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    const response = await axiosInstance.get('/livelihoods', {
+    const response = await fetch(`${baseUrl}/api/livelihoods`, {
+      method: 'GET',
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
+        'x-app-key': process.env.APP_AUTH_KEY!
       }
     });
-    return response.data;
+
+    return await handleApiResponse(response);
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Failed to fetch livelihoods');
+    throw new Error(error.message || 'Failed to fetch livelihoods');
   }
 };
 
 export const getProjectTypesByLivelihood = async (livelihoodId: number): Promise<any[]> => {
   try {
-    const token = (await cookies()).get('accessToken')?.value ||
-      (await cookies()).get('staffAccessToken')?.value;
+    const token = await getAuthToken();
+    const baseUrl = getBaseUrl();
 
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    const response = await axiosInstance.get(`/project-type/livelihood/${livelihoodId}`, {
+    const response = await fetch(`${baseUrl}/api/project-types?livelihoodId=${livelihoodId}`, {
+      method: 'GET',
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
+        'x-app-key': process.env.APP_AUTH_KEY!
       }
     });
-    return response.data;
+
+    return await handleApiResponse(response);
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Failed to fetch project types');
+    throw new Error(error.message || 'Failed to fetch project types');
   }
 };

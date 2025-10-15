@@ -11,7 +11,6 @@ export const useToast = () => {
     }>>([]);
 
     const addToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-        console.log('Adding toast:', message, type); // Add this line
         const id = uuidv4();
         setToasts((prev) => [...prev, { id, message, type }]);
     };

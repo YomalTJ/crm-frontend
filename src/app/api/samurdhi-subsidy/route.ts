@@ -1,29 +1,43 @@
-import { NextResponse } from 'next/server';
-import axiosInstance from '@/lib/axios';
-import { AxiosError } from 'axios'; // 👈 import this
+import axiosInstance from "@/lib/axios";
+import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 
-export async function GET(req: Request) {
+export async function GET(request: Request) {
     try {
-        const authHeader = req.headers.get('authorization');
+        const cookieToken =
+            (await cookies()).get("accessToken")?.value ||
+            (await cookies()).get("staffAccessToken")?.value;
 
-        const response = await axiosInstance.get('/samurdhi-subsidy', {
-            headers: {
-                Authorization: authHeader || ''
-            }
-        });
+        const authHeader = request.headers.get("authorization");
+        const headerToken = authHeader?.startsWith("Bearer ")
+            ? authHeader.split(" ")[1]
+            : null;
 
-        return NextResponse.json(response.data);
-    } catch (error: unknown) {
-        if (error instanceof AxiosError) {
+        const token = cookieToken || headerToken;
+
+        if (!token) {
             return NextResponse.json(
-                { error: error.response?.data?.message || 'Failed to fetch Samurdhi subsidy options' },
-                { status: error.response?.status || 500 }
+                { error: "No authentication token found" },
+                { status: 401 }
             );
         }
 
+        const response = await axiosInstance.get("/samurdhi-subsidy", {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        return NextResponse.json(response.data);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
         return NextResponse.json(
-            { error: 'An unknown error occurred while fetching Samurdhi subsidy options' },
-            { status: 500 }
+            {
+                error:
+                    error?.response?.data?.message ||
+                    "Failed to fetch Samurdhi subsidy options",
+            },
+            { status: error?.response?.status || 500 }
         );
     }
 }

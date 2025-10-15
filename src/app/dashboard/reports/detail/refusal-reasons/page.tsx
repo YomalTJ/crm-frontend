@@ -57,12 +57,10 @@ const RefusalReasons = () => {
 
                 // Get accessible locations based on user's role and location
                 const locations = await getAccessibleLocations();
-                console.log("locations: ", locations);
                 setAccessibleLocations(locations);
 
                 // Get user's default location based on their access permissions
                 const defaultLocationFilters = await getUserDefaultLocation();
-                console.log("defaultLocationFilters: ", defaultLocationFilters);
 
                 // Set the default location filters
                 setFilters(defaultLocationFilters);

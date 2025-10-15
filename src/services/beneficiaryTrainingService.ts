@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use server'
 
-import axiosInstance from '@/lib/axios';
 import { cookies } from 'next/headers';
 
 export interface BeneficiaryTrainingPayload {
@@ -70,16 +69,30 @@ export const fetchBeneficiaryData = async (nicOrHh: string) => {
     try {
         const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
 
-        const response = await axiosInstance.get(`/samurdhi-family/${nicOrHh}`, {
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        const response = await fetch(`${baseUrl}/api/samurdhi-family/${nicOrHh}`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
+
             }
         });
 
-        return response.data;
-    } catch (error) {
-        console.error('Error fetching beneficiary data:', error);
-        throw new Error('Failed to fetch beneficiary data');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch beneficiary data');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to fetch beneficiary data');
     }
 };
 
@@ -91,41 +104,50 @@ export const fetchBeneficiaryTrainingByIdentifier = async (
     try {
         const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
 
-        console.log('Fetching training data with:', { nicNumber, hhNumber, token: !!token });
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
         const params = new URLSearchParams();
+        if (nicNumber) params.append('nic', nicNumber);
+        if (hhNumber) params.append('hh', hhNumber);
 
-        // Priority 1: Search by NIC if available
-        if (nicNumber) {
-            params.append('nic', nicNumber);
-        }
-        // Priority 2: Search by HH number if no NIC
-        else if (hhNumber) {
-            params.append('hh', hhNumber);
-        }
+        const url = `${baseUrl}/api/beneficiary-training?${params}`
 
-        const url = `/beneficiary-training/search/by-identifier?${params}`;
-        console.log('API URL:', url);
-
-        const response = await axiosInstance.get(url, {
+        const response = await fetch(url, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        console.log('API Response:', response.data);
-        return response.data;
+        if (!response.ok) {
+            if (response.status === 404) {
+                return []; // No existing records found
+            }
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch beneficiary training data');
+        }
+
+        const data = await response.json();
+        return data;
     } catch (error: any) {
-        console.error('Error details:', {
+        console.error('Error fetching beneficiary training data:', {
+            message: error.message,
             status: error.response?.status,
-            data: error.response?.data,
-            message: error.message
+            data: error.response?.data
         });
 
-        if (error.response?.status === 404) {
-            return []; // No existing records found
+        // If it's a 404 error from the server, return empty array
+        if (error.message?.includes('404') || error.response?.status === 404) {
+            return [];
         }
-        throw new Error('Failed to fetch beneficiary training data');
+
+        throw new Error(error.message || 'Failed to fetch beneficiary training data');
     }
 };
 
@@ -134,15 +156,30 @@ export const createBeneficiaryTraining = async (payload: BeneficiaryTrainingPayl
     try {
         const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
 
-        const response = await axiosInstance.post('/beneficiary-training', payload, {
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        const response = await fetch(`${baseUrl}/api/beneficiary-training`, {
+            method: 'POST',
             headers: {
-                Authorization: `Bearer ${token}`
-            }
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
+            },
+            body: JSON.stringify(payload)
         });
 
-        return response.data;
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to create beneficiary training record');
+        }
+
+        return await response.json();
     } catch (error: any) {
-        throw new Error(error.response?.data?.message || 'Failed to create beneficiary training record');
+        throw new Error(error.message || 'Failed to create beneficiary training record');
     }
 };
 
@@ -155,19 +192,35 @@ export const updateBeneficiaryTrainingByIdentifier = async (
     try {
         const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
 
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
         const params = new URLSearchParams();
         if (nicNumber) params.append('nic', nicNumber);
         if (hhNumber) params.append('hh', hhNumber);
 
-        const response = await axiosInstance.put(`/beneficiary-training/update/by-identifier?${params}`, payload, {
+        const response = await fetch(`${baseUrl}/api/beneficiary-training?${params}`, {
+            method: 'PUT',
             headers: {
-                Authorization: `Bearer ${token}`
-            }
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
+
+            },
+            body: JSON.stringify(payload)
         });
 
-        return response.data;
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to update beneficiary training records');
+        }
+
+        return await response.json();
     } catch (error: any) {
-        throw new Error(error.response?.data?.message || 'Failed to update beneficiary training records');
+        throw new Error(error.message || 'Failed to update beneficiary training records');
     }
 };
 
@@ -176,15 +229,29 @@ export const fetchCourses = async (): Promise<Course[]> => {
     try {
         const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
 
-        const response = await axiosInstance.get('/course', {
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        const response = await fetch(`${baseUrl}/api/courses`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
+
             }
         });
 
-        return response.data;
-    } catch (error) {
-        console.error('Error fetching courses:', error);
-        throw new Error('Failed to fetch courses');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch courses');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to fetch courses');
     }
 };

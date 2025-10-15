@@ -65,13 +65,8 @@ export const validateSamurdhiForm = (
     // SKIP ALL REMAINING VALIDATIONS IF CONSENT IS FALSE
     if (formData.hasConsentedToEmpowerment === false) {
         if (Object.keys(newErrors).length > 0) {
-            console.log('=== VALIDATION ERRORS (Consent False) ===');
-            console.log('Total errors:', Object.keys(newErrors).length);
-            console.log('Errors object:', newErrors);
-            Object.entries(newErrors).forEach(([field, error]) => {
-                console.log(`${field}: ${error}`);
+            Object.entries(newErrors).forEach(([]) => {
             });
-            console.log('=========================================');
         }
 
         return {
@@ -246,13 +241,8 @@ export const validateSamurdhiForm = (
     }
 
     if (Object.keys(newErrors).length > 0) {
-        console.log('=== VALIDATION ERRORS (Consent True/Null) ===');
-        console.log('Total errors:', Object.keys(newErrors).length);
-        console.log('Errors object:', newErrors);
-        Object.entries(newErrors).forEach(([field, error]) => {
-            console.log(`${field}: ${error}`);
+        Object.entries(newErrors).forEach(([]) => {
         });
-        console.log('=============================================');
     }
 
     return {

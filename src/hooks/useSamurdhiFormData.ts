@@ -257,7 +257,6 @@ export const useSamurdhiFormData = () => {
                         setIsLoadingHouseholdNumbers(true);
                         const numbers = await getHouseholdNumbersByGnCode(gnCode);
                         setHouseholdNumbers(numbers);
-                        console.log('Fetched household numbers for GN Code:', gnCode, numbers);
                     } else {
                         console.error('GN Code not found in location details');
                     }

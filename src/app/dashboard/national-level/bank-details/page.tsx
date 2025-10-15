@@ -183,7 +183,7 @@ const BankAccDetails = () => {
             </h2>
             <p className={theme === 'dark' ? 'text-red-400' : 'text-red-600'}>{error}</p>
             <button
-              onClick={() => window.location.href = '/login'}
+              onClick={() => window.location.href = '/signin'}
               className="mt-4 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
             >
               Go to Login

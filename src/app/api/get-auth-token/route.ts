@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 
@@ -41,7 +42,6 @@ export async function POST(request: NextRequest) {
                     })
                 }
             } catch (error) {
-                console.log('Token validation failed:', error)
             }
         }
 
@@ -67,7 +67,6 @@ export async function POST(request: NextRequest) {
         const newToken = loginData?.token?.accessToken
 
         if (!newToken) {
-            console.log('Login response structure:', JSON.stringify(loginData, null, 2))
             return NextResponse.json({
                 success: false,
                 error: 'No access token received from login',

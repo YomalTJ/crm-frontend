@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use server'
 
-import axiosInstance from "@/lib/axios";
 import { cookies } from 'next/headers';
 
 // Grant Utilization Response Interface
@@ -97,36 +97,35 @@ export interface AccessibleLocations {
     }[];
 }
 
-// Decode JWT token to get user details
+// Decode JWT token to get user details (server-side only)
 export const getUserDetailsFromToken = async () => {
-    if (typeof window === 'undefined') return null;
+    try {
+        const token = (await cookies()).get('staffAccessToken')?.value;
 
-    const staffToken = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('staffAccessToken='))
-        ?.split('=')[1];
-
-    if (staffToken) {
-        try {
-            const payloadBase64 = staffToken.split('.')[1];
-            const paddedPayload = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
-            const payload = JSON.parse(atob(paddedPayload));
-            return {
-                userId: payload.sub,
-                username: payload.username,
-                locationCode: payload.locationCode,
-                roleName: payload.roleName,
-                roleCanAdd: payload.roleCanAdd,
-                roleCanUpdate: payload.roleCanUpdate,
-                roleCanDelete: payload.roleCanDelete,
-            };
-        } catch (e) {
-            console.error("Error decoding staff token", e);
+        if (!token) {
+            return null;
         }
+
+        const payloadBase64 = token.split('.')[1];
+        const paddedPayload = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(atob(paddedPayload));
+
+        return {
+            userId: payload.sub,
+            username: payload.username,
+            locationCode: payload.locationCode,
+            roleName: payload.roleName,
+            roleCanAdd: payload.roleCanAdd,
+            roleCanUpdate: payload.roleCanUpdate,
+            roleCanDelete: payload.roleCanDelete,
+        };
+    } catch (error) {
+        console.error("Error decoding staff token", error);
+        return null;
     }
-    return null;
 };
 
+// Use existing API routes
 export const getBeneficiaryTypes = async (): Promise<BeneficiaryType[]> => {
     try {
         const token = (await cookies()).get('staffAccessToken')?.value;
@@ -135,16 +134,26 @@ export const getBeneficiaryTypes = async (): Promise<BeneficiaryType[]> => {
             throw new Error('No authentication token found');
         }
 
-        const response = await axiosInstance.get('/beneficiary-status', {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        // Use existing beneficiary-status API route
+        const response = await fetch(`${baseUrl}/api/beneficiary-status`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
-        console.error('Failed to fetch beneficiary types:', error);
-        throw new Error('Failed to fetch beneficiary types');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch beneficiary types');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to fetch beneficiary types');
     }
 };
 
@@ -157,16 +166,26 @@ export const getAccessibleLocations = async (): Promise<AccessibleLocations> => 
             throw new Error('No authentication token found');
         }
 
-        const response = await axiosInstance.get('/samurdhi-family/accessible-locations', {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        // Use existing accessible-locations API route from dashboard
+        const response = await fetch(`${baseUrl}/api/dashboard/accessible-locations`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
-        console.error('Failed to fetch accessible locations:', error);
-        throw new Error('Failed to fetch accessible locations');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch accessible locations');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to fetch accessible locations');
     }
 };
 
@@ -179,6 +198,8 @@ export const getGrantUtilization = async (filters?: GrantUtilizationFilters): Pr
             throw new Error('No authentication token found');
         }
 
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
         // Build query parameters
         const queryParams = new URLSearchParams();
         if (filters?.district_id) queryParams.append('district_id', filters.district_id);
@@ -189,18 +210,28 @@ export const getGrantUtilization = async (filters?: GrantUtilizationFilters): Pr
         if (filters?.beneficiary_type_id) queryParams.append('beneficiary_type_id', filters.beneficiary_type_id);
 
         const queryString = queryParams.toString();
-        const url = `/beneficiaries/grant-utilization${queryString ? `?${queryString}` : ''}`;
 
-        const response = await axiosInstance.get(url, {
+        // Use a generic API route or create a specific one for grant utilization
+        // For now, using the beneficiaries API pattern
+        const url = `${baseUrl}/api/beneficiaries/grant-utilization${queryString ? `?${queryString}` : ''}`;
+
+        const response = await fetch(url, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
-        console.error('Failed to fetch grant utilization:', error);
-        throw new Error('Failed to fetch grant utilization data');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch grant utilization data');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to fetch grant utilization data');
     }
 };
 

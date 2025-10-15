@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use server"
 
-import axiosInstance from "@/lib/axios";
 import { cookies } from "next/headers";
 
 export interface GrantUtilizationPayload {
@@ -87,21 +86,32 @@ export interface GrantUtilizationResponse {
 
 export const createGrantUtilization = async (payload: GrantUtilizationPayload): Promise<GrantUtilizationResponse> => {
   try {
-    // Get the token from cookies
     const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
 
     if (!token) {
       throw new Error('No authentication token found');
     }
 
-    const response = await axiosInstance.post('/grant-utilization', payload, {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+    const response = await fetch(`${baseUrl}/api/grant-utilization`, {
+      method: 'POST',
       headers: {
-        Authorization: `Bearer ${token}`
-      }
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        'x-app-key': process.env.APP_AUTH_KEY!
+      },
+      body: JSON.stringify(payload)
     });
-    return response.data;
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create Grant Utilization record');
+    }
+
+    return await response.json();
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Failed to create Grant Utilization record');
+    throw new Error(error.message || 'Failed to create Grant Utilization record');
   }
 };
 
@@ -114,14 +124,25 @@ export const getGrantUtilizationById = async (id: string): Promise<GrantUtilizat
       throw new Error('No authentication token found');
     }
 
-    const response = await axiosInstance.get(`/grant-utilization/${id}`, {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+    const response = await fetch(`${baseUrl}/api/grant-utilization/${id}`, {
+      method: 'GET',
+      cache: 'no-store',
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
+        'x-app-key': process.env.APP_AUTH_KEY!
       }
     });
-    return response.data;
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch Grant Utilization details');
+    }
+
+    return await response.json();
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Failed to fetch Grant Utilization details');
+    throw new Error(error.message || 'Failed to fetch Grant Utilization details');
   }
 };
 
@@ -134,14 +155,26 @@ export const updateGrantUtilization = async (hhNumberOrNic: string, payload: Gra
       throw new Error('No authentication token found');
     }
 
-    const response = await axiosInstance.put(`/grant-utilization/${hhNumberOrNic}`, payload, {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+    const response = await fetch(`${baseUrl}/api/grant-utilization/${hhNumberOrNic}`, {
+      method: 'PUT',
       headers: {
-        Authorization: `Bearer ${token}`
-      }
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        'x-app-key': process.env.APP_AUTH_KEY!
+      },
+      body: JSON.stringify(payload)
     });
-    return response.data;
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to update Grant Utilization record');
+    }
+
+    return await response.json();
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Failed to update Grant Utilization record');
+    throw new Error(error.message || 'Failed to update Grant Utilization record');
   }
 };
 
@@ -154,6 +187,8 @@ export const getAllGrantUtilizations = async (filters?: any): Promise<GrantUtili
       throw new Error('No authentication token found');
     }
 
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
     const params = new URLSearchParams();
     if (filters) {
       Object.keys(filters).forEach(key => {
@@ -163,14 +198,26 @@ export const getAllGrantUtilizations = async (filters?: any): Promise<GrantUtili
       });
     }
 
-    const response = await axiosInstance.get(`/grant-utilization?${params.toString()}`, {
+    const queryString = params.toString();
+    const url = `${baseUrl}/api/grant-utilization${queryString ? `?${queryString}` : ''}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      cache: 'no-store',
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
+        'x-app-key': process.env.APP_AUTH_KEY!
       }
     });
-    return response.data;
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch Grant Utilization records');
+    }
+
+    return await response.json();
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Failed to fetch Grant Utilization records');
+    throw new Error(error.message || 'Failed to fetch Grant Utilization records');
   }
 };
 
@@ -182,24 +229,33 @@ export const checkGrantUtilizationExists = async (hhNumberOrNic: string): Promis
       throw new Error('No authentication token found');
     }
 
-    const response = await axiosInstance.get(`/grant-utilization/family/${hhNumberOrNic}`, {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+    const response = await fetch(`${baseUrl}/api/grant-utilization/family/${hhNumberOrNic}`, {
+      method: 'GET',
+      cache: 'no-store',
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
+        'x-app-key': process.env.APP_AUTH_KEY!
       }
     });
 
-    // If we get a successful response and there are grant utilizations, return true
-    return response.data.grantUtilizations && response.data.grantUtilizations.length > 0;
-  } catch (error: any) {
-    // If it's a 404 error, it means no records exist
-    if (error.response?.status === 404) {
-      return false;
+    if (!response.ok) {
+      if (response.status === 404) {
+        return false;
+      }
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to check Grant Utilization existence');
     }
-    throw new Error(error.response?.data?.message || 'Failed to check Grant Utilization existence');
+
+    const data = await response.json();
+    // If we get a successful response and there are grant utilizations, return true
+    return data.grantUtilizations && data.grantUtilizations.length > 0;
+  } catch (error: any) {
+    throw new Error(error.message || 'Failed to check Grant Utilization existence');
   }
 };
 
-// Add this function to get existing grant utilizations
 export const getGrantUtilizationsByHhNumberOrNic = async (hhNumberOrNic: string): Promise<any> => {
   try {
     const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
@@ -208,13 +264,24 @@ export const getGrantUtilizationsByHhNumberOrNic = async (hhNumberOrNic: string)
       throw new Error('No authentication token found');
     }
 
-    const response = await axiosInstance.get(`/grant-utilization/family/${hhNumberOrNic}`, {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+    const response = await fetch(`${baseUrl}/api/grant-utilization/family/${hhNumberOrNic}`, {
+      method: 'GET',
+      cache: 'no-store',
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
+        'x-app-key': process.env.APP_AUTH_KEY!
       }
     });
-    return response.data;
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch Grant Utilization records');
+    }
+
+    return await response.json();
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Failed to fetch Grant Utilization records');
+    throw new Error(error.message || 'Failed to fetch Grant Utilization records');
   }
 };

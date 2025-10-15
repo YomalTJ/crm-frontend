@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use server'
 
-import axiosInstance from "@/lib/axios";
 import { cookies } from 'next/headers';
 
 // Project Owner Response Interface
@@ -157,16 +157,25 @@ export const getAccessibleLocations = async (): Promise<AccessibleLocations> => 
             throw new Error('No authentication token found');
         }
 
-        const response = await axiosInstance.get('/samurdhi-family/accessible-locations', {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const response = await fetch(`${baseUrl}/api/samurdhi-family/accessible-locations`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch accessible locations');
+        }
+
+        return await response.json();
+    } catch (error: any) {
         console.error('Failed to fetch accessible locations:', error);
-        throw new Error('Failed to fetch accessible locations');
+        throw new Error(error.message || 'Failed to fetch accessible locations');
     }
 };
 
@@ -179,16 +188,25 @@ export const getBeneficiaryTypes = async (): Promise<BeneficiaryType[]> => {
             throw new Error('No authentication token found');
         }
 
-        const response = await axiosInstance.get('/beneficiary-status', {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const response = await fetch(`${baseUrl}/api/beneficiary-status`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch beneficiary types');
+        }
+
+        return await response.json();
+    } catch (error: any) {
         console.error('Failed to fetch beneficiary types:', error);
-        throw new Error('Failed to fetch beneficiary types');
+        throw new Error(error.message || 'Failed to fetch beneficiary types');
     }
 };
 
@@ -211,18 +229,27 @@ export const getProjectOwners = async (filters?: ProjectOwnerFilters): Promise<P
         if (filters?.beneficiary_type_id) queryParams.append('beneficiary_type_id', filters.beneficiary_type_id);
 
         const queryString = queryParams.toString();
-        const url = `/beneficiaries/project-owners${queryString ? `?${queryString}` : ''}`;
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const url = `${baseUrl}/api/beneficiaries/project-owners${queryString ? `?${queryString}` : ''}`;
 
-        const response = await axiosInstance.get(url, {
+        const response = await fetch(url, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch project owners');
+        }
+
+        return await response.json();
+    } catch (error: any) {
         console.error('Failed to fetch project owners:', error);
-        throw new Error('Failed to fetch project owners');
+        throw new Error(error.message || 'Failed to fetch project owners');
     }
 };
 

@@ -79,18 +79,10 @@ const BeneficiaryTrainingForm = () => {
         const beneficiary = await fetchBeneficiaryData(hhNumberOrNic);
         setBeneficiaryData(beneficiary);
 
-        // Check if beneficiary training records already exist
-        const isNic = /^\d{9}[VvXx]?$|^\d{12}$/.test(hhNumberOrNic); // Assuming NIC is longer
-        console.log("isNic: ", isNic, "for value:", hhNumberOrNic);
         const existingData = await fetchBeneficiaryTrainingByIdentifier(
-          isNic ? hhNumberOrNic : undefined,
-          isNic ? undefined : hhNumberOrNic
+          hhNumberOrNic, // Always pass as NIC first
+          undefined       // Don't pass HH number initially
         );
-
-        console.log("hhNumberOrNic: ", hhNumberOrNic);
-
-        console.log("existingData: ", existingData);
-
 
         if (existingData && existingData.length > 0) {
           setExistingTrainingData(existingData);
@@ -120,19 +112,69 @@ const BeneficiaryTrainingForm = () => {
             trainerContactNumber: firstRecord.trainerContactNumber || ''
           });
         } else {
-          // Pre-fill form with beneficiary data for new record
-          setFormData(prev => ({
-            ...prev,
-            name: beneficiary.beneficiaryDetails?.name || '',
-            phoneNumber: beneficiary.mobilePhone || '',
-            address: beneficiary.address || '',
-            districtId: beneficiary.location?.district?.id || '',
-            dsId: beneficiary.location?.divisionalSecretariat?.id || '',
-            zoneId: beneficiary.location?.samurdhiBank?.id || '',
-            gndId: beneficiary.location?.gramaNiladhariDivision?.id || '',
-            hhNumber: beneficiary.householdNumber || '',
-            nicNumber: beneficiary.beneficiaryDetails?.nicNumber || hhNumberOrNic
-          }));
+          // If no data found with NIC, try searching by HH number as fallback
+          if (beneficiary.householdNumber) {
+            const existingDataByHh = await fetchBeneficiaryTrainingByIdentifier(
+              undefined,
+              beneficiary.householdNumber
+            );
+
+            if (existingDataByHh && existingDataByHh.length > 0) {
+              setExistingTrainingData(existingDataByHh);
+              setIsEditMode(true);
+
+              const firstRecord = existingDataByHh[0];
+              setFormData({
+                districtId: firstRecord.districtId || '',
+                dsId: firstRecord.dsId || '',
+                zoneId: firstRecord.zoneId || '',
+                gndId: firstRecord.gndId || '',
+                hhNumber: firstRecord.hhNumber || '',
+                nicNumber: firstRecord.nicNumber || '',
+                name: firstRecord.name || '',
+                address: firstRecord.address || '',
+                phoneNumber: firstRecord.phoneNumber || '',
+                trainingActivitiesDone: firstRecord.trainingActivitiesDone || false,
+                trainingActivitiesRequired: firstRecord.trainingActivitiesRequired || false,
+                courseId: firstRecord.courseId || undefined,
+                trainingInstitution: firstRecord.trainingInstitution || '',
+                trainingInstituteAddress: firstRecord.trainingInstituteAddress || '',
+                trainingInstitutePhone: firstRecord.trainingInstitutePhone || '',
+                courseCost: firstRecord.courseCost || undefined,
+                trainingDuration: firstRecord.trainingDuration || '',
+                trainerName: firstRecord.trainerName || '',
+                trainerContactNumber: firstRecord.trainerContactNumber || ''
+              });
+            } else {
+              // Pre-fill form with beneficiary data for new record
+              setFormData(prev => ({
+                ...prev,
+                name: beneficiary.beneficiaryDetails?.name || '',
+                phoneNumber: beneficiary.mobilePhone || '',
+                address: beneficiary.address || '',
+                districtId: beneficiary.location?.district?.id || '',
+                dsId: beneficiary.location?.divisionalSecretariat?.id || '',
+                zoneId: beneficiary.location?.samurdhiBank?.id || '',
+                gndId: beneficiary.location?.gramaNiladhariDivision?.id || '',
+                hhNumber: beneficiary.householdNumber || '',
+                nicNumber: beneficiary.beneficiaryDetails?.nicNumber || hhNumberOrNic
+              }));
+            }
+          } else {
+            // Pre-fill form with beneficiary data for new record
+            setFormData(prev => ({
+              ...prev,
+              name: beneficiary.beneficiaryDetails?.name || '',
+              phoneNumber: beneficiary.mobilePhone || '',
+              address: beneficiary.address || '',
+              districtId: beneficiary.location?.district?.id || '',
+              dsId: beneficiary.location?.divisionalSecretariat?.id || '',
+              zoneId: beneficiary.location?.samurdhiBank?.id || '',
+              gndId: beneficiary.location?.gramaNiladhariDivision?.id || '',
+              hhNumber: beneficiary.householdNumber || '',
+              nicNumber: beneficiary.beneficiaryDetails?.nicNumber || hhNumberOrNic
+            }));
+          }
         }
 
         // Load courses
@@ -191,10 +233,11 @@ const BeneficiaryTrainingForm = () => {
       setError(null);
 
       if (isEditMode) {
+        // Use the actual NIC and HH from the form data for update
         await updateBeneficiaryTrainingByIdentifier(
           formData,
-          hhNumberOrNic, // Use the NIC since that's what we used to find the record
-          undefined       // Don't pass HH number
+          formData.nicNumber, // Use the actual NIC from form data
+          formData.hhNumber   // Use the actual HH number from form data
         );
         toast.success('Training record updated successfully');
       } else {

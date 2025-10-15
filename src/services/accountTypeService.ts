@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use server"
+'use server'
 
-import axiosInstance from "@/lib/axios";
 import { cookies } from "next/headers";
 
 export interface AccountType {
@@ -13,20 +12,32 @@ export interface AccountType {
 
 export const getAccountTypes = async (): Promise<AccountType[]> => {
   try {
-    const token = (await cookies()).get('accessToken')?.value ||
-      (await cookies()).get('staffAccessToken')?.value;
+    const token =
+      (await cookies()).get("accessToken")?.value ||
+      (await cookies()).get("staffAccessToken")?.value;
 
     if (!token) {
-      throw new Error('No authentication token found');
+      throw new Error("No authentication token found");
     }
 
-    const response = await axiosInstance.get('/account-types', {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+
+    const response = await fetch(`${baseUrl}/api/account-types`, {
+      method: "GET",
+      cache: "no-store",
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
+        'x-app-key': process.env.APP_AUTH_KEY!
       }
     });
-    return response.data;
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to fetch account types");
+    }
+
+    return await response.json();
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Failed to fetch account types');
+    throw new Error(error.message || "Failed to fetch account types");
   }
 };

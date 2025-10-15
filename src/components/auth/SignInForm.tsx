@@ -30,9 +30,6 @@ export default function SignInForm() {
       const result = await loginUser({ username, password });
 
       if (result.type === "staff") {
-        console.log("Location details:", result.locationDetails);
-        console.log("WBB Password:", result.wbbPassword);
-        console.log("NIC:", result.nic); // NIC is now available
 
         if (result.locationDetails) {
           localStorage.setItem('staffLocation', JSON.stringify(result.locationDetails));

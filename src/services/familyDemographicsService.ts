@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use server'
 
-import axiosInstance from "@/lib/axios";
 import { cookies } from 'next/headers';
 
 // Family Demographics Response Interface
@@ -123,34 +123,32 @@ export interface AccessibleLocations {
     }[];
 }
 
-// Decode JWT token to get user details
+// Decode JWT token to get user details (server-side only)
 export const getUserDetailsFromToken = async () => {
-    if (typeof window === 'undefined') return null;
+    try {
+        const token = (await cookies()).get('staffAccessToken')?.value;
 
-    const staffToken = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('staffAccessToken='))
-        ?.split('=')[1];
-
-    if (staffToken) {
-        try {
-            const payloadBase64 = staffToken.split('.')[1];
-            const paddedPayload = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
-            const payload = JSON.parse(atob(paddedPayload));
-            return {
-                userId: payload.sub,
-                username: payload.username,
-                locationCode: payload.locationCode,
-                roleName: payload.roleName,
-                roleCanAdd: payload.roleCanAdd,
-                roleCanUpdate: payload.roleCanUpdate,
-                roleCanDelete: payload.roleCanDelete,
-            };
-        } catch (e) {
-            console.error("Error decoding staff token", e);
+        if (!token) {
+            return null;
         }
+
+        const payloadBase64 = token.split('.')[1];
+        const paddedPayload = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(atob(paddedPayload));
+
+        return {
+            userId: payload.sub,
+            username: payload.username,
+            locationCode: payload.locationCode,
+            roleName: payload.roleName,
+            roleCanAdd: payload.roleCanAdd,
+            roleCanUpdate: payload.roleCanUpdate,
+            roleCanDelete: payload.roleCanDelete,
+        };
+    } catch (error) {
+        console.error("Error decoding staff token", error);
+        return null;
     }
-    return null;
 };
 
 // Get accessible locations based on user role and location
@@ -162,16 +160,25 @@ export const getAccessibleLocations = async (): Promise<AccessibleLocations> => 
             throw new Error('No authentication token found');
         }
 
-        const response = await axiosInstance.get('/samurdhi-family/accessible-locations', {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        const response = await fetch(`${baseUrl}/api/family-demographics/accessible-locations`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
-        console.error('Failed to fetch accessible locations:', error);
-        throw new Error('Failed to fetch accessible locations');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch accessible locations');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to fetch accessible locations');
     }
 };
 
@@ -184,16 +191,25 @@ export const getBeneficiaryTypes = async (): Promise<BeneficiaryType[]> => {
             throw new Error('No authentication token found');
         }
 
-        const response = await axiosInstance.get('/beneficiary-status', {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        const response = await fetch(`${baseUrl}/api/family-demographics/beneficiary-types`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
-        console.error('Failed to fetch beneficiary types:', error);
-        throw new Error('Failed to fetch beneficiary types');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch beneficiary types');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to fetch beneficiary types');
     }
 };
 
@@ -205,6 +221,8 @@ export const getFamilyDemographics = async (filters?: FamilyDemographicsFilters)
         if (!token) {
             throw new Error('No authentication token found');
         }
+
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
         // Build query parameters
         const queryParams = new URLSearchParams();
@@ -218,22 +236,29 @@ export const getFamilyDemographics = async (filters?: FamilyDemographicsFilters)
         if (filters?.maxAge) queryParams.append('maxAge', filters.maxAge.toString());
 
         const queryString = queryParams.toString();
-        const url = `/beneficiaries/demographics${queryString ? `?${queryString}` : ''}`;
+        const url = `${baseUrl}/api/family-demographics/data${queryString ? `?${queryString}` : ''}`;
 
-        const response = await axiosInstance.get(url, {
+        const response = await fetch(url, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
-        console.error('Failed to fetch family demographics:', error);
-        throw new Error('Failed to fetch family demographics');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch family demographics');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to fetch family demographics');
     }
 };
 
-// Add this function to familyDemographicsService.ts
+// Get user default location
 export const getUserDefaultLocation = async (): Promise<FamilyDemographicsFilters> => {
     try {
         const locations = await getAccessibleLocations();

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client'
 
 import { useTheme } from '@/context/ThemeContext'
@@ -220,7 +221,6 @@ const ApiStatus = () => {
                     }
                 }
             } catch (healthError) {
-                console.log(`Health check failed for ${endpoint.name}:`, healthError)
             }
 
             // Final fallback - mark as offline

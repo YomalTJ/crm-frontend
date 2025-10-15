@@ -1,37 +1,43 @@
-import { NextResponse } from 'next/server';
-import axiosInstance from '@/lib/axios';
+import axiosInstance from "@/lib/axios";
+import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 
-export async function GET(req: Request) {
+export async function GET(request: Request) {
     try {
-        const authHeader = req.headers.get('authorization');
+        const cookieToken =
+            (await cookies()).get("accessToken")?.value ||
+            (await cookies()).get("staffAccessToken")?.value;
 
-        const response = await axiosInstance.get('/aswasuma-category', {
-            headers: {
-                Authorization: authHeader || ''
-            }
-        });
+        const authHeader = request.headers.get("authorization");
+        const headerToken = authHeader?.startsWith("Bearer ")
+            ? authHeader.split(" ")[1]
+            : null;
 
-        return NextResponse.json(response.data);
-    } catch (error: unknown) {
-        // Narrow the error to check if it's an AxiosError
-        if (typeof error === 'object' && error !== null && 'response' in error) {
-            const axiosError = error as {
-                response?: {
-                    data?: { message?: string };
-                    status?: number;
-                };
-            };
+        const token = cookieToken || headerToken;
 
+        if (!token) {
             return NextResponse.json(
-                { error: axiosError.response?.data?.message || 'Failed to fetch Aswasuma categories' },
-                { status: axiosError.response?.status || 500 }
+                { error: "No authentication token found" },
+                { status: 401 }
             );
         }
 
-        // Fallback for unknown errors
+        const response = await axiosInstance.get("/aswasuma-category", {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        return NextResponse.json(response.data);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
         return NextResponse.json(
-            { error: 'An unknown error occurred' },
-            { status: 500 }
+            {
+                error:
+                    error?.response?.data?.message ||
+                    "Failed to fetch Aswasuma categories",
+            },
+            { status: error?.response?.status || 500 }
         );
     }
 }

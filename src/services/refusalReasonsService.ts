@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use server'
 
-import axiosInstance from "@/lib/axios";
 import { cookies } from 'next/headers';
 
 // Refusal Reason Response Interface
@@ -109,16 +109,25 @@ export const getAccessibleLocations = async (): Promise<AccessibleLocations> => 
             throw new Error('No authentication token found');
         }
 
-        const response = await axiosInstance.get('/samurdhi-family/accessible-locations', {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const response = await fetch(`${baseUrl}/api/samurdhi-family/accessible-locations`, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch accessible locations');
+        }
+
+        return await response.json();
+    } catch (error: any) {
         console.error('Failed to fetch accessible locations:', error);
-        throw new Error('Failed to fetch accessible locations');
+        throw new Error(error.message || 'Failed to fetch accessible locations');
     }
 };
 
@@ -140,18 +149,27 @@ export const getRefusalReasons = async (filters?: RefusalReasonFilters): Promise
         if (filters?.mainProgram) queryParams.append('mainProgram', filters.mainProgram);
 
         const queryString = queryParams.toString();
-        const url = `/beneficiaries/empowerment-refusals${queryString ? `?${queryString}` : ''}`;
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const url = `${baseUrl}/api/beneficiaries/empowerment-refusals${queryString ? `?${queryString}` : ''}`;
 
-        const response = await axiosInstance.get(url, {
+        const response = await fetch(url, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch refusal reasons');
+        }
+
+        return await response.json();
+    } catch (error: any) {
         console.error('Failed to fetch refusal reasons:', error);
-        throw new Error('Failed to fetch refusal reasons');
+        throw new Error(error.message || 'Failed to fetch refusal reasons');
     }
 };
 

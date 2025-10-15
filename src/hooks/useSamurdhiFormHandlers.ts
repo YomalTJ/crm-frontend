@@ -659,7 +659,6 @@ export const useSamurdhiFormHandlers = ({
                 }
                 if (householdData.household.level !== undefined && householdData.household.level !== null) {
                     loadedFields.add('aswesuma_cat_id');
-                    console.log('Added aswesuma_cat_id to loadedFields, level:', householdData.household.level);
                 }
 
                 // Calculate household member counts
@@ -714,7 +713,6 @@ export const useSamurdhiFormHandlers = ({
                 }
 
                 setHouseholdLoadedFields(loadedFields);
-                console.log('Final loadedFields:', Array.from(loadedFields));
             }
         } catch (error: unknown) {
             console.error('Error fetching household details:', error);
@@ -883,8 +881,6 @@ export const useSamurdhiFormHandlers = ({
                 otherSubsidyAmount: formData.otherSubsidyAmount || null
             };
 
-            console.log("payload: ", payload);
-
 
             // Add JSON payload
             Object.entries(payload).forEach(([key, value]) => {
@@ -908,10 +904,7 @@ export const useSamurdhiFormHandlers = ({
             if (selectedFile) {
                 submitFormData.append('consentLetter', selectedFile);
             }
-
-            console.log("FormData contents:");
-            for (const pair of submitFormData.entries()) {
-                console.log(pair[0] + ': ' + pair[1]);
+            for (const {} of submitFormData.entries()) {
             }
 
             let response;

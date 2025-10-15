@@ -5,9 +5,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { useRouter } from 'next/navigation';
 import { useProjectData } from '@/hooks/useProjectData';
 import PageHeader from '@/components/layout/PageHeader';
-import ProjectFilters from '@/components/filters/ProjectFilters';
 import ProjectDataTable from '@/components/form-fields/ProjectDataTable';
 import StatsCards from '@/components/form-fields/StatsCards';
+import ProjectFilters from '@/components/filters/ProjectFilters';
 
 const GrantUtilization = () => {
     const { theme } = useTheme();

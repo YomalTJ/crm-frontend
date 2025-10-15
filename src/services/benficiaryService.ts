@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// beneficiaryService.ts
 'use server'
 
-import axiosInstance from "@/lib/axios";
 import { cookies } from 'next/headers';
 
 export interface BeneficiaryDetailsResponseDto {
@@ -290,6 +291,8 @@ export const getBeneficiaries = async (filters: BeneficiaryFilters = {}): Promis
             throw new Error('No authentication token found');
         }
 
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
         // Build query parameters
         const params = new URLSearchParams();
         if (filters.page) params.append('page', filters.page.toString());
@@ -301,22 +304,25 @@ export const getBeneficiaries = async (filters: BeneficiaryFilters = {}): Promis
         if (filters.search) params.append('search', filters.search);
 
         const queryString = params.toString();
-        const url = `/samurdhi-family/created-by-me${queryString ? `?${queryString}` : ''}`;
+        const url = `${baseUrl}/api/beneficiaries${queryString ? `?${queryString}` : ''}`;
 
-        console.log('API Request URL:', url); // Debug the URL being called
-        console.log('Filters being sent:', filters); // Debug the filters
-
-        const response = await axiosInstance.get(url, {
+        const response = await fetch(url, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        console.log('API Response:', response.data); // Debug the response
-        return response.data;
-    } catch (error) {
-        console.error('Failed to fetch beneficiaries:', error);
-        throw new Error('Failed to fetch beneficiaries');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch beneficiaries');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to fetch beneficiaries');
     }
 };
 
@@ -328,14 +334,22 @@ export const deleteBeneficiary = async (id: string): Promise<void> => {
             throw new Error('No authentication token found');
         }
 
-        await axiosInstance.delete(`/samurdhi-family/${id}`, {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        const response = await fetch(`${baseUrl}/api/beneficiaries/${id}`, {
+            method: 'DELETE',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
-    } catch (error) {
-        console.error('Failed to delete beneficiary:', error);
-        throw new Error('Failed to delete beneficiary');
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to delete beneficiary');
+        }
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to delete beneficiary');
     }
 };
 
@@ -349,7 +363,9 @@ export const getBeneficiaryDetails = async (
             throw new Error('No authentication token found');
         }
 
-        // Build query parameters - adjust field names to match your DTO
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        // Build query parameters
         const queryParams = new URLSearchParams();
         if (filters.district_id) queryParams.append('district_id', filters.district_id);
         if (filters.ds_id) queryParams.append('ds_id', filters.ds_id);
@@ -359,18 +375,25 @@ export const getBeneficiaryDetails = async (
         if (filters.empowerment_dimension_id) queryParams.append('empowerment_dimension_id', filters.empowerment_dimension_id);
 
         const queryString = queryParams.toString();
-        const url = `/beneficiaries/details${queryString ? `?${queryString}` : ''}`;
+        const url = `${baseUrl}/api/beneficiaries/details${queryString ? `?${queryString}` : ''}`;
 
-        const response = await axiosInstance.get(url, {
+        const response = await fetch(url, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
-        console.error('Failed to fetch beneficiary details:', error);
-        throw new Error('Failed to fetch beneficiary details');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch beneficiary details');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to fetch beneficiary details');
     }
 };
 
@@ -388,6 +411,8 @@ export const getBeneficiaryCountsByLocation = async (filters: {
             throw new Error('No authentication token found');
         }
 
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
         const queryParams = new URLSearchParams();
         if (filters.province_id) queryParams.append('province_id', filters.province_id);
         if (filters.district_id) queryParams.append('district_id', filters.district_id);
@@ -396,17 +421,24 @@ export const getBeneficiaryCountsByLocation = async (filters: {
         if (filters.gnd_id) queryParams.append('gnd_id', filters.gnd_id);
 
         const queryString = queryParams.toString();
-        const url = `/beneficiaries/counts${queryString ? `?${queryString}` : ''}`;
+        const url = `${baseUrl}/api/beneficiaries/counts${queryString ? `?${queryString}` : ''}`;
 
-        const response = await axiosInstance.get(url, {
+        const response = await fetch(url, {
+            method: 'GET',
+            cache: 'no-store',
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 
-        return response.data;
-    } catch (error) {
-        console.error('Failed to fetch beneficiary counts:', error);
-        throw new Error('Failed to fetch beneficiary counts');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch beneficiary counts');
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to fetch beneficiary counts');
     }
 };
