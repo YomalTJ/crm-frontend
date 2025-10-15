@@ -6,9 +6,12 @@ import { NextResponse } from "next/server";
 
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        // Await the params to resolve the Promise
+        const { id } = await params;
+
         const appKeyValidation = validateAppKey(request);
         if (appKeyValidation) {
             return appKeyValidation;
@@ -28,7 +31,7 @@ export async function GET(
             return NextResponse.json({ error: "No authentication token found" }, { status: 401 });
         }
 
-        const response = await axiosInstance.get(`/grant-utilization/${params.id}`, {
+        const response = await axiosInstance.get(`/grant-utilization/${id}`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             }
@@ -45,9 +48,12 @@ export async function GET(
 
 export async function PUT(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        // Await the params to resolve the Promise
+        const { id } = await params;
+
         const appKeyValidation = validateAppKey(request);
         if (appKeyValidation) {
             return appKeyValidation;
@@ -69,7 +75,7 @@ export async function PUT(
 
         const payload = await request.json();
 
-        const response = await axiosInstance.put(`/grant-utilization/${params.id}`, payload, {
+        const response = await axiosInstance.put(`/grant-utilization/${id}`, payload, {
             headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",

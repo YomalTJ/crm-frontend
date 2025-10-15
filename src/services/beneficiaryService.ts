@@ -5,10 +5,12 @@
 import { cookies } from 'next/headers';
 
 export interface BeneficiaryStatus {
-  beneficiary_status_id: number;
-  name: string;
-  created_at: string;
-  updated_at: string;
+  beneficiary_type_id: string;  // UUID format
+  nameEnglish: string;
+  nameSinhala: string;
+  nameTamil: string;
+  createdAt: string;
+  created_by: string;
 }
 
 export const getBeneficiaryStatuses = async (): Promise<BeneficiaryStatus[]> => {
@@ -37,7 +39,17 @@ export const getBeneficiaryStatuses = async (): Promise<BeneficiaryStatus[]> => 
       throw new Error(error.error || 'Failed to fetch beneficiary statuses');
     }
 
-    return await response.json();
+    const data = await response.json();
+    
+    // Transform the data to match the expected structure
+    return data.map((item: any) => ({
+      beneficiary_type_id: item.beneficiary_type_id,
+      nameEnglish: item.nameEnglish,
+      nameSinhala: item.nameSinhala,
+      nameTamil: item.nameTamil,
+      createdAt: item.createdAt,
+      created_by: item.created_by
+    }));
   } catch (error: any) {
     throw new Error(error.message || 'Failed to fetch beneficiary statuses');
   }

@@ -7,7 +7,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export async function GET(
     request: NextRequest,
-    context: { params: { identifier: string } }
+    context: { params: Promise<{ identifier: string }> } // Change to Promise
 ) {
     try {
         const appKeyValidation = validateAppKey(request);
@@ -15,7 +15,7 @@ export async function GET(
             return appKeyValidation;
         }
 
-        const { identifier } = await context.params;
+        const { identifier } = await context.params; // Await the params
         const authHeader = request.headers.get('authorization');
 
         if (!identifier) {
@@ -46,7 +46,7 @@ export async function GET(
 
 export async function PUT(
     request: NextRequest,
-    context: { params: { identifier: string } }
+    context: { params: Promise<{ identifier: string }> } // Change to Promise
 ) {
     try {
         const appKeyValidation = validateAppKey(request);
@@ -54,7 +54,7 @@ export async function PUT(
             return appKeyValidation;
         }
 
-        const { identifier } = await context.params;
+        const { identifier } = await context.params; // Await the params
         const authHeader = request.headers.get('authorization');
         const contentType = request.headers.get('content-type');
 

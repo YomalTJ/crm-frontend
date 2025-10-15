@@ -6,13 +6,16 @@ import { NextResponse } from "next/server";
 
 export async function GET(
     request: Request,
-    { params }: { params: { livelihoodId: string } }
+    { params }: { params: Promise<{ livelihoodId: string }> } // Change this line
 ) {
     try {
         const appKeyValidation = validateAppKey(request);
         if (appKeyValidation) {
             return appKeyValidation;
         }
+
+        // Await the params first
+        const { livelihoodId } = await params;
 
         const cookieToken =
             (await cookies()).get("accessToken")?.value ||
@@ -28,11 +31,10 @@ export async function GET(
             return NextResponse.json({ error: "No authentication token found" }, { status: 401 });
         }
 
-        const response = await axiosInstance.get(`/project-type/livelihood/${params.livelihoodId}`, {
+        const response = await axiosInstance.get(`/project-type/livelihood/${livelihoodId}`, {
             headers: {
                 Authorization: `Bearer ${token}`,
-                        'x-app-key': process.env.APP_AUTH_KEY!
-
+                'x-app-key': process.env.APP_AUTH_KEY!
             }
         });
 

@@ -6,9 +6,13 @@ import { NextResponse } from "next/server";
 
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        // Await the params to resolve the Promise
+        const resolvedParams = await params;
+        const id = resolvedParams.id;
+
         const appKeyValidation = validateAppKey(request);
         if (appKeyValidation) {
             return appKeyValidation;
@@ -26,7 +30,7 @@ export async function DELETE(
             return NextResponse.json({ error: "No authentication token found" }, { status: 401 });
         }
 
-        await axiosInstance.delete(`/samurdhi-family/${params.id}`, {
+        await axiosInstance.delete(`/samurdhi-family/${id}`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             }
