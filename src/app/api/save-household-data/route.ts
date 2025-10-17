@@ -19,12 +19,26 @@ export async function POST(request: NextRequest) {
             }, { status: 400 })
         }
 
+        // Get the staff access token from cookies
+        const staffAccessToken = request.cookies.get('staffAccessToken')?.value
+        console.log("staffAccessToken: ", staffAccessToken);
+        
+
+        if (!staffAccessToken) {
+            return NextResponse.json({
+                success: false,
+                error: 'Authentication token not found'
+            }, { status: 401 })
+        }
+
         // Call NestJS backend endpoint
         const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000'
         const response = await fetch(`${backendUrl}/household-citizen/bulk-save`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${staffAccessToken}`,
+                'x-app-key': process.env.APP_AUTH_KEY!
             },
             body: JSON.stringify({
                 households,
@@ -33,6 +47,9 @@ export async function POST(request: NextRequest) {
         })
 
         if (!response.ok) {
+            const errorText = await response.text()
+            console.error('Backend error:', errorText)
+            
             return NextResponse.json({
                 success: false,
                 error: `Backend request failed with status ${response.status}`
