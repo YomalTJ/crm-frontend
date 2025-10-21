@@ -75,12 +75,6 @@ const FundInvestmentTable: React.FC<FundInvestmentTableProps> = ({
                                 <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>
                                     Total
                                 </th>
-                                <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>
-                                    Main Program
-                                </th>
-                                <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>
-                                    Beneficiary Type
-                                </th>
                             </tr>
                         </thead>
                         <tbody className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-200'}`}>
@@ -113,12 +107,6 @@ const FundInvestmentTable: React.FC<FundInvestmentTableProps> = ({
                                     <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${theme === 'dark' ? 'text-green-400' : 'text-green-600'
                                         }`}>
                                         {formatCurrency(item.total)}
-                                    </td>
-                                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'}`}>
-                                        {item.mainProgram || 'N/A'}
-                                    </td>
-                                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'}`}>
-                                        {item.beneficiaryType || 'N/A'}
                                     </td>
                                 </tr>
                             ))}
