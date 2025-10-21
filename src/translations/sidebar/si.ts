@@ -32,7 +32,8 @@ export const translations = {
         refusalReasons: "ප්‍රතික්ෂේප හේතු",
         beneficiariesProfiles: "ලාභගැන්නුවන්ගේ පැතිකඩ",
         departmentUsers: "දෙපාර්තමේන්තු පරිශීලකයන්",
-        bankAccDetails: "බැංකු ගිණුම් විස්තර"
+        bankAccDetails: "බැංකු ගිණුම් විස්තර",
+        fundInvestment: "අරමුදල් ආයෝජනය",
     }
 
 }

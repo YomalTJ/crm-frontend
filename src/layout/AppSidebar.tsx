@@ -170,6 +170,7 @@ const navItems: (NavItem & { translationKey: string })[] = [
           { name: "Family Age Groups", translationKey: "sidebar.familyAgeGroups", path: "/dashboard/reports/detail/family-age-groups" },
           { name: "Owner Details", translationKey: "sidebar.ownerDetails", path: "/dashboard/reports/detail/owner-details" },
           { name: "Empowerment Program Refusing Reasons", translationKey: "sidebar.refusalReasons", path: "/dashboard/reports/detail/refusal-reasons" },
+          { name: "Fund Investment Details", translationKey: "sidebar.fundInvestment", path: "/dashboard/reports/detail/fund-investment" },
         ],
       },
     ],

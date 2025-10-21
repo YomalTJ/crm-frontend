@@ -32,7 +32,8 @@ export const translations = {
         refusalReasons: "மறுப்பின் காரணங்கள்",
         beneficiariesProfiles: "பயனாளிகளின் சுயவிவரங்கள்",
         departmentUsers: "துறை பயனர்கள்",
-        bankAccDetails: "வங்கி கணக்கு விவரங்கள்"
+        bankAccDetails: "வங்கி கணக்கு விவரங்கள்",
+        fundInvestment: "நிதி முதலீடு",
     }
 
 }
