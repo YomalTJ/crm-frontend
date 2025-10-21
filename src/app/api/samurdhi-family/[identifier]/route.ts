@@ -85,7 +85,8 @@ export async function PUT(
             response = await axios.put(`${API_BASE_URL}/samurdhi-family/${identifier}`, body, {
                 headers: {
                     Authorization: authHeader || '',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'x-app-key': process.env.APP_AUTH_KEY!
                 }
             });
         }

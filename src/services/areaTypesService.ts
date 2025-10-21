@@ -138,6 +138,20 @@ export const getAreaTypes = async (filters?: AreaTypeFilters): Promise<AreaTypeI
             throw new Error('No authentication token found');
         }
 
+        // ADD VALIDATION BEFORE BUILDING QUERY PARAMS
+        if (filters?.gnd_id && !/^[a-zA-Z0-9\-]+$/.test(filters.gnd_id)) {
+            throw new Error('Invalid GND ID format');
+        }
+        if (filters?.district_id && !/^\d+$/.test(filters.district_id)) {
+            throw new Error('Invalid district ID format');
+        }
+        if (filters?.ds_id && !/^\d+$/.test(filters.ds_id)) {
+            throw new Error('Invalid DS ID format');
+        }
+        if (filters?.zone_id && !/^\d+$/.test(filters.zone_id)) {
+            throw new Error('Invalid zone ID format');
+        }
+
         // Build query parameters
         const queryParams = new URLSearchParams();
         if (filters?.district_id) queryParams.append('district_id', filters.district_id);
@@ -147,13 +161,9 @@ export const getAreaTypes = async (filters?: AreaTypeFilters): Promise<AreaTypeI
         if (filters?.mainProgram) queryParams.append('mainProgram', filters.mainProgram);
         if (filters?.areaClassification) queryParams.append('areaClassification', filters.areaClassification);
 
-        const queryString = queryParams.toString();
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-        const url = `${baseUrl}/api/area-types${queryString ? `?${queryString}` : ''}`;
-
-        const response = await fetch(url, {
+        const response = await fetch(`${baseUrl}/api/area-types?${queryParams}`, {
             method: 'GET',
-            cache: 'no-store',
             headers: {
                 Authorization: `Bearer ${token}`,
                 'x-app-key': process.env.APP_AUTH_KEY!

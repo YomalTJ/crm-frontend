@@ -21,7 +21,6 @@ export async function POST(request: NextRequest) {
 
         // Get the staff access token from cookies
         const staffAccessToken = request.cookies.get('staffAccessToken')?.value
-        console.log("staffAccessToken: ", staffAccessToken);
         
 
         if (!staffAccessToken) {
