@@ -26,7 +26,7 @@ export default function SignInForm() {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{username?: string; password?: string}>({});
   const [successData, setSuccessData] = useState<SuccessData | null>(null);
-  const [countdown, setCountdown] = useState(5);
+  const [countdown, setCountdown] = useState(10);
   const lastSubmitRef = useRef<number>(0);
 
   const validateForm = () => {
@@ -60,7 +60,6 @@ export default function SignInForm() {
     }
     lastSubmitRef.current = now;
     
-    // Validate form fields
     if (!validateForm()) {
       return;
     }
@@ -77,13 +76,11 @@ export default function SignInForm() {
           localStorage.setItem('staffLocation', JSON.stringify(result.locationDetails));
         }
 
-        // Store login credentials for API testing - use NIC instead of username
         sessionStorage.setItem('loginCredentials', JSON.stringify({
           username: result.nic,
           password: result.wbbPassword || password
         }));
 
-        // Also store WBB password and NIC separately for reference
         if (result.wbbPassword) {
           sessionStorage.setItem('wbbPassword', result.wbbPassword);
         }
@@ -91,26 +88,22 @@ export default function SignInForm() {
           sessionStorage.setItem('userNIC', result.nic);
         }
 
-        // Get token from cookie
-        const res = await fetch("/api/auth/get-staff-token");
-        const { token } = await res.json();
+        const staffToken = result.staffAccessToken;
 
-        if (!token) throw new Error("Staff token not found");
+        if (!staffToken) throw new Error("Staff token not found");
 
-        const payloadBase64 = token.split(".")[1];
+        const payloadBase64 = staffToken.split(".")[1];
         const decodedPayload = JSON.parse(atob(payloadBase64));
         const roleName: string = decodedPayload?.roleName;
 
-        // Set success data to display
         setSuccessData({
           roleName: roleName || result.roleName,
           locationDetails: result.locationDetails,
           wbbPassword: result.wbbPassword,
           nic: result.nic,
-          staffAccessToken: token
+          staffAccessToken: staffToken
         });
 
-        // Start countdown and redirect after 5 seconds
         let timeLeft = 10;
         setCountdown(timeLeft);
 
@@ -121,7 +114,6 @@ export default function SignInForm() {
           if (timeLeft <= 0) {
             clearInterval(countdownInterval);
 
-            // Format role name for routing
             const formattedRole = (roleName || 'staff').toLowerCase().replace(/\s+/g, '-').replace(/\//g, '-');
 
             switch (formattedRole) {
@@ -158,30 +150,25 @@ export default function SignInForm() {
     }
   };
 
-  // Success message display
   if (successData) {
     return (
       <div className="flex flex-col flex-1 lg:w-1/2 w-full">
         <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
           <div className="p-6 bg-green-50 border border-green-200 rounded-lg dark:bg-green-900/20 dark:border-green-800">
-            {/* Success Icon */}
             <div className="flex justify-center mb-4">
               <svg className="w-16 h-16 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
 
-            {/* Success Title */}
             <h2 className="text-2xl font-bold text-center text-green-800 dark:text-green-300 mb-2">
               Login Successful!
             </h2>
 
-            {/* Success Message */}
             <p className="text-center text-green-700 dark:text-green-400 mb-6">
               Welcome back! Your credentials have been verified.
             </p>
 
-            {/* Token Details */}
             <div className="space-y-3 mb-6 bg-white dark:bg-gray-800 p-4 rounded border border-green-200 dark:border-green-800">
               <div className="flex justify-between items-start">
                 <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">NIC:</span>
@@ -216,7 +203,6 @@ export default function SignInForm() {
               </div>
             </div>
 
-            {/* Countdown */}
             <div className="text-center">
               <p className="text-gray-700 dark:text-gray-300 mb-2">
                 Redirecting to dashboard in <span className="font-bold text-lg text-green-600 dark:text-green-400">{countdown}</span> seconds...
@@ -224,7 +210,7 @@ export default function SignInForm() {
               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
                 <div 
                   className="bg-green-600 dark:bg-green-500 h-full transition-all duration-1000 ease-linear"
-                  style={{width: `${(countdown / 5) * 100}%`}}
+                  style={{width: `${(countdown / 10) * 100}%`}}
                 ></div>
               </div>
             </div>
@@ -247,7 +233,6 @@ export default function SignInForm() {
             </p>
           </div>
           <div>
-            {/* Error Message */}
             {error && (
               <div className="p-3 mb-6 text-sm text-red-800 bg-red-100 border border-red-200 rounded-lg dark:bg-red-900/20 dark:text-red-400 dark:border-red-800">
                 <div className="flex items-center">

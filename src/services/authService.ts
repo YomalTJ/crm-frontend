@@ -43,7 +43,8 @@ export const loginUser = async ({ username, password }: LoginPayload) => {
       roleName: data.roleName,
       locationDetails: data.locationDetails,
       wbbPassword: data.wbbPassword,
-      nic: data.nic // Add NIC to response
+      nic: data.nic,
+      staffAccessToken: data.staffAccessToken // Add token to response
     };
 
     // Handle specific error messages from server
@@ -85,3 +86,5 @@ export const logoutUser = async () => {
     return false;
   }
 };
+
+

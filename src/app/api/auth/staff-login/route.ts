@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     const staffToken = res.data.staffAccessToken;
     const locationDetails = res.data.locationDetails;
     const wbbPassword = res.data.wbbPassword;
-    const nic = res.data.nic; // Get NIC from response
+    const nic = res.data.nic;
 
     // Decode role from JWT payload
     const decoded: any = JSON.parse(
@@ -38,7 +38,8 @@ export async function POST(req: NextRequest) {
       type: "staff",
       locationDetails,
       wbbPassword,
-      nic // Return NIC to frontend
+      nic,
+      staffAccessToken: staffToken
     });
   } catch (error: any) {
     return NextResponse.json(
