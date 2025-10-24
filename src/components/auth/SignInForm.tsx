@@ -8,6 +8,14 @@ import { loginUser } from "@/services/authService";
 import { useRouter } from "next/navigation";
 import React, { useRef, useState } from "react";
 
+interface SuccessData {
+  roleName: string;
+  locationDetails: any;
+  wbbPassword: string;
+  nic: string;
+  staffAccessToken: string;
+}
+
 export default function SignInForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -17,6 +25,8 @@ export default function SignInForm() {
   const [, setAttemptCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{username?: string; password?: string}>({});
+  const [successData, setSuccessData] = useState<SuccessData | null>(null);
+  const [countdown, setCountdown] = useState(5);
   const lastSubmitRef = useRef<number>(0);
 
   const validateForm = () => {
@@ -69,8 +79,8 @@ export default function SignInForm() {
 
         // Store login credentials for API testing - use NIC instead of username
         sessionStorage.setItem('loginCredentials', JSON.stringify({
-          username: result.nic, // Use NIC instead of username
-          password: result.wbbPassword || password // Use WBB password if available
+          username: result.nic,
+          password: result.wbbPassword || password
         }));
 
         // Also store WBB password and NIC separately for reference
@@ -88,54 +98,141 @@ export default function SignInForm() {
         if (!token) throw new Error("Staff token not found");
 
         const payloadBase64 = token.split(".")[1];
-        const decodedPayload = JSON.parse(
-          atob(payloadBase64)
-        );
-
+        const decodedPayload = JSON.parse(atob(payloadBase64));
         const roleName: string = decodedPayload?.roleName;
 
-        if (!roleName) {
-          console.warn("No role name in token, redirecting to /dashboard/staff");
-          router.push("/dashboard/staff");
-          return;
-        }
+        // Set success data to display
+        setSuccessData({
+          roleName: roleName || result.roleName,
+          locationDetails: result.locationDetails,
+          wbbPassword: result.wbbPassword,
+          nic: result.nic,
+          staffAccessToken: token
+        });
 
-        // Format role name (e.g., "Bank/Zone Level User" → "bank-zone-level-user")
-        const formattedRole = roleName.toLowerCase().replace(/\s+/g, '-').replace(/\//g, '-');
+        // Start countdown and redirect after 5 seconds
+        let timeLeft = 10;
+        setCountdown(timeLeft);
 
-        switch (formattedRole) {
-          case 'national-level-user':
-            router.push("/dashboard/national-level");
-            break;
-          case 'district-level-user':
-            router.push("/dashboard/district-level");
-            break;
-          case 'divisional-level-user':
-            router.push("/dashboard/divisional-level");
-            break;
-          case 'bank-zone-level-user':
-            router.push("/dashboard/bank-zone-level");
-            break;
-          case 'gn-level-user':
-            router.push("/dashboard/gn-level");
-            break;
-          default:
-            router.push("/dashboard/staff");
-        }
+        const countdownInterval = setInterval(() => {
+          timeLeft -= 1;
+          setCountdown(timeLeft);
+
+          if (timeLeft <= 0) {
+            clearInterval(countdownInterval);
+
+            // Format role name for routing
+            const formattedRole = (roleName || 'staff').toLowerCase().replace(/\s+/g, '-').replace(/\//g, '-');
+
+            switch (formattedRole) {
+              case 'national-level-user':
+                router.push("/dashboard/national-level");
+                break;
+              case 'district-level-user':
+                router.push("/dashboard/district-level");
+                break;
+              case 'divisional-level-user':
+                router.push("/dashboard/divisional-level");
+                break;
+              case 'bank-zone-level-user':
+                router.push("/dashboard/bank-zone-level");
+                break;
+              case 'gn-level-user':
+                router.push("/dashboard/gn-level");
+                break;
+              default:
+                router.push("/dashboard/staff");
+            }
+          }
+        }, 1000);
       }
     } catch (error: any) {
       console.error("Login error:", error.message);
       
-      // Set user-friendly error messages
       const errorMessage = error.message || "Login failed. Please check your credentials and try again.";
       setError(errorMessage);
       
-      // Clear password field on error for security
       setPassword("");
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Success message display
+  if (successData) {
+    return (
+      <div className="flex flex-col flex-1 lg:w-1/2 w-full">
+        <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
+          <div className="p-6 bg-green-50 border border-green-200 rounded-lg dark:bg-green-900/20 dark:border-green-800">
+            {/* Success Icon */}
+            <div className="flex justify-center mb-4">
+              <svg className="w-16 h-16 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+
+            {/* Success Title */}
+            <h2 className="text-2xl font-bold text-center text-green-800 dark:text-green-300 mb-2">
+              Login Successful!
+            </h2>
+
+            {/* Success Message */}
+            <p className="text-center text-green-700 dark:text-green-400 mb-6">
+              Welcome back! Your credentials have been verified.
+            </p>
+
+            {/* Token Details */}
+            <div className="space-y-3 mb-6 bg-white dark:bg-gray-800 p-4 rounded border border-green-200 dark:border-green-800">
+              <div className="flex justify-between items-start">
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">NIC:</span>
+                <span className="text-sm text-gray-900 dark:text-white font-mono break-all">{successData.nic}</span>
+              </div>
+
+              <div className="flex justify-between items-start">
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Role:</span>
+                <span className="text-sm text-gray-900 dark:text-white">{successData.roleName}</span>
+              </div>
+
+              <div className="flex justify-between items-start">
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Province:</span>
+                <span className="text-sm text-gray-900 dark:text-white">{successData.locationDetails?.province?.name}</span>
+              </div>
+
+              <div className="flex justify-between items-start">
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">District:</span>
+                <span className="text-sm text-gray-900 dark:text-white">{successData.locationDetails?.district?.name}</span>
+              </div>
+
+              <div className="flex justify-between items-start">
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">WBB Password:</span>
+                <span className="text-sm text-gray-900 dark:text-white font-mono">{successData.wbbPassword}</span>
+              </div>
+
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
+                <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Access Token (JWT):</span>
+                <p className="text-xs text-gray-700 dark:text-gray-300 font-mono break-all mt-1 bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                  {successData.staffAccessToken}
+                </p>
+              </div>
+            </div>
+
+            {/* Countdown */}
+            <div className="text-center">
+              <p className="text-gray-700 dark:text-gray-300 mb-2">
+                Redirecting to dashboard in <span className="font-bold text-lg text-green-600 dark:text-green-400">{countdown}</span> seconds...
+              </p>
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                <div 
+                  className="bg-green-600 dark:bg-green-500 h-full transition-all duration-1000 ease-linear"
+                  style={{width: `${(countdown / 5) * 100}%`}}
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full">

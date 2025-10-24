@@ -298,9 +298,43 @@ const GrantUtilizationForm = () => {
         return errors;
     };
 
+    const requestTimestamps: number[] = [];
+    const MAX_REQUESTS_PER_MINUTE = 30;
+
+    const checkRateLimit = (): boolean => {
+        const now = Date.now();
+        const oneMinuteAgo = now - 60000;
+
+        // Remove old timestamps
+        while (requestTimestamps.length > 0 && requestTimestamps[0] < oneMinuteAgo) {
+            requestTimestamps.shift();
+        }
+
+        // Check if under limit
+        if (requestTimestamps.length >= MAX_REQUESTS_PER_MINUTE) {
+            return false;
+        }
+
+        requestTimestamps.push(now);
+        return true;
+    };
+
+    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
     // Handle form submission
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Check rate limit
+        if (!checkRateLimit()) {
+            const errorMessage = t('grantUtilization.rateLimitExceeded');
+            setError(errorMessage);
+            toast.error(errorMessage);
+            return;
+        }
+
+        // Add random delay to prevent synchronized attacks
+        await delay(Math.random() * 1000 + 500);
 
         const formErrors = validateGrantUtilizationForm(formData);
         setErrors(formErrors);
@@ -356,6 +390,7 @@ const GrantUtilizationForm = () => {
                 router.push('/dashboard/grant-utilization');
             }, 1500);
         } catch (err) {
+            await delay(2000);
             const errorMessage = err instanceof Error ? err.message :
                 isUpdateMode ? t('grantUtilization.updateError') : t('grantUtilization.createError');
             setError(errorMessage);

@@ -84,35 +84,75 @@ export interface GrantUtilizationResponse {
   };
 }
 
-export const createGrantUtilization = async (payload: GrantUtilizationPayload): Promise<GrantUtilizationResponse> => {
-  try {
-    const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
+const requestQueue: Array<{ resolve: (value: any) => void; reject: (error: any) => void; fn: () => Promise<any> }> = [];
+let processing = false;
+const MAX_CONCURRENT_REQUESTS = 5;
+const REQUEST_DELAY = 1000; // 1 second between batches
 
-    if (!token) {
-      throw new Error('No authentication token found');
+async function processQueue() {
+  if (processing || requestQueue.length === 0) return;
+
+  processing = true;
+
+  while (requestQueue.length > 0) {
+    const batch = requestQueue.splice(0, MAX_CONCURRENT_REQUESTS);
+    const promises = batch.map(({ fn, resolve, reject }) =>
+      fn().then(resolve).catch(reject)
+    );
+
+    await Promise.all(promises);
+
+    if (requestQueue.length > 0) {
+      await new Promise(resolve => setTimeout(resolve, REQUEST_DELAY));
     }
-
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-
-    const response = await fetch(`${baseUrl}/api/grant-utilization`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-        'x-app-key': process.env.APP_AUTH_KEY!
-      },
-      body: JSON.stringify(payload)
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to create Grant Utilization record');
-    }
-
-    return await response.json();
-  } catch (error: any) {
-    throw new Error(error.message || 'Failed to create Grant Utilization record');
   }
+
+  processing = false;
+}
+
+function queuedRequest<T>(fn: () => Promise<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    requestQueue.push({ resolve, reject, fn });
+    processQueue();
+  });
+}
+
+export const createGrantUtilization = async (payload: GrantUtilizationPayload): Promise<GrantUtilizationResponse> => {
+  return queuedRequest(async () => {
+    // Validate payload size before sending
+    if (JSON.stringify(payload).length > 10000) {
+      throw new Error('Request payload too large');
+    }
+
+    try {
+      const token = (await cookies()).get('accessToken')?.value || (await cookies()).get('staffAccessToken')?.value;
+
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+      const response = await fetch(`${baseUrl}/api/grant-utilization`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          'x-app-key': process.env.APP_AUTH_KEY!
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create Grant Utilization record');
+      }
+
+      return await response.json();
+    } catch (error: any) {
+      throw new Error(error.message || 'Failed to create Grant Utilization record');
+    }
+  });
 };
 
 export const getGrantUtilizationById = async (id: string): Promise<GrantUtilizationResponse> => {
@@ -147,35 +187,40 @@ export const getGrantUtilizationById = async (id: string): Promise<GrantUtilizat
 };
 
 export const updateGrantUtilization = async (hhNumberOrNic: string, payload: GrantUtilizationPayload): Promise<GrantUtilizationResponse> => {
-  try {
-    const token = (await cookies()).get('accessToken')?.value ||
-      (await cookies()).get('staffAccessToken')?.value;
-
-    if (!token) {
-      throw new Error('No authentication token found');
+  return queuedRequest(async () => {
+    if (JSON.stringify(payload).length > 10000) {
+      throw new Error('Request payload too large');
     }
+    try {
+      const token = (await cookies()).get('accessToken')?.value ||
+        (await cookies()).get('staffAccessToken')?.value;
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
 
-    const response = await fetch(`${baseUrl}/api/grant-utilization/${hhNumberOrNic}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-        'x-app-key': process.env.APP_AUTH_KEY!
-      },
-      body: JSON.stringify(payload)
-    });
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to update Grant Utilization record');
+      const response = await fetch(`${baseUrl}/api/grant-utilization/${hhNumberOrNic}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          'x-app-key': process.env.APP_AUTH_KEY!
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update Grant Utilization record');
+      }
+
+      return await response.json();
+    } catch (error: any) {
+      throw new Error(error.message || 'Failed to update Grant Utilization record');
     }
-
-    return await response.json();
-  } catch (error: any) {
-    throw new Error(error.message || 'Failed to update Grant Utilization record');
-  }
+  });
 };
 
 export const getAllGrantUtilizations = async (filters?: any): Promise<GrantUtilizationResponse[]> => {
