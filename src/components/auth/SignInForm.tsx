@@ -6,31 +6,63 @@ import Button from "@/components/ui/button/Button";
 import { EyeCloseIcon, EyeIcon } from "@/icons";
 import { loginUser } from "@/services/authService";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 
 export default function SignInForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // Add loading state
+  const [isLoading, setIsLoading] = useState(false);
+  const [, setAttemptCount] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{username?: string; password?: string}>({});
+  const lastSubmitRef = useRef<number>(0);
+
+  const validateForm = () => {
+    const errors: {username?: string; password?: string} = {};
+    
+    if (!username.trim()) {
+      errors.username = "Username is required";
+    }
+    
+    if (!password) {
+      errors.password = "Password is required";
+    }
+    
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const clearErrors = () => {
+    setError(null);
+    setFieldErrors({});
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    clearErrors();
+
+    const now = Date.now();
+    if (now - lastSubmitRef.current < 1000) {
+      setError("Please wait before trying again");
+      return;
+    }
+    lastSubmitRef.current = now;
     
-    // Basic validation
-    if (!username || !password) {
-      alert("Please enter both username and password");
+    // Validate form fields
+    if (!validateForm()) {
       return;
     }
 
-    setIsLoading(true); // Start loading
+    setIsLoading(true);
 
     try {
       const result = await loginUser({ username, password });
+      setAttemptCount(0);
+      clearErrors();
 
       if (result.type === "staff") {
-
         if (result.locationDetails) {
           localStorage.setItem('staffLocation', JSON.stringify(result.locationDetails));
         }
@@ -93,9 +125,15 @@ export default function SignInForm() {
       }
     } catch (error: any) {
       console.error("Login error:", error.message);
-      alert(error.message || "Login failed");
+      
+      // Set user-friendly error messages
+      const errorMessage = error.message || "Login failed. Please check your credentials and try again.";
+      setError(errorMessage);
+      
+      // Clear password field on error for security
+      setPassword("");
     } finally {
-      setIsLoading(false); // Stop loading in both success and error cases
+      setIsLoading(false);
     }
   };
 
@@ -112,6 +150,18 @@ export default function SignInForm() {
             </p>
           </div>
           <div>
+            {/* Error Message */}
+            {error && (
+              <div className="p-3 mb-6 text-sm text-red-800 bg-red-100 border border-red-200 rounded-lg dark:bg-red-900/20 dark:text-red-400 dark:border-red-800">
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  {error}
+                </div>
+              </div>
+            )}
+            
             <form onSubmit={handleSubmit}>
               <div className="space-y-6">
                 <div>
@@ -124,9 +174,18 @@ export default function SignInForm() {
                     placeholder="nimal" 
                     type="text" 
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    disabled={isLoading} // Disable input during loading
+                    onChange={(e) => {
+                      setUsername(e.target.value);
+                      if (fieldErrors.username) {
+                        setFieldErrors(prev => ({...prev, username: undefined}));
+                      }
+                    }}
+                    disabled={isLoading}
+                    className={fieldErrors.username ? "border-error-500 focus:border-error-500 focus:ring-error-500" : ""}
                   />
+                  {fieldErrors.username && (
+                    <p className="mt-1 text-sm text-error-500">{fieldErrors.username}</p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="password">
@@ -139,11 +198,17 @@ export default function SignInForm() {
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      disabled={isLoading} // Disable input during loading
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (fieldErrors.password) {
+                          setFieldErrors(prev => ({...prev, password: undefined}));
+                        }
+                      }}
+                      disabled={isLoading}
+                      className={fieldErrors.password ? "border-error-500 focus:border-error-500 focus:ring-error-500" : ""}
                     />
                     <span
-                      onClick={() => !isLoading && setShowPassword(!showPassword)} // Only allow toggle when not loading
+                      onClick={() => !isLoading && setShowPassword(!showPassword)}
                       className={`absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2 ${
                         isLoading ? 'opacity-50 cursor-not-allowed' : ''
                       }`}
@@ -155,13 +220,16 @@ export default function SignInForm() {
                       )}
                     </span>
                   </div>
+                  {fieldErrors.password && (
+                    <p className="mt-1 text-sm text-error-500">{fieldErrors.password}</p>
+                  )}
                 </div>
                 <div>
                   <Button 
                     className="w-full" 
                     size="sm" 
                     type="submit"
-                    disabled={isLoading} // Disable button during loading
+                    disabled={isLoading}
                   >
                     {isLoading ? (
                       <div className="flex items-center justify-center">

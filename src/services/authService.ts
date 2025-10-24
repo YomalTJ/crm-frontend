@@ -4,7 +4,17 @@ interface LoginPayload {
   password: string;
 }
 
+let lastRequestTime = 0;
+const MIN_REQUEST_INTERVAL = 1000;
+
 export const loginUser = async ({ username, password }: LoginPayload) => {
+  // Basic client-side rate limiting
+  const now = Date.now();
+  if (now - lastRequestTime < MIN_REQUEST_INTERVAL) {
+    throw new Error('Please wait before trying again');
+  }
+  lastRequestTime = now;
+
   try {
     const res = await fetch("/api/auth/staff-login", {
       method: "POST",
@@ -14,6 +24,16 @@ export const loginUser = async ({ username, password }: LoginPayload) => {
       },
       body: JSON.stringify({ username, password })
     });
+
+    // Handle rate limit responses
+    if (res.status === 429) {
+      throw new Error('Too many login attempts. Please wait a few minutes and try again.');
+    }
+
+    // Handle server errors
+    if (res.status >= 500) {
+      throw new Error('Server error. Please try again later.');
+    }
 
     const data = await res.json();
 
@@ -26,9 +46,15 @@ export const loginUser = async ({ username, password }: LoginPayload) => {
       nic: data.nic // Add NIC to response
     };
 
-    throw new Error(data.error || "Login failed");
+    // Handle specific error messages from server
+    const errorMessage = data.error || data.message || "Login failed. Please check your credentials.";
+    throw new Error(errorMessage);
   } catch (err: any) {
-    throw new Error(err.message || "Something went wrong");
+    // Handle network errors
+    if (err.name === 'TypeError' || err.message.includes('Network') || err.message.includes('fetch')) {
+      throw new Error('Network error. Please check your connection and try again.');
+    }
+    throw new Error(err.message || "Something went wrong. Please try again.");
   }
 };
 

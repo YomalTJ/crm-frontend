@@ -24,7 +24,6 @@ const BankAccDetails = () => {
   const [error, setError] = useState<string | null>(null)
   const [authStatus, setAuthStatus] = useState<'idle' | 'checking' | 'success' | 'error'>('idle')
 
-  // Check if user is authenticated on component mount
   useEffect(() => {
     const checkAuth = () => {
       const credentials = sessionStorage.getItem('loginCredentials')
@@ -50,7 +49,6 @@ const BankAccDetails = () => {
       return
     }
 
-    // Basic validation for HH number format
     if (!trimmedHh.startsWith('HH-')) {
       setError('Invalid HH number format. It should start with "HH-"')
       return
@@ -88,7 +86,6 @@ const BankAccDetails = () => {
     setResults([])
 
     try {
-      // Get stored credentials
       const credentialsStr = sessionStorage.getItem('loginCredentials')
       if (!credentialsStr) {
         throw new Error('User credentials not found')
@@ -96,7 +93,6 @@ const BankAccDetails = () => {
 
       const credentials = JSON.parse(credentialsStr)
 
-      // Use proxy route to fetch bank details
       const response = await fetch('/api/fetch-bank-details', {
         method: 'POST',
         headers: {
@@ -111,7 +107,12 @@ const BankAccDetails = () => {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || `Request failed with status: ${response.status}`)
+
+        if (response.status === 504) {
+          throw new Error(`Server timeout. Try with fewer HH numbers (12 or less recommended). Current: ${hhNumbers.length}`)
+        }
+
+        throw new Error(errorData.error || `Request failed: ${response.status}`)
       }
 
       const data = await response.json()
@@ -119,11 +120,17 @@ const BankAccDetails = () => {
       if (data.success && data.results && Array.isArray(data.results)) {
         setResults(data.results)
       } else {
-        throw new Error(data.error || 'Invalid response format from API')
+        throw new Error(data.error || 'Invalid response from API')
       }
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred')
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred'
+
+      if (errorMessage.includes('504') || errorMessage.includes('timeout')) {
+        setError(`Server timeout. Try with fewer HH numbers (12 or less recommended). Current: ${hhNumbers.length}`)
+      } else {
+        setError(errorMessage)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -135,7 +142,6 @@ const BankAccDetails = () => {
       return
     }
 
-    // Create CSV content
     const headers = [
       'HH Number',
       'Account Number',
@@ -202,8 +208,8 @@ const BankAccDetails = () => {
           <h1 className={`text-2xl sm:text-3xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
             Bank Account Details
           </h1>
-          <p className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>
-            Fetch bank account information for household reference numbers
+          <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+            💡 Note: Better to process 12 HH numbers or less to avoid timeout
           </p>
         </div>
 
@@ -221,8 +227,8 @@ const BankAccDetails = () => {
               onKeyPress={handleKeyPress}
               placeholder="Enter HH number (e.g., HH-1-1-09-03-175-0012)"
               className={`flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${theme === 'dark'
-                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                 }`}
             />
             <button
@@ -245,9 +251,16 @@ const BankAccDetails = () => {
           {/* HH Numbers List */}
           {hhNumbers.length > 0 && (
             <div className="space-y-3">
-              <h3 className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                Added HH Numbers ({hhNumbers.length})
-              </h3>
+              <div className="flex justify-between items-center">
+                <h3 className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Added HH Numbers ({hhNumbers.length})
+                </h3>
+                {hhNumbers.length > 12 && (
+                  <span className="text-xs text-amber-500 font-medium">
+                    ⚠️ Large batch
+                  </span>
+                )}
+              </div>
               <div className={`max-h-48 overflow-y-auto border rounded-lg p-3 ${theme === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
                 }`}>
                 <div className="flex flex-wrap gap-2">
@@ -255,8 +268,8 @@ const BankAccDetails = () => {
                     <div
                       key={index}
                       className={`flex items-center gap-2 px-3 py-2 rounded-lg border shadow-sm ${theme === 'dark'
-                          ? 'bg-gray-600 border-gray-500 text-white'
-                          : 'bg-white border-gray-300 text-gray-700'
+                        ? 'bg-gray-600 border-gray-500 text-white'
+                        : 'bg-white border-gray-300 text-gray-700'
                         }`}
                     >
                       <span className="text-sm font-mono">{hh}</span>
@@ -279,8 +292,8 @@ const BankAccDetails = () => {
               onClick={fetchBankDetails}
               disabled={isLoading || hhNumbers.length === 0}
               className={`w-full sm:w-auto px-8 py-3 rounded-lg transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2 ${isLoading || hhNumbers.length === 0
-                  ? theme === 'dark' ? 'bg-gray-700 text-gray-400' : 'bg-gray-400 text-gray-700'
-                  : 'bg-green-600 hover:bg-green-700 text-white'
+                ? theme === 'dark' ? 'bg-gray-700 text-gray-400' : 'bg-gray-400 text-gray-700'
+                : 'bg-green-600 hover:bg-green-700 text-white'
                 }`}
             >
               {isLoading ? (
@@ -382,49 +395,6 @@ const BankAccDetails = () => {
                 </tbody>
               </table>
             </div>
-
-            {/* Error Details */}
-            {results.some(r => r.errorMessage) && (
-              <div className={`mt-4 p-4 rounded-lg border ${theme === 'dark' ? 'bg-amber-900/20 border-amber-800' : 'bg-amber-50 border-amber-200'
-                }`}>
-                <div className="flex items-start gap-2 mb-3">
-                  <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h3 className={`text-sm font-semibold mb-1 ${theme === 'dark' ? 'text-amber-300' : 'text-amber-800'
-                      }`}>
-                      Some HH Numbers Have Issues
-                    </h3>
-                    <p className={`text-xs mb-3 ${theme === 'dark' ? 'text-amber-400' : 'text-amber-700'
-                      }`}>
-                      The following household numbers couldn&apos;t retrieve bank account information:
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-2 pl-7">
-                  {results.filter(r => r.errorMessage).map((result, index) => (
-                    <div key={index} className={`p-3 rounded border ${theme === 'dark' ? 'bg-gray-700 border-amber-800' : 'bg-white border-amber-200'
-                      }`}>
-                      <div className="flex items-start gap-2">
-                        <span className={`font-mono font-semibold text-xs px-2 py-1 rounded ${theme === 'dark'
-                            ? 'bg-gray-600 text-gray-300'
-                            : 'bg-gray-100 text-gray-700'
-                          }`}>
-                          {result.qr}
-                        </span>
-                        <span className={`text-xs flex-1 ${theme === 'dark' ? 'text-amber-300' : 'text-amber-800'
-                          }`}>
-                          {result.errorMessage}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className={`mt-3 pl-7 text-xs ${theme === 'dark' ? 'text-amber-400' : 'text-amber-700'
-                  }`}>
-                  <p>💡 <strong>Tip:</strong> This usually means the HH number doesn&apos;t have bank account details registered in the system yet.</p>
-                </div>
-              </div>
-            )}
           </div>
         )}
       </div>
