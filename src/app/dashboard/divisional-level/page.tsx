@@ -14,6 +14,7 @@ import {
     BeneficiaryTypeCountResponseDto,
     EmpowermentDimensionCountResponseDto
 } from '@/services/dashboardService';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 const DsOfficerDashboard = () => {
     const { theme } = useTheme();
@@ -24,6 +25,12 @@ const DsOfficerDashboard = () => {
     const [locationName, setLocationName] = useState<string>('');
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    const { trackPageView } = useAnalytics();
+
+    useEffect(() => {
+        trackPageView('/dashboard/divisional-level', 'DS Level Dashboard');
+    }, [trackPageView]);
 
     useEffect(() => {
         const fetchDashboardData = async () => {

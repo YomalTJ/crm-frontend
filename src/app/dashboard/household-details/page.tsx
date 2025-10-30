@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useTheme } from '@/context/ThemeContext'
+import { tokenStorage } from '@/lib/tokenStorage'
 
 interface Citizen {
   name: string
@@ -57,6 +58,8 @@ const HouseholdDetails = () => {
   const [staffLocation, setStaffLocation] = useState<StaffLocation | null>(null)
   const [gnCode, setGnCode] = useState<string>('')
   const [level, setLevel] = useState<number>(2)
+  const [authToken, setAuthToken] = useState<string | null>(null)
+  const [tokenSource, setTokenSource] = useState<string>('none')
 
   useEffect(() => {
     const locationData = localStorage.getItem('staffLocation')
@@ -65,15 +68,20 @@ const HouseholdDetails = () => {
       try {
         const location = JSON.parse(locationData)
         setStaffLocation(location)
-
-        const gnCode = location.gnd.id
-        setGnCode(gnCode)
+        setGnCode(location.gnd.id)
       } catch (err) {
         console.error("Failed to parse staff location data:", err)
         setError('Failed to parse staff location data')
       }
     } else {
       setError('Staff location not found in localStorage')
+    }
+
+    // Get token from all storage sources
+    const token = tokenStorage.getToken()
+    if (token) {
+      setAuthToken(token)
+      setTokenSource('stored')
     }
   }, [])
 
@@ -88,11 +96,20 @@ const HouseholdDetails = () => {
     setSuccess(null)
 
     try {
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      }
+
+      // Pass token via all possible header methods
+      if (authToken) {
+        headers['x-auth-token'] = authToken
+        headers['x-session-storage-token'] = authToken
+        headers['x-local-storage-token'] = authToken
+      }
+
       const response = await fetch('/api/fetch-household-data', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           gn_code: gnCode,
           level: level
@@ -150,7 +167,6 @@ const HouseholdDetails = () => {
     }
   }
 
-  // Get the current level name for display
   const currentLevelName = levelNames[level] || `Level ${level}`
 
   return (
@@ -209,6 +225,24 @@ const HouseholdDetails = () => {
           </div>
         </div>
       )}
+
+      {/* Auth Token Status */}
+      <div className={`p-4 rounded-lg border mb-6 ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <div className={`w-3 h-3 rounded-full ${authToken ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            <span className={`font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+              Auth Token Status:
+            </span>
+            <span className={`${authToken ? 'text-green-600' : 'text-red-600'}`}>
+              {authToken ? `✓ Loaded (${tokenSource})` : '✗ Not Loaded'}
+            </span>
+          </div>
+          <span className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+            Stored in: Cookies → SessionStorage → LocalStorage
+          </span>
+        </div>
+      </div>
 
       {/* Controls */}
       <div className={`p-4 rounded-lg border mb-6 ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>

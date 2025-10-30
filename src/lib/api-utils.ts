@@ -104,12 +104,6 @@ export const validateAppKey = (request: Request): NextResponse | null => {
     const appKey = request.headers.get("x-app-key");
     const expectedAppKey = process.env.APP_AUTH_KEY;
 
-    console.log("🔐 APP_KEY VALIDATION:", {
-        received: appKey ? `"${appKey}"` : 'MISSING',
-        expected: expectedAppKey ? `"${expectedAppKey}"` : 'NOT_SET_IN_ENV',
-        isValid: appKey === expectedAppKey
-    });
-
     if (!appKey) {
         return NextResponse.json(
             { error: "Missing Application Key - x-app-key header required" },

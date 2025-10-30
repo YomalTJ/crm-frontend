@@ -807,3 +807,20 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .dark input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(1);
 }
+
+/* Add to your global CSS */
+.menu-item-inactive .relative span {
+  color: #6b7280; /* gray-500 for light mode */
+}
+
+.dark .menu-item-inactive .relative span {
+  color: #9ca3af; /* gray-400 for dark mode */
+}
+
+.menu-item-active .relative span {
+  color: #6366f1; /* brand-500 for active state */
+}
+
+.dark .menu-item-active .relative span {
+  color: #818cf8; /* brand-400 for dark mode active state */
+}

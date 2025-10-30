@@ -7,7 +7,6 @@ import { useSidebar } from "../context/SidebarContext";
 import {
   BoltIcon,
   ChevronDownIcon,
-  DollarLineIcon,
   EyeIcon,
   GroupIcon,
   HorizontaLDots,
@@ -21,7 +20,7 @@ import {
   FileIcon,
   FolderIcon,
   TaskIcon,
-  UserIcon
+  UserIcon,
 } from "../icons/index";
 import { getCookie } from "@/utils/cookies";
 import { useLanguage } from "@/context/LanguageContext"; // Import the language context
@@ -176,7 +175,13 @@ const navItems: (NavItem & { translationKey: string })[] = [
     ],
   },
   {
-    icon: <DollarLineIcon />, // Grant Utilization
+    icon: (
+      <span className="relative flex items-center justify-center w-5 h-5">
+        <span className="absolute text-[22px] font-bold leading-none transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
+          Rs.
+        </span>
+      </span>
+    ),
     name: "Grant Utilization",
     translationKey: "sidebar.grantUtilization",
     path: "/dashboard/grant-utilization",
@@ -641,23 +646,23 @@ const AppSidebar: React.FC = () => {
         {isExpanded || isHovered || isMobileOpen ? (
           <>
             <Image
-              className="dark:hidden"
-              src="/images/logo/samurdi_logo.jpg"
+              className="dark:hidden p-3"
+              src="/images/logo/samurdhi-login-logo.png"
               alt="Logo"
-              width={150}
+              width={190}
               height={40}
             />
             <Image
-              className="hidden md:dark:block"
-              src="/images/logo/samurdi_logo.jpg"
+              className="hidden md:dark:block bg-white p-3"
+              src="/images/logo/samurdhi-login-logo.png"
               alt="Logo"
-              width={150}
+              width={190}
               height={40}
             />
           </>
         ) : (
           <Image
-            src="/images/logo/samurdi_logo.jpg"
+            src="/images/logo/samurdhi-login-logo.png"
             alt="Logo"
             width={32}
             height={32}

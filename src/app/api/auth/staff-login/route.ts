@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     const res = await axiosInstance.post("/staff/login", {
       username,
       password,
-    });
+    }, { withCredentials: true });
 
     const staffToken = res.data.staffAccessToken;
     const locationDetails = res.data.locationDetails;
@@ -24,13 +24,22 @@ export async function POST(req: NextRequest) {
 
     const roleName = decoded?.roleName || "staff";
 
+    // (await cookies()).set("staffAccessToken", staffToken, {
+    //   httpOnly: true,
+    //   secure: process.env.NODE_ENV === "production",
+    //   maxAge: 60 * 60 * 24 * 7,
+    //   path: "/",
+    //   sameSite: "lax",
+    // });
+
     (await cookies()).set("staffAccessToken", staffToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: false, // explicitly off
       maxAge: 60 * 60 * 24 * 7,
       path: "/",
       sameSite: "lax",
     });
+
 
     return NextResponse.json({
       success: true,

@@ -2,6 +2,7 @@
 'use client'
 
 import { useTheme } from '@/context/ThemeContext'
+import { tokenStorage } from '@/lib/tokenStorage'
 import React, { useState, useEffect } from 'react'
 
 interface ApiEndpoint {
@@ -29,7 +30,7 @@ const ApiStatus = () => {
             responseTime: null,
             lastChecked: null,
             statusCode: null,
-            testPayload: null // Will be set dynamically
+            testPayload: null
         },
         {
             name: 'Get Household Details',
@@ -41,18 +42,28 @@ const ApiStatus = () => {
             statusCode: null,
             requiresAuth: true,
             authToken: null,
-            queryParams: undefined // Will be set dynamically
+            queryParams: undefined
         }
     ])
 
     const [isChecking, setIsChecking] = useState(false)
     const [autoRefresh, setAutoRefresh] = useState(false)
-    const [refreshInterval, setRefreshInterval] = useState(30) // seconds
+    const [refreshInterval, setRefreshInterval] = useState(30)
     const [authToken, setAuthToken] = useState<string | null>(null)
     const [userCredentials, setUserCredentials] = useState<{ username: string, password: string } | null>(null)
     const [locationCode, setLocationCode] = useState<string | null>(null)
+    const [tokenSource, setTokenSource] = useState<string>('none')
 
-    // Get user credentials from login form (stored in sessionStorage or passed as props)
+    // Initialize token from any storage on mount
+    useEffect(() => {
+        const storedToken = tokenStorage.getToken()
+        if (storedToken) {
+            setAuthToken(storedToken)
+            setTokenSource('storage')
+        }
+    }, [])
+
+    // Get user credentials from login form
     useEffect(() => {
         const getStoredCredentials = () => {
             try {
@@ -61,7 +72,6 @@ const ApiStatus = () => {
                     const creds = JSON.parse(stored)
                     setUserCredentials(creds)
 
-                    // Update the login endpoint payload
                     setEndpoints(prev => prev.map(ep =>
                         ep.name === 'User Login'
                             ? { ...ep, testPayload: { username: creds.username, password: creds.password } }
@@ -86,7 +96,6 @@ const ApiStatus = () => {
                     if (result.success) {
                         setLocationCode(result.locationCode)
 
-                        // Update the GetByGn endpoint with location code
                         setEndpoints(prev => prev.map(ep =>
                             ep.name === 'Get Household Details'
                                 ? {
@@ -110,12 +119,16 @@ const ApiStatus = () => {
         getLocationCode()
     }, [])
 
-    // In the getAuthToken function, ensure it uses the stored credentials correctly
+    // Get auth token and save to all storage methods
     const getAuthToken = async (): Promise<string | null> => {
         try {
-            // Get stored credentials which now contain NIC as username
-            const storedCredentials = sessionStorage.getItem('loginCredentials');
-            const credentials = storedCredentials ? JSON.parse(storedCredentials) : {};
+            // Check if we already have a valid token
+            if (authToken) {
+                return authToken
+            }
+
+            const storedCredentials = sessionStorage.getItem('loginCredentials')
+            const credentials = storedCredentials ? JSON.parse(storedCredentials) : {}
 
             const response = await fetch('/api/get-auth-token', {
                 method: 'POST',
@@ -123,19 +136,22 @@ const ApiStatus = () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(credentials)
-            });
+            })
 
             if (response.ok) {
-                const result = await response.json();
+                const result = await response.json()
                 if (result.success && result.accessToken) {
-                    setAuthToken(result.accessToken);
-                    return result.accessToken;
+                    // Save to all storage methods
+                    tokenStorage.setToken(result.accessToken)
+                    setAuthToken(result.accessToken)
+                    setTokenSource(result.source || 'fresh')
+                    return result.accessToken
                 }
             }
-            return null;
+            return null
         } catch (error) {
-            console.error('Failed to get auth token:', error);
-            return null;
+            console.error('Failed to get auth token:', error)
+            return null
         }
     }
 
@@ -143,8 +159,10 @@ const ApiStatus = () => {
         const startTime = Date.now()
 
         try {
+            let currentToken = authToken
+
             // If endpoint requires auth and we don't have a token, get one first
-            if (endpoint.requiresAuth && !authToken) {
+            if (endpoint.requiresAuth && !currentToken) {
                 const token = await getAuthToken()
                 if (!token) {
                     return {
@@ -155,6 +173,7 @@ const ApiStatus = () => {
                         statusCode: 401
                     }
                 }
+                currentToken = token
             }
 
             // Make the API call through our proxy
@@ -169,8 +188,8 @@ const ApiStatus = () => {
                     payload: endpoint.testPayload,
                     queryParams: endpoint.queryParams,
                     requiresAuth: endpoint.requiresAuth,
-                    authToken: endpoint.requiresAuth ? authToken : undefined,
-                    userCredentials: userCredentials // Pass user credentials
+                    authToken: endpoint.requiresAuth ? currentToken : undefined,
+                    userCredentials: userCredentials
                 })
             })
 
@@ -181,7 +200,10 @@ const ApiStatus = () => {
 
                 // If this is the login endpoint and it was successful, store the token
                 if (endpoint.name === 'User Login' && result.success && result.data?.token?.accessToken) {
-                    setAuthToken(result.data.token.accessToken)
+                    const newToken = result.data.token.accessToken
+                    tokenStorage.setToken(newToken)
+                    setAuthToken(newToken)
+                    setTokenSource('login')
                 }
 
                 return {
@@ -198,7 +220,6 @@ const ApiStatus = () => {
         } catch (error) {
             console.error(`API ${endpoint.name} check failed:`, error)
 
-            // Fallback to simple health check
             try {
                 const healthResponse = await fetch('/api/simple-health-check', {
                     method: 'POST',
@@ -223,7 +244,6 @@ const ApiStatus = () => {
             } catch (healthError) {
             }
 
-            // Final fallback - mark as offline
             const responseTime = Date.now() - startTime
             return {
                 ...endpoint,
@@ -238,7 +258,6 @@ const ApiStatus = () => {
     const checkAllApis = async () => {
         setIsChecking(true)
 
-        // Check login endpoint first to get auth token
         const loginEndpoint = endpoints.find(ep => ep.name === 'User Login')
         if (loginEndpoint) {
             const updatedLogin = await checkApiStatus(loginEndpoint)
@@ -247,15 +266,13 @@ const ApiStatus = () => {
             ))
         }
 
-        // Then check other endpoints
         const otherEndpoints = endpoints.filter(ep => ep.name !== 'User Login')
         const updatedEndpoints = await Promise.all(
             otherEndpoints.map(endpoint => checkApiStatus(endpoint))
         )
 
-        // Update all endpoints
         setEndpoints(prev => prev.map(ep => {
-            if (ep.name === 'User Login') return ep // Already updated above
+            if (ep.name === 'User Login') return ep
             const updated = updatedEndpoints.find(updated => updated.name === ep.name)
             return updated || ep
         }))
@@ -303,7 +320,6 @@ const ApiStatus = () => {
         return date.toLocaleTimeString()
     }
 
-    // Auto refresh functionality
     useEffect(() => {
         let interval: NodeJS.Timeout | null = null
 
@@ -318,7 +334,6 @@ const ApiStatus = () => {
         }
     }, [autoRefresh, refreshInterval])
 
-    // Initial check on component mount (only after credentials and location are loaded)
     useEffect(() => {
         if (userCredentials || locationCode) {
             checkAllApis()
@@ -354,6 +369,22 @@ const ApiStatus = () => {
                                 {locationCode ? `✓ ${locationCode}` : '✗ Not Found'}
                             </span>
                         </div>
+                        <div>
+                            <span className={`block font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                                Auth Token Status
+                            </span>
+                            <span className={`${authToken ? 'text-green-600' : 'text-red-600'}`}>
+                                {authToken ? `✓ Loaded (${tokenSource})` : '✗ Not Loaded'}
+                            </span>
+                        </div>
+                        <div>
+                            <span className={`block font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                                Token Storage
+                            </span>
+                            <span className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                Cookies → SessionStorage → LocalStorage
+                            </span>
+                        </div>
                     </div>
                 </div>
 
@@ -365,7 +396,6 @@ const ApiStatus = () => {
                                 System Status
                             </h2>
 
-                            {/* Status Message */}
                             <div className={`p-3 sm:p-4 rounded-lg lg:w-1/3 ${endpoints.filter(ep => ep.status === 'online').length === endpoints.length
                                 ? theme === 'dark'
                                     ? 'bg-green-900/30 border border-green-700'
@@ -481,7 +511,6 @@ const ApiStatus = () => {
                                         {endpoint.url}
                                     </p>
 
-                                    {/* Show current payload/query params */}
                                     {(endpoint.testPayload || endpoint.queryParams) && (
                                         <div className={`mb-3 p-2 rounded text-xs ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`}>
                                             <span className={`font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>

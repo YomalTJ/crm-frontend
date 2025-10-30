@@ -378,7 +378,7 @@ const GrantUtilizationForm = () => {
             }
 
             if (isUpdateMode && existingGrantId) {
-                // Update existing record
+                // Update existing record using the grant record's UUID ID
                 await updateGrantUtilization(existingGrantId, finalFormData);
                 toast.success(t('grantUtilization.updateSuccess'));
             } else {

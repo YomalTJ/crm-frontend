@@ -1,25 +1,27 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+// app/api/get-auth-token/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 
+/**
+ * Get authentication token from WBB API
+ * Attempts to retrieve from cache first, then authenticates if needed
+ * Saves token to cookies for server-side use
+ */
 export async function POST(request: NextRequest) {
     try {
-        // Get user credentials from request body
         const body = await request.json()
         const { username, password } = body
 
-        // Use provided credentials or fallback to default
         const loginCredentials = {
             username: username || "12345678",
             password: password || "@7@7sdsss"
         }
 
-        // First check if we have a valid token in cookies
         const cookieStore = await cookies()
         const existingToken = cookieStore.get('wbbAuthToken')?.value
 
+        // Test if existing token is still valid
         if (existingToken) {
-            // Test if the existing token is still valid by making a simple request
             try {
                 const testResponse = await fetch('https://api.wbb.gov.lk/api/Samurthis/GetByGn', {
                     method: 'POST',
@@ -33,7 +35,6 @@ export async function POST(request: NextRequest) {
                     })
                 })
 
-                // If we get anything other than 401, the token is likely still valid
                 if (testResponse.status !== 401) {
                     return NextResponse.json({
                         success: true,
@@ -42,10 +43,11 @@ export async function POST(request: NextRequest) {
                     })
                 }
             } catch (error) {
+                console.warn('Token validation failed, getting new one:', error)
             }
         }
 
-        // If no token or token is invalid, get a new one using provided credentials
+        // Get new token from login endpoint
         const loginResponse = await fetch('https://api.wbb.gov.lk/api/samurthi/AuthSamurthi/login', {
             method: 'POST',
             headers: {
@@ -63,7 +65,6 @@ export async function POST(request: NextRequest) {
         }
 
         const loginData = await loginResponse.json()
-        
         const newToken = loginData?.token?.accessToken
 
         if (!newToken) {
@@ -74,20 +75,27 @@ export async function POST(request: NextRequest) {
             }, { status: 400 })
         }
 
-        // Store the new token in cookies
-        cookieStore.set('wbbAuthToken', newToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: 60 * 60 * 24 // 1 day
-        })
+        // Attempt to set cookie - will work in production with SSL
+        try {
+            cookieStore.set('wbbAuthToken', newToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 60 * 60 * 24 // 1 day
+            })
+        } catch (cookieError) {
+            console.warn('Failed to set cookie (expected in non-SSL environments):', cookieError)
+            // Continue anyway - token will be passed via request body and client-side storage
+        }
 
+        // Return token for client-side storage in all storage methods
         return NextResponse.json({
             success: true,
             accessToken: newToken,
             source: 'fresh',
             expiresIn: loginData.data?.token?.expiresIn || '24h',
-            refreshToken: loginData.data?.token?.refreshToken
+            refreshToken: loginData.data?.token?.refreshToken,
+            storageInstruction: 'Store in localStorage, sessionStorage, and cookies'
         })
 
     } catch (error) {

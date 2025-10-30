@@ -87,7 +87,7 @@ export interface GrantUtilizationResponse {
 const requestQueue: Array<{ resolve: (value: any) => void; reject: (error: any) => void; fn: () => Promise<any> }> = [];
 let processing = false;
 const MAX_CONCURRENT_REQUESTS = 5;
-const REQUEST_DELAY = 1000; // 1 second between batches
+const REQUEST_DELAY = 1000;
 
 async function processQueue() {
   if (processing || requestQueue.length === 0) return;
@@ -119,7 +119,6 @@ function queuedRequest<T>(fn: () => Promise<T>): Promise<T> {
 
 export const createGrantUtilization = async (payload: GrantUtilizationPayload): Promise<GrantUtilizationResponse> => {
   return queuedRequest(async () => {
-    // Validate payload size before sending
     if (JSON.stringify(payload).length > 10000) {
       throw new Error('Request payload too large');
     }
@@ -186,7 +185,8 @@ export const getGrantUtilizationById = async (id: string): Promise<GrantUtilizat
   }
 };
 
-export const updateGrantUtilization = async (hhNumberOrNic: string, payload: GrantUtilizationPayload): Promise<GrantUtilizationResponse> => {
+// FIX: Changed first parameter from hhNumberOrNic to grantId (UUID)
+export const updateGrantUtilization = async (grantId: string, payload: GrantUtilizationPayload): Promise<GrantUtilizationResponse> => {
   return queuedRequest(async () => {
     if (JSON.stringify(payload).length > 10000) {
       throw new Error('Request payload too large');
@@ -201,7 +201,7 @@ export const updateGrantUtilization = async (hhNumberOrNic: string, payload: Gra
 
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
-      const response = await fetch(`${baseUrl}/api/grant-utilization/${hhNumberOrNic}`, {
+      const response = await fetch(`${baseUrl}/api/grant-utilization/${grantId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -294,7 +294,6 @@ export const checkGrantUtilizationExists = async (hhNumberOrNic: string): Promis
     }
 
     const data = await response.json();
-    // If we get a successful response and there are grant utilizations, return true
     return data.grantUtilizations && data.grantUtilizations.length > 0;
   } catch (error: any) {
     throw new Error(error.message || 'Failed to check Grant Utilization existence');

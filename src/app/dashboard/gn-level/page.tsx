@@ -14,6 +14,7 @@ import {
   getEmpowermentDimensionCounts
 } from '@/services/dashboardService';
 import EmpowermentDimensionTable from '@/components/dashboard/EmpowermentDimensionTable';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 const GndOfficerDashboard = () => {
   const { theme } = useTheme();
@@ -24,6 +25,12 @@ const GndOfficerDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [empowermentData, setEmpowermentData] = useState<EmpowermentDimensionCountResponseDto | null>(null);
+
+  const { trackPageView } = useAnalytics();
+
+  useEffect(() => {
+    trackPageView('/dashboard/gn-level', 'GN Level Dashboard');
+  }, [trackPageView]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {

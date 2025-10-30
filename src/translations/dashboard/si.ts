@@ -7,11 +7,11 @@ export const translations = {
         location: 'ස්ථානය',
 
         // Dashboard titles
-        gndOfficerDashboard: 'ග්‍රාම නිලධාරී උපකරණ පුවරුව',
-        zoneOfficerDashboard: 'මූලස්ථාන නිලධාරී උපකරණ පුවරුව',
-        divisionalOfficerDashboard: 'ප්‍රාදේශීය ලේකම් උපකරණ පුවරුව',
-        districtOfficerDashboard: 'දිස්ත්‍රික් නිලධාරී උපකරණ පුවරුව',
-        nationalOfficerDashboard: 'ජාතික නිලධාරී උපකරණ පුවරුව',
+        gndOfficerDashboard: 'ග්‍රාම නිලධාරී පුවරුව',
+        zoneOfficerDashboard: 'මූලස්ථාන නිලධාරී පුවරුව',
+        divisionalOfficerDashboard: 'ප්‍රාදේශීය ලේකම් පුවරුව',
+        districtOfficerDashboard: 'දිස්ත්‍රික් නිලධාරී පුවරුව',
+        nationalOfficerDashboard: 'ජාතික නිලධාරී පුවරුව',
 
         // Table titles
         beneficiaryCountByYear: 'වර්ෂය අනුව ප්‍රතිලාභී ගණන',

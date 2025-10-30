@@ -1,12 +1,54 @@
+// app/api/check-external-api/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+
+/**
+ * Retrieves token from: Cookies -> Custom Header -> SessionStorage Header
+ * Priority: Cookies (from cookies header) -> x-auth-token header -> fallback login
+ */
+async function getTokenFromRequest(request: NextRequest): Promise<string | null> {
+    // 1. Try to get from cookies (if available on server)
+    try {
+        const cookieStore = cookies()
+        const cookieToken = (await cookieStore).get('wbbAuthToken')?.value
+        if (cookieToken) {
+            console.log('Token retrieved from cookies')
+            return cookieToken
+        }
+    } catch (error) {
+        console.warn('Failed to read cookies:', error)
+    }
+
+    // 2. Try to get from x-auth-token header (passed from client)
+    const headerToken = request.headers.get('x-auth-token')
+    if (headerToken) {
+        console.log('Token retrieved from x-auth-token header')
+        return headerToken
+    }
+
+    // 3. Try to get from x-session-storage header (passed from client)
+    const sessionHeaderToken = request.headers.get('x-session-storage-token')
+    if (sessionHeaderToken) {
+        console.log('Token retrieved from x-session-storage-token header')
+        return sessionHeaderToken
+    }
+
+    // 4. Try to get from x-local-storage header (passed from client)
+    const localHeaderToken = request.headers.get('x-local-storage-token')
+    if (localHeaderToken) {
+        console.log('Token retrieved from x-local-storage-token header')
+        return localHeaderToken
+    }
+
+    return null
+}
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
         const { url, method, payload, queryParams, requiresAuth, authToken, userCredentials } = body
 
-        // Build URL with query parameters if provided
+        // Build URL with query parameters
         let finalUrl = url
         if (queryParams && Object.keys(queryParams).length > 0) {
             const searchParams = new URLSearchParams()
@@ -16,7 +58,6 @@ export async function POST(request: NextRequest) {
             finalUrl = `${url}?${searchParams.toString()}`
         }
 
-        // Set up headers
         const headers: HeadersInit = {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
@@ -26,15 +67,13 @@ export async function POST(request: NextRequest) {
         if (requiresAuth) {
             let token = authToken
 
+            // If no token provided, try to get from all sources
             if (!token) {
-                // Try to get token from cookies first
-                const cookieStore = cookies()
-                const wbbAuthToken = (await cookieStore).get('wbbAuthToken')?.value
-                token = wbbAuthToken
+                token = await getTokenFromRequest(request)
             }
 
             if (!token) {
-                // If no token, try to login first using provided credentials
+                // Last resort - try to login first using provided credentials
                 const loginCredentials = userCredentials || {
                     username: "12345678",
                     password: "@7@7sdsss"
@@ -63,14 +102,19 @@ export async function POST(request: NextRequest) {
                     token = loginData?.token?.accessToken
 
                     if (token) {
-                        // Store the new token in cookies
-                        const cookieStore = await cookies()
-                        cookieStore.set('wbbAuthToken', token, {
-                            httpOnly: true,
-                            secure: process.env.NODE_ENV === 'production',
-                            sameSite: 'strict',
-                            maxAge: 60 * 60 * 24 // 1 day
-                        })
+                        // Try to store token in cookies, but don't fail if it doesn't work
+                        try {
+                            const cookieStore = await cookies()
+                            cookieStore.set('wbbAuthToken', token, {
+                                httpOnly: true,
+                                secure: process.env.NODE_ENV === 'production',
+                                sameSite: 'lax',
+                                maxAge: 60 * 60 * 24
+                            })
+                        } catch (cookieError) {
+                            console.warn('Could not set cookie (non-SSL environment):', cookieError)
+                            // Continue with token from response
+                        }
                     }
                 } catch (loginError) {
                     return NextResponse.json({
@@ -88,19 +132,17 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // Set up fetch options
         const options: RequestInit = {
             method: method,
             headers,
             signal: AbortSignal.timeout(30000) // 30 second timeout
         }
 
-        // Add body for POST requests (only if we have payload, not query params)
         if (method === 'POST' && payload) {
             options.body = JSON.stringify(payload)
         }
 
-        // Make the external API call using the final URL with query parameters
+        // Make the external API call
         const startTime = Date.now()
         let response: Response
 
@@ -121,11 +163,14 @@ export async function POST(request: NextRequest) {
 
         const responseTime = Date.now() - startTime
 
-        // Handle 401 unauthorized - clear token and return error
+        // Handle 401 unauthorized
         if (response.status === 401 && requiresAuth) {
-            // Clear invalid token
-            const cookieStore = await cookies()
-            cookieStore.delete('wbbAuthToken')
+            try {
+                const cookieStore = await cookies()
+                cookieStore.delete('wbbAuthToken')
+            } catch (error) {
+                console.warn('Could not delete cookie:', error)
+            }
 
             return NextResponse.json({
                 success: false,
@@ -136,7 +181,7 @@ export async function POST(request: NextRequest) {
             }, { status: 401 })
         }
 
-        // Try to parse response
+        // Parse response
         let responseData = null
         const contentType = response.headers.get('content-type')
 
